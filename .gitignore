@@ -1,0 +1,28 @@
+# Node
+node_modules/
+dist/
+.pnpm-store/
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Vite
+*.local
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

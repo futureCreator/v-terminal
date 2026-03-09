@@ -1,0 +1,8 @@
+.panel-grid {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  overflow: hidden;
+  min-height: 0;
+}

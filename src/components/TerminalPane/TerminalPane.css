@@ -1,0 +1,45 @@
+.terminal-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-terminal);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: var(--radius-sm);
+  cursor: default;
+  transition: border-color 0.15s;
+}
+
+.terminal-pane--active {
+  border-color: var(--accent);
+}
+
+.terminal-container {
+  flex: 1;
+  overflow: hidden;
+  padding: 6px 4px 4px 6px;
+}
+
+/* xterm.js overrides */
+.terminal-container .xterm {
+  height: 100%;
+}
+
+.terminal-container .xterm-screen {
+  height: 100% !important;
+}
+
+.terminal-exit-overlay {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: var(--label-secondary);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  white-space: nowrap;
+}

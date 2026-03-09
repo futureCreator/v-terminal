@@ -1,0 +1,60 @@
+.titlebar {
+  height: 36px;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--separator);
+  padding: 0 var(--spacing-md);
+  -webkit-app-region: drag;
+}
+
+.titlebar-traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+}
+
+.traffic-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.1s;
+  outline: none;
+}
+
+.traffic-light:hover {
+  filter: brightness(1.2);
+}
+
+.traffic-light:active {
+  filter: brightness(0.85);
+}
+
+.traffic-close    { background: var(--traffic-close); }
+.traffic-minimize { background: var(--traffic-min); }
+.traffic-maximize { background: var(--traffic-max); }
+
+.titlebar-title {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label-secondary);
+  letter-spacing: 0.01em;
+  -webkit-app-region: drag;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.titlebar-spacer {
+  width: 64px;  /* mirror traffic lights width for centering */
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}

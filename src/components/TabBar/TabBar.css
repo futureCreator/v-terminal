@@ -1,0 +1,130 @@
+.tabbar {
+  height: 38px;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--separator);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.tabbar-tabs {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: none;
+}
+
+.tabbar-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px 0 14px;
+  min-width: 100px;
+  max-width: 180px;
+  height: 100%;
+  cursor: pointer;
+  position: relative;
+  border-right: 1px solid var(--separator);
+  background: transparent;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+
+.tab-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.tab-item--active {
+  background: var(--bg-primary);
+}
+
+.tab-item--active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px 1px 0 0;
+}
+
+.tab-item-label {
+  flex: 1;
+  font-size: 12px;
+  color: var(--label-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-item--active .tab-item-label {
+  color: var(--label-primary);
+}
+
+.tab-item-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: 1px solid var(--accent);
+  border-radius: var(--radius-xs);
+  color: var(--label-primary);
+  font-size: 12px;
+  padding: 1px 3px;
+  font-family: inherit;
+  width: 100%;
+}
+
+.tab-item-close {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--label-tertiary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+  padding: 0;
+  opacity: 0;
+}
+
+.tab-item:hover .tab-item-close,
+.tab-item--active .tab-item-close {
+  opacity: 1;
+}
+
+.tab-item-close:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--label-primary);
+}
+
+.tabbar-add {
+  flex-shrink: 0;
+  width: 38px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--label-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+  border-left: 1px solid var(--separator);
+}
+
+.tabbar-add:hover {
+  color: var(--label-primary);
+  background: var(--bg-tertiary);
+}

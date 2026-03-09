@@ -1,0 +1,51 @@
+:root {
+  /* ── System backgrounds (Apple HIG dark layering) ────────────── */
+  --bg-primary:      #1c1c1e;   /* window base */
+  --bg-secondary:    #2c2c2e;   /* tab bar, toolbar */
+  --bg-tertiary:     #3a3a3c;   /* hover states, dividers */
+  --bg-elevated:     #242426;   /* title bar, raised surfaces */
+  --bg-terminal:     #1c1c1e;   /* terminal pane */
+  --bg-panel-border: #3a3a3c;
+
+  /* ── Labels ──────────────────────────────────────────────────── */
+  --label-primary:   rgba(255,255,255,0.85);
+  --label-secondary: rgba(255,255,255,0.55);
+  --label-tertiary:  rgba(255,255,255,0.25);
+  --label-disabled:  rgba(255,255,255,0.15);
+
+  /* ── Accent ──────────────────────────────────────────────────── */
+  --accent:          #0a84ff;
+  --accent-hover:    #409cff;
+  --accent-pressed:  #0070d8;
+
+  /* ── Semantic ────────────────────────────────────────────────── */
+  --destructive:     #ff453a;
+  --warning:         #ffd60a;
+  --broadcast:       #ff9f0a;
+  --broadcast-dim:   rgba(255,159,10,0.15);
+  --success:         #30d158;
+
+  /* ── Traffic lights ──────────────────────────────────────────── */
+  --traffic-close:   #ff5f57;
+  --traffic-min:     #febc2e;
+  --traffic-max:     #28c840;
+
+  /* ── Geometry ────────────────────────────────────────────────── */
+  --radius-xs:  3px;
+  --radius-sm:  5px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 20px;
+
+  /* ── Elevation shadows ───────────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.4);
+
+  /* ── Separators ──────────────────────────────────────────────── */
+  --separator: rgba(255,255,255,0.08);
+  --separator-strong: rgba(255,255,255,0.15);
+}

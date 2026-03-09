@@ -1,0 +1,48 @@
+{
+  "productName": "v-terminal",
+  "version": "0.1.0",
+  "identifier": "com.v-terminal.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "v-terminal",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 600,
+        "minHeight": 400,
+        "decorations": false,
+        "transparent": false,
+        "resizable": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [],
+    "externalBin": [],
+    "windows": {
+      "wix": {},
+      "nsis": {}
+    }
+  }
+}
