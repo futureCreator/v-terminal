@@ -14,6 +14,11 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.2 - 2026-03-10
+
+- Simplified TitleBar component — removed title/cwd display props for a cleaner, minimal title bar
+- Removed built-in keyboard shortcuts from TerminalPane (copy/paste, tab navigation, layout switching) to reduce conflicts and prepare for a unified keybinding system
+
 ### v0.1.1 - 2026-03-10
 
 - Enhanced TitleBar with macOS-style controls and improved styling

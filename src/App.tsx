@@ -77,7 +77,7 @@ export function App() {
 
   return (
     <div className="app">
-      <TitleBar title={activeTab?.label ?? "v-terminal"} cwd={activeTab?.cwd ?? ""} />
+      <TitleBar />
       <div className="topbar">
         <TabBar onOpenSshManager={() => setSshModalOpen(true)} />
         <SplitToolbar

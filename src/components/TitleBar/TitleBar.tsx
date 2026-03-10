@@ -1,18 +1,9 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./TitleBar.css";
 
-function formatCwd(cwd: string): string {
-  if (!cwd || cwd === "~") return "~";
-  const sep = cwd.includes("\\") ? "\\" : "/";
-  const parts = cwd.split(sep).filter(Boolean);
-  if (parts.length <= 2) return cwd;
-  return `\u2026${sep}${parts.slice(-2).join(sep)}`;
-}
-
-export function TitleBar({ title, cwd }: { title: string; cwd: string }) {
+export function TitleBar() {
   const win = getCurrentWindow();
   const isWindows = navigator.platform.toUpperCase().includes("WIN");
-  const cwdFormatted = formatCwd(cwd);
 
   if (isWindows) {
     return (
@@ -20,14 +11,6 @@ export function TitleBar({ title, cwd }: { title: string; cwd: string }) {
         <span className="titlebar-app-name" data-tauri-drag-region>
           v-terminal
         </span>
-        <div className="titlebar-info" data-tauri-drag-region>
-          <span className="titlebar-tab-name">{title}</span>
-          {cwdFormatted && (
-            <span className="titlebar-cwd" title={cwd}>
-              {cwdFormatted}
-            </span>
-          )}
-        </div>
         <div className="titlebar-win-controls">
           <button
             className="win-btn win-btn--minimize"
@@ -85,14 +68,6 @@ export function TitleBar({ title, cwd }: { title: string; cwd: string }) {
           title="Zoom"
           aria-label="Zoom window"
         />
-      </div>
-      <div className="titlebar-center" data-tauri-drag-region>
-        <span className="titlebar-title">{title}</span>
-        {cwdFormatted && (
-          <span className="titlebar-cwd" title={cwd}>
-            {cwdFormatted}
-          </span>
-        )}
       </div>
       <div className="titlebar-spacer" data-tauri-drag-region />
     </div>

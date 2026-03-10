@@ -35,39 +35,6 @@
 .traffic-minimize { background: var(--traffic-min); }
 .traffic-maximize { background: var(--traffic-max); }
 
-/* ── macOS center ─────────────────────────────────────────────── */
-.titlebar-center {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  overflow: hidden;
-  -webkit-app-region: drag;
-}
-
-.titlebar-title {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--label-secondary);
-  letter-spacing: 0.01em;
-  pointer-events: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-  max-width: 200px;
-}
-
-.titlebar-cwd {
-  font-size: 11px;
-  color: var(--label-tertiary);
-  pointer-events: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .titlebar-spacer {
   width: 64px; /* mirror traffic lights width for centering */
   flex-shrink: 0;
@@ -88,28 +55,6 @@
   flex-shrink: 0;
   pointer-events: none;
   letter-spacing: 0.02em;
-}
-
-.titlebar-info {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-  padding: 0 8px;
-  -webkit-app-region: drag;
-}
-
-.titlebar-tab-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--label-secondary);
-  pointer-events: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-  max-width: 200px;
 }
 
 /* ── Windows controls ─────────────────────────────────────────── */
