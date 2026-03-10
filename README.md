@@ -14,6 +14,17 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.6 - 2026-03-11
+
+- Added Pretendard variable font as the primary UI font with `prefers-reduced-motion` support
+- Applied frosted-glass (backdrop-filter) effect to TitleBar and TabBar for a native macOS look
+- Fixed traffic light button order to macOS HIG standard (close, minimize, zoom) with hover SVG icons
+- Added empty state UI in SSH Manager when no profiles are saved
+- Improved SSH profile list: rounded items, accent-colored active state with blue highlight
+- Added focus ring (box-shadow) to SSH input fields and tab rename input
+- Bumped SplitToolbar button size from 22px to 28px with improved border radius
+- Updated app icons across all platforms
+
 ### v0.1.5 - 2026-03-11
 
 - Fixed paste handling in TerminalPane: switched from `readText()` on Ctrl+V to a capture-phase `paste` event listener on the terminal textarea, supporting both Ctrl+V and Ctrl+Shift+V without sending raw `\x16` to the PTY

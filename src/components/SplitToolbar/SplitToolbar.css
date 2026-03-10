@@ -14,12 +14,12 @@
 }
 
 .split-btn {
-  width: 26px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border: none;
   background: transparent;
   color: var(--label-tertiary);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,11 +54,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--label-secondary);
   cursor: pointer;

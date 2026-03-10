@@ -1,4 +1,13 @@
-/* ─── Font ─────────────────────────────────────────────────────── */
+/* ─── Font: Pretendard ──────────────────────────────────────────── */
+@font-face {
+  font-family: "Pretendard";
+  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── Font: JetBrains Mono Nerd ─────────────────────────────────── */
 @font-face {
   font-family: "JetBrainsMonoNerdFont";
   src: url("/fonts/JetBrainsMonoNerdFont-Regular.ttf") format("truetype");
@@ -55,10 +64,19 @@ html, body, #root {
 body {
   background: var(--bg-primary);
   color: var(--label-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   font-size: 13px;
   -webkit-font-smoothing: antialiased;
   user-select: none;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ─── xterm.js container reset ──────────────────────────────────── */

@@ -142,18 +142,32 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel }: Props)
           {/* Profile list */}
           <div className="ssh-profile-list">
             <div className="ssh-list-heading">저장된 서버</div>
-            {profiles.map((p) => (
-              <div
-                key={p.id}
-                className={`ssh-profile-item ${p.id === selectedId && !isNew ? "ssh-profile-item--active" : ""}`}
-                onClick={() => selectProfile(p.id)}
-              >
-                <div className="ssh-profile-name">{p.name}</div>
-                <div className="ssh-profile-host">
-                  {p.username}@{p.host}:{p.port}
-                </div>
+            {profiles.length === 0 ? (
+              <div className="ssh-empty-state">
+                <svg className="ssh-empty-icon" width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <rect x="4" y="8" width="24" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M4 13h24" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="8" cy="10.5" r="1" fill="currentColor" />
+                  <circle cx="12" cy="10.5" r="1" fill="currentColor" />
+                  <circle cx="16" cy="10.5" r="1" fill="currentColor" />
+                </svg>
+                <div className="ssh-empty-title">저장된 서버 없음</div>
+                <div className="ssh-empty-desc">아래 버튼을 눌러<br />첫 번째 서버를 추가하세요</div>
               </div>
-            ))}
+            ) : (
+              profiles.map((p) => (
+                <div
+                  key={p.id}
+                  className={`ssh-profile-item ${p.id === selectedId && !isNew ? "ssh-profile-item--active" : ""}`}
+                  onClick={() => selectProfile(p.id)}
+                >
+                  <div className="ssh-profile-name">{p.name}</div>
+                  <div className="ssh-profile-host">
+                    {p.username}@{p.host}:{p.port}
+                  </div>
+                </div>
+              ))
+            )}
             <button className="ssh-list-add-btn" onClick={startNew}>
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path

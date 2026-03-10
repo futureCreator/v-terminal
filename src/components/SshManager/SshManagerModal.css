@@ -82,7 +82,9 @@
 }
 
 .ssh-profile-item {
-  padding: 8px 12px;
+  padding: 7px 8px;
+  margin: 0 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.1s;
 }
@@ -92,7 +94,11 @@
 }
 
 .ssh-profile-item--active {
-  background: var(--bg-tertiary);
+  background: rgba(10, 132, 255, 0.18);
+}
+
+.ssh-profile-item--active:hover {
+  background: rgba(10, 132, 255, 0.24);
 }
 
 .ssh-profile-name {
@@ -105,6 +111,7 @@
 
 .ssh-profile-item--active .ssh-profile-name {
   color: var(--accent);
+  font-weight: 500;
 }
 
 .ssh-profile-host {
@@ -120,7 +127,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 7px 8px;
+  margin: 0 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   border: none;
   color: var(--accent);
@@ -134,6 +143,35 @@
 
 .ssh-list-add-btn:hover {
   background: var(--bg-tertiary);
+}
+
+/* ── Empty State ───────────────────────────────────────────────── */
+.ssh-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.ssh-empty-icon {
+  color: var(--label-tertiary);
+  margin-bottom: 4px;
+}
+
+.ssh-empty-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-secondary);
+}
+
+.ssh-empty-desc {
+  font-size: 11px;
+  color: var(--label-tertiary);
+  line-height: 1.5;
 }
 
 /* Form */
@@ -180,6 +218,7 @@
 
 .ssh-input:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
 }
 
 .ssh-input::placeholder {

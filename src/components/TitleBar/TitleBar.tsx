@@ -52,23 +52,35 @@ export function TitleBar() {
       <div className="titlebar-spacer" data-tauri-drag-region />
       <div className="titlebar-traffic-lights">
         <button
+          className="traffic-light traffic-close"
+          onClick={() => win.close()}
+          title="Close"
+          aria-label="Close window"
+        >
+          <svg className="traffic-light-icon" viewBox="0 0 6 6" fill="none">
+            <path d="M1 1l4 4M5 1L1 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+          </svg>
+        </button>
+        <button
           className="traffic-light traffic-minimize"
           onClick={() => win.minimize()}
           title="Minimize"
           aria-label="Minimize window"
-        />
+        >
+          <svg className="traffic-light-icon" viewBox="0 0 6 6" fill="none">
+            <path d="M1 3h4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+          </svg>
+        </button>
         <button
           className="traffic-light traffic-maximize"
           onClick={() => win.toggleMaximize()}
           title="Zoom"
           aria-label="Zoom window"
-        />
-        <button
-          className="traffic-light traffic-close"
-          onClick={() => win.close()}
-          title="Close"
-          aria-label="Close window"
-        />
+        >
+          <svg className="traffic-light-icon" viewBox="0 0 6 6" fill="none">
+            <path d="M1 1l4 4M1 5V1h4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
     </div>
   );

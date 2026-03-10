@@ -71,7 +71,8 @@
   flex: 1;
   background: transparent;
   border: none;
-  outline: 1px solid var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent);
   border-radius: var(--radius-xs);
   color: var(--label-primary);
   font-size: 12px;
