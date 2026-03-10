@@ -14,6 +14,10 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.4 - 2026-03-10
+
+- Fixed invalid Tauri capability permissions: removed `core:clipboard:allow-read-text` and `core:clipboard:allow-write-text` which do not exist in Tauri v2 (clipboard access uses the Web API `navigator.clipboard` instead)
+
 ### v0.1.3 - 2026-03-10
 
 - Added clipboard support: Ctrl+C copies selected text, Ctrl+V pastes from clipboard in the terminal
