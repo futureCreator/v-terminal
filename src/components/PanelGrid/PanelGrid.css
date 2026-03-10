@@ -5,4 +5,5 @@
   padding: 6px;
   overflow: hidden;
   min-height: 0;
+  transition: grid-template-columns 0.18s ease, grid-template-rows 0.18s ease;
 }

@@ -5,19 +5,28 @@ import { WebLinksAddon } from "@xterm/addon-web-links";
 import { ipc } from "../../lib/tauriIpc";
 import { XTERM_DARK_THEME } from "../../lib/xtermTheme";
 import { ensureFontLoaded } from "../../lib/fontLoader";
+import { useTabStore } from "../../store/tabStore";
+import type { Layout } from "../../types/terminal";
 import "@xterm/xterm/css/xterm.css";
 import "./TerminalPane.css";
 
 export const terminalRegistry = new Map<string, Terminal>();
+
+const LAYOUT_KEYS: Record<string, Layout> = {
+  "1": 1, "2": 2, "3": 3, "4": 4, "5": 6, "6": 9,
+};
 
 interface TerminalPaneProps {
   cwd: string;
   isActive: boolean;
   broadcastEnabled: boolean;
   siblingPtyIds: string[];
+  sshCommand?: string;
   onPtyCreated: (ptyId: string) => void;
   onPtyKilled: () => void;
   onFocus: () => void;
+  onNextPanel?: () => void;
+  onPrevPanel?: () => void;
 }
 
 export function TerminalPane({
@@ -25,9 +34,12 @@ export function TerminalPane({
   isActive,
   broadcastEnabled,
   siblingPtyIds,
+  sshCommand,
   onPtyCreated,
   onPtyKilled,
   onFocus,
+  onNextPanel,
+  onPrevPanel,
 }: TerminalPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -41,6 +53,10 @@ export function TerminalPane({
   broadcastRef.current = broadcastEnabled;
   siblingsRef.current = siblingPtyIds;
 
+  // Store shortcut callbacks in refs to avoid stale closures
+  const shortcutRef = useRef({ onNextPanel, onPrevPanel });
+  shortcutRef.current = { onNextPanel, onPrevPanel };
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -52,7 +68,7 @@ export function TerminalPane({
       await ensureFontLoaded();
 
       const term = new Terminal({
-        fontFamily: '"JetBrainsMonoNerdFont", "JetBrains Mono", monospace',
+        fontFamily: '"JetBrainsMonoNerdFont", "JetBrains Mono", "Nanum Gothic Coding", monospace',
         fontSize: 14,
         lineHeight: 1.2,
         theme: XTERM_DARK_THEME,
@@ -78,6 +94,73 @@ export function TerminalPane({
       termRef.current = term;
       fitAddonRef.current = fitAddon;
 
+      // Copy/Paste handling
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      term.attachCustomKeyEventHandler((event: KeyboardEvent) => {
+        if (event.type !== "keydown") return true;
+
+        const { ctrlKey, shiftKey, metaKey, key } = event;
+
+        // Paste: Cmd+V (macOS) or Ctrl+Shift+V (Linux/Windows)
+        const isPaste = isMac
+          ? metaKey && key === "v"
+          : ctrlKey && shiftKey && key === "V";
+        if (isPaste) {
+          navigator.clipboard.readText().then((text) => {
+            if (text) term.paste(text);
+          }).catch(() => {});
+          return false;
+        }
+
+        // Copy: Cmd+C (macOS) or Ctrl+Shift+C (Linux/Windows) when text is selected
+        const isCopy = isMac
+          ? metaKey && key === "c"
+          : ctrlKey && shiftKey && key === "C";
+        if (isCopy && term.hasSelection()) {
+          navigator.clipboard.writeText(term.getSelection()).catch(() => {});
+          return false;
+        }
+
+        // App shortcuts: Ctrl+Shift+* and Ctrl+Tab
+        if (ctrlKey && !metaKey) {
+          // Ctrl+Tab: next tab
+          if (key === "Tab" && !shiftKey) {
+            const store = useTabStore.getState();
+            const { tabs, activeTabId } = store;
+            const idx = tabs.findIndex((t) => t.id === activeTabId);
+            const next = tabs[(idx + 1) % tabs.length];
+            if (next) store.setActiveTab(next.id);
+            return false;
+          }
+
+          if (shiftKey) {
+            switch (key) {
+              case "N":
+                shortcutRef.current.onNextPanel?.();
+                return false;
+              case "P":
+                shortcutRef.current.onPrevPanel?.();
+                return false;
+              case "B": {
+                const store = useTabStore.getState();
+                store.toggleBroadcast(store.activeTabId);
+                return false;
+              }
+              default: {
+                const layout = LAYOUT_KEYS[key];
+                if (layout !== undefined) {
+                  const store = useTabStore.getState();
+                  store.setLayout(store.activeTabId, layout);
+                  return false;
+                }
+              }
+            }
+          }
+        }
+
+        return true;
+      });
+
       const { cols, rows } = term;
 
       let ptyId: string;
@@ -97,6 +180,12 @@ export function TerminalPane({
       ptyIdRef.current = ptyId;
       terminalRegistry.set(ptyId, term);
       onPtyCreated(ptyId);
+
+      // Auto-execute SSH command if provided
+      if (sshCommand) {
+        const encoded = new TextEncoder().encode(sshCommand + "\r");
+        ipc.ptyWrite(ptyId, encoded).catch(() => {});
+      }
 
       // Input
       term.onData((data) => {

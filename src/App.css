@@ -7,6 +7,15 @@
   background: var(--bg-primary);
 }
 
+.topbar {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  height: 32px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--separator);
+}
+
 .app-content {
   flex: 1;
   display: flex;

@@ -12,6 +12,16 @@ export interface Tab {
   layout: Layout;
   panels: Panel[];
   broadcastEnabled: boolean;
+  sshCommand?: string; // auto-execute after PTY start (e.g. ssh user@host)
+}
+
+export interface SshProfile {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  identityFile?: string;
 }
 
 export interface SessionData {
@@ -21,6 +31,7 @@ export interface SessionData {
     cwd: string;
     layout: Layout;
     broadcastEnabled: boolean;
+    sshCommand?: string;
   }>;
   activeTabId: string;
 }

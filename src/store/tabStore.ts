@@ -17,10 +17,11 @@ interface TabStore {
   activeTabId: string;
 
   // Tab actions
-  addTab: (cwd: string, label?: string) => string;
+  addTab: (cwd: string, label?: string, sshCommand?: string) => string;
   removeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   renameTab: (id: string, label: string) => void;
+  reorderTabs: (fromId: string, toId: string) => void;
 
   // Layout actions
   setLayout: (tabId: string, layout: Layout) => { added: Panel[]; removed: Panel[] };
@@ -34,21 +35,24 @@ interface TabStore {
 
   // Session restore
   restoreFromSession: (
-    tabs: Array<{ id: string; label: string; cwd: string; layout: Layout; broadcastEnabled: boolean }>,
+    tabs: Array<{ id: string; label: string; cwd: string; layout: Layout; broadcastEnabled: boolean; sshCommand?: string }>,
     activeTabId: string
   ) => void;
 }
 
-const DEFAULT_CWD =
-  typeof window !== "undefined"
-    ? "C:\\Users"
-    : "/Users";
+const DEFAULT_CWD = "~";
+
+let tabCounter = 1;
+
+function nextTabLabel() {
+  return `Terminal ${tabCounter++}`;
+}
 
 function createDefaultTab(): Tab {
   const layout: Layout = 1;
   return {
     id: genId(),
-    label: "Terminal",
+    label: nextTabLabel(),
     cwd: DEFAULT_CWD,
     layout,
     panels: makePanels(panelCount(layout)),
@@ -63,16 +67,17 @@ export const useTabStore = create<TabStore>((set, get) => {
     tabs: [defaultTab],
     activeTabId: defaultTab.id,
 
-    addTab: (cwd, label) => {
+    addTab: (cwd, label?, sshCommand?) => {
       const id = genId();
       const layout: Layout = 1;
       const tab: Tab = {
         id,
-        label: label ?? "Terminal",
+        label: label ?? nextTabLabel(),
         cwd,
         layout,
         panels: makePanels(panelCount(layout)),
         broadcastEnabled: false,
+        sshCommand,
       };
       set((s) => ({ tabs: [...s.tabs, tab], activeTabId: id }));
       return id;
@@ -100,6 +105,18 @@ export const useTabStore = create<TabStore>((set, get) => {
       set((s) => ({
         tabs: s.tabs.map((t) => (t.id === id ? { ...t, label } : t)),
       })),
+
+    reorderTabs: (fromId, toId) => {
+      set((s) => {
+        const from = s.tabs.findIndex((t) => t.id === fromId);
+        const to = s.tabs.findIndex((t) => t.id === toId);
+        if (from === -1 || to === -1 || from === to) return s;
+        const tabs = [...s.tabs];
+        const [moved] = tabs.splice(from, 1);
+        tabs.splice(to, 0, moved);
+        return { tabs };
+      });
+    },
 
     setLayout: (tabId, layout) => {
       const tab = get().tabs.find((t) => t.id === tabId);
@@ -169,6 +186,11 @@ export const useTabStore = create<TabStore>((set, get) => {
       })),
 
     restoreFromSession: (savedTabs, activeTabId) => {
+      // Bump counter past any restored "Terminal N" labels
+      for (const st of savedTabs) {
+        const m = st.label.match(/^Terminal (\d+)$/);
+        if (m) tabCounter = Math.max(tabCounter, parseInt(m[1]) + 1);
+      }
       const tabs: Tab[] = savedTabs.map((st) => ({
         id: st.id,
         label: st.label,
@@ -176,6 +198,7 @@ export const useTabStore = create<TabStore>((set, get) => {
         layout: st.layout,
         panels: makePanels(panelCount(st.layout)),
         broadcastEnabled: st.broadcastEnabled,
+        sshCommand: st.sshCommand,
       }));
       set({
         tabs: tabs.length > 0 ? tabs : [createDefaultTab()],

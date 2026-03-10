@@ -45,7 +45,7 @@ export function usePty({
       await ensureFontLoaded();
 
       term = new Terminal({
-        fontFamily: '"JetBrainsMonoNerdFont", "JetBrains Mono", "Cascadia Code", monospace',
+        fontFamily: '"JetBrainsMonoNerdFont", "JetBrains Mono", "Nanum Gothic Coding", "Cascadia Code", monospace',
         fontSize: 14,
         lineHeight: 1.2,
         letterSpacing: 0,

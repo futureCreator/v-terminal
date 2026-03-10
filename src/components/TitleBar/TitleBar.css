@@ -9,6 +9,7 @@
   -webkit-app-region: drag;
 }
 
+/* ── macOS traffic lights ─────────────────────────────────────── */
 .titlebar-traffic-lights {
   display: flex;
   align-items: center;
@@ -27,26 +28,40 @@
   outline: none;
 }
 
-.traffic-light:hover {
-  filter: brightness(1.2);
-}
-
-.traffic-light:active {
-  filter: brightness(0.85);
-}
+.traffic-light:hover  { filter: brightness(1.2); }
+.traffic-light:active { filter: brightness(0.85); }
 
 .traffic-close    { background: var(--traffic-close); }
 .traffic-minimize { background: var(--traffic-min); }
 .traffic-maximize { background: var(--traffic-max); }
 
-.titlebar-title {
+/* ── macOS center ─────────────────────────────────────────────── */
+.titlebar-center {
   flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+  -webkit-app-region: drag;
+}
+
+.titlebar-title {
   font-size: 12px;
   font-weight: 500;
   color: var(--label-secondary);
   letter-spacing: 0.01em;
-  -webkit-app-region: drag;
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  max-width: 200px;
+}
+
+.titlebar-cwd {
+  font-size: 11px;
+  color: var(--label-tertiary);
   pointer-events: none;
   white-space: nowrap;
   overflow: hidden;
@@ -54,7 +69,71 @@
 }
 
 .titlebar-spacer {
-  width: 64px;  /* mirror traffic lights width for centering */
+  width: 64px; /* mirror traffic lights width for centering */
   flex-shrink: 0;
   -webkit-app-region: drag;
 }
+
+/* ── Windows titlebar ─────────────────────────────────────────── */
+.titlebar--windows {
+  padding: 0;
+  gap: 0;
+}
+
+.titlebar-app-name {
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  flex-shrink: 0;
+  pointer-events: none;
+  letter-spacing: 0.02em;
+}
+
+.titlebar-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 0 8px;
+  -webkit-app-region: drag;
+}
+
+.titlebar-tab-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--label-secondary);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  max-width: 200px;
+}
+
+/* ── Windows controls ─────────────────────────────────────────── */
+.titlebar-win-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.win-btn {
+  width: 46px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--label-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.win-btn:hover        { background: var(--bg-tertiary); color: var(--label-primary); }
+.win-btn--close:hover { background: #c42b1c; color: #fff; }
+.win-btn:active       { filter: brightness(0.9); }

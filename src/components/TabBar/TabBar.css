@@ -1,11 +1,9 @@
 .tabbar {
-  height: 38px;
-  background: var(--bg-secondary);
+  flex: 1;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--separator);
-  flex-shrink: 0;
   overflow: hidden;
+  min-width: 0;
 }
 
 .tabbar-tabs {
@@ -109,9 +107,14 @@
   color: var(--label-primary);
 }
 
-.tabbar-add {
+.tab-item--drag-over {
+  border-left: 2px solid var(--accent);
+}
+
+.tabbar-add,
+.tabbar-ssh {
   flex-shrink: 0;
-  width: 38px;
+  width: 32px;
   height: 100%;
   border: none;
   background: transparent;
@@ -124,7 +127,8 @@
   border-left: 1px solid var(--separator);
 }
 
-.tabbar-add:hover {
+.tabbar-add:hover,
+.tabbar-ssh:hover {
   color: var(--label-primary);
   background: var(--bg-tertiary);
 }
