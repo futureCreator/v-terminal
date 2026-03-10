@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { Tab } from "../../types/terminal";
 import { TerminalPane } from "../TerminalPane/TerminalPane";
 import { getGridConfig } from "../../lib/layoutMath";
@@ -7,9 +7,10 @@ import "./PanelGrid.css";
 
 interface PanelGridProps {
   tab: Tab;
+  onActivePanelChanged?: (ptyId: string | null) => void;
 }
 
-export function PanelGrid({ tab }: PanelGridProps) {
+export function PanelGrid({ tab, onActivePanelChanged }: PanelGridProps) {
   const { setPtyId, clearPtyId } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
 
@@ -29,6 +30,12 @@ export function PanelGrid({ tab }: PanelGridProps) {
     const prev = panels[(idx - 1 + panels.length) % panels.length];
     if (prev) setActivePanelId(prev.id);
   }, [tab.panels]);
+
+  useEffect(() => {
+    if (!onActivePanelChanged) return;
+    const activePanel = tab.panels.find((p) => p.id === activePanelId);
+    onActivePanelChanged(activePanel?.ptyId ?? null);
+  }, [activePanelId, tab.panels, onActivePanelChanged]);
 
   const gridConfig = getGridConfig(tab.layout);
 

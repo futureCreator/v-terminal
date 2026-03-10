@@ -87,6 +87,24 @@ export function TerminalPane({
       termRef.current = term;
       fitAddonRef.current = fitAddon;
 
+      // Clipboard key bindings
+      term.attachCustomKeyEventHandler((event: KeyboardEvent) => {
+        if (event.type !== "keydown") return true;
+        // Ctrl+C with selection → copy (not SIGINT)
+        if (event.ctrlKey && event.key === "c" && term.hasSelection()) {
+          navigator.clipboard.writeText(term.getSelection()).catch(() => {});
+          return false;
+        }
+        // Ctrl+V → paste from clipboard
+        if (event.ctrlKey && event.key === "v") {
+          navigator.clipboard.readText().then((text) => {
+            if (text) term.paste(text);
+          }).catch(() => {});
+          return false;
+        }
+        return true;
+      });
+
 
       const { cols, rows } = term;
 

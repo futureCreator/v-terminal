@@ -49,13 +49,8 @@ export function TitleBar() {
 
   return (
     <div className="titlebar" data-tauri-drag-region>
+      <div className="titlebar-spacer" data-tauri-drag-region />
       <div className="titlebar-traffic-lights">
-        <button
-          className="traffic-light traffic-close"
-          onClick={() => win.close()}
-          title="Close"
-          aria-label="Close window"
-        />
         <button
           className="traffic-light traffic-minimize"
           onClick={() => win.minimize()}
@@ -68,8 +63,13 @@ export function TitleBar() {
           title="Zoom"
           aria-label="Zoom window"
         />
+        <button
+          className="traffic-light traffic-close"
+          onClick={() => win.close()}
+          title="Close"
+          aria-label="Close window"
+        />
       </div>
-      <div className="titlebar-spacer" data-tauri-drag-region />
     </div>
   );
 }

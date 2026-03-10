@@ -6,6 +6,7 @@ import "./SshManagerModal.css";
 interface Props {
   onClose: () => void;
   onConnect: (profile: SshProfile) => void;
+  onConnectInPanel?: (profile: SshProfile) => void;
 }
 
 type FormState = {
@@ -28,7 +29,7 @@ function profileToForm(p: SshProfile): FormState {
   };
 }
 
-export function SshManagerModal({ onClose, onConnect }: Props) {
+export function SshManagerModal({ onClose, onConnect, onConnectInPanel }: Props) {
   const { profiles, addProfile, removeProfile, updateProfile } = useSshStore();
 
   const [selectedId, setSelectedId] = useState<string | null>(profiles[0]?.id ?? null);
@@ -96,6 +97,20 @@ export function SshManagerModal({ onClose, onConnect }: Props) {
       profile = { id: selectedId, ...data };
     } else return;
     onConnect(profile);
+  };
+
+  const handleConnectInPanel = () => {
+    if (!onConnectInPanel) return;
+    const data = buildProfileData();
+    if (!data.host || !data.username) return;
+    let profile: SshProfile;
+    if (isNew) {
+      profile = addProfile(data);
+    } else if (selectedId) {
+      updateProfile(selectedId, data);
+      profile = { id: selectedId, ...data };
+    } else return;
+    onConnectInPanel(profile);
   };
 
   const setField = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -222,6 +237,15 @@ export function SshManagerModal({ onClose, onConnect }: Props) {
           <button className="ssh-btn ssh-btn--secondary" onClick={onClose}>
             취소
           </button>
+          {onConnectInPanel && (
+            <button
+              className="ssh-btn ssh-btn--secondary"
+              onClick={handleConnectInPanel}
+              disabled={!canConnect}
+            >
+              현재 패널에서 열기
+            </button>
+          )}
           <button
             className="ssh-btn ssh-btn--primary"
             onClick={handleConnect}

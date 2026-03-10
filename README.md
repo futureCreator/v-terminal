@@ -14,6 +14,12 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.3 - 2026-03-10
+
+- Added clipboard support: Ctrl+C copies selected text, Ctrl+V pastes from clipboard in the terminal
+- Added "Connect in Panel" option in SSH Manager — connect SSH into the currently active terminal pane without opening a new tab
+- Fixed TitleBar traffic light button order (minimize, zoom, close) and improved spacer layout
+
 ### v0.1.2 - 2026-03-10
 
 - Simplified TitleBar component — removed title/cwd display props for a cleaner, minimal title bar

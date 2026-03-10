@@ -19,6 +19,7 @@ export function App() {
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
   const sessionLoaded = useRef(false);
   const [sshModalOpen, setSshModalOpen] = useState(false);
+  const activePanelPtyIdRef = useRef<string | null>(null);
 
   // Load persisted session on mount
   useEffect(() => {
@@ -59,6 +60,22 @@ export function App() {
     if (activeTab) toggleBroadcast(activeTab.id);
   };
 
+  const buildSshCommand = (profile: SshProfile) => {
+    let cmd = `ssh ${profile.username}@${profile.host}`;
+    if (profile.port !== 22) cmd += ` -p ${profile.port}`;
+    if (profile.identityFile) cmd += ` -i "${profile.identityFile}"`;
+    return cmd;
+  };
+
+  const handleSshConnectInPanel = (profile: SshProfile) => {
+    const ptyId = activePanelPtyIdRef.current;
+    if (!ptyId) return;
+    const cmd = buildSshCommand(profile);
+    const encoded = new TextEncoder().encode(cmd + "\r");
+    ipc.ptyWrite(ptyId, encoded).catch(() => {});
+    setSshModalOpen(false);
+  };
+
   const handleSshConnect = async (profile: SshProfile) => {
     let cwd: string;
     try {
@@ -67,10 +84,7 @@ export function App() {
       cwd = "~";
     }
 
-    let cmd = `ssh ${profile.username}@${profile.host}`;
-    if (profile.port !== 22) cmd += ` -p ${profile.port}`;
-    if (profile.identityFile) cmd += ` -i "${profile.identityFile}"`;
-
+    const cmd = buildSshCommand(profile);
     addTab(cwd, profile.name, cmd);
     setSshModalOpen(false);
   };
@@ -94,7 +108,10 @@ export function App() {
             className="tab-viewport"
             style={{ display: tab.id === activeTabId ? "flex" : "none" }}
           >
-            <PanelGrid tab={tab} />
+            <PanelGrid
+              tab={tab}
+              onActivePanelChanged={tab.id === activeTabId ? (ptyId) => { activePanelPtyIdRef.current = ptyId; } : undefined}
+            />
           </div>
         ))}
       </div>
@@ -102,6 +119,7 @@ export function App() {
         <SshManagerModal
           onClose={() => setSshModalOpen(false)}
           onConnect={handleSshConnect}
+          onConnectInPanel={handleSshConnectInPanel}
         />
       )}
     </div>
