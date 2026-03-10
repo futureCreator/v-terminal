@@ -95,15 +95,20 @@ export function TerminalPane({
           navigator.clipboard.writeText(term.getSelection()).catch(() => {});
           return false;
         }
-        // Ctrl+V → paste from clipboard
-        if (event.ctrlKey && event.key === "v") {
-          navigator.clipboard.readText().then((text) => {
-            if (text) term.paste(text);
-          }).catch(() => {});
+        // Ctrl+V → prevent \x16 from being sent to PTY (paste handled via paste event)
+        if (event.ctrlKey && !event.shiftKey && event.key === "v") {
           return false;
         }
         return true;
       });
+
+      // Handle paste once via capture-phase paste event (covers both Ctrl+V and Ctrl+Shift+V)
+      term.textarea?.addEventListener("paste", (e: ClipboardEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const text = e.clipboardData?.getData("text/plain") ?? "";
+        if (text) term.paste(text);
+      }, true);
 
 
       const { cols, rows } = term;

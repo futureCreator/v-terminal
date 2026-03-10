@@ -62,6 +62,7 @@
   align-items: stretch;
   height: 100%;
   flex-shrink: 0;
+  margin-left: auto;
   -webkit-app-region: no-drag;
 }
 
