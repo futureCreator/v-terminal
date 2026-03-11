@@ -6,11 +6,10 @@ import "./TabBar.css";
 interface TabBarProps {
   onOpenSshManager: () => void;
   onCloseTab?: (tabId: string) => void;
-  receivingTabIds?: Set<string>;
   onActivateTab?: (tabId: string) => void;
 }
 
-export function TabBar({ onOpenSshManager, onCloseTab, receivingTabIds, onActivateTab }: TabBarProps) {
+export function TabBar({ onOpenSshManager, onCloseTab, onActivateTab }: TabBarProps) {
   const { tabs, activeTabId, addTab, removeTab, setActiveTab, renameTab, reorderTabs } =
     useTabStore();
 
@@ -106,8 +105,6 @@ export function TabBar({ onOpenSshManager, onCloseTab, receivingTabIds, onActiva
             isActive={tab.id === activeTabId}
             isDragging={tab.id === draggingId}
             isDragOver={tab.id === dragOverId && tab.id !== draggingId}
-            hasActivity={tab.hasActivity ?? false}
-            isReceiving={receivingTabIds?.has(tab.id) ?? false}
             onActivate={() => {
               if (preventClickRef.current) {
                 preventClickRef.current = false;
@@ -158,8 +155,6 @@ interface TabItemProps {
   isActive: boolean;
   isDragging: boolean;
   isDragOver: boolean;
-  hasActivity: boolean;
-  isReceiving: boolean;
   onActivate: () => void;
   onClose: () => void;
   onRename: (label: string) => void;
@@ -172,8 +167,6 @@ function TabItem({
   isActive,
   isDragging,
   isDragOver,
-  hasActivity,
-  isReceiving,
   onActivate,
   onClose,
   onRename,
@@ -221,12 +214,6 @@ function TabItem({
         />
       ) : (
         <span className="tab-item-label">{label}</span>
-      )}
-      {!isActive && hasActivity && (
-        <span
-          className={`tab-activity-dot${isReceiving ? " tab-activity-dot--receiving" : ""}`}
-          aria-hidden="true"
-        />
       )}
       <button
         className="tab-item-close"

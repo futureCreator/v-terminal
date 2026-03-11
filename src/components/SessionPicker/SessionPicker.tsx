@@ -11,10 +11,17 @@ export interface NewSessionOptions {
   label?: string;
 }
 
+export interface TabSessionGroup {
+  tabId: string;
+  label: string;
+  ptyIds: string[];
+}
+
 interface SessionPickerProps {
   onNewSession: (opts?: NewSessionOptions) => void;
   onAttach: (sessionId: string) => void;
   onKill: (sessionId: string) => void;
+  tabGroups?: TabSessionGroup[];
 }
 
 function formatAge(secs: number): string {
@@ -58,7 +65,7 @@ const IconSsh = () => (
   </svg>
 );
 
-export function SessionPicker({ onNewSession, onAttach, onKill }: SessionPickerProps) {
+export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups }: SessionPickerProps) {
   const [sessions, setSessions] = useState<DaemonSessionInfo[]>([]);
   const [wslDistros, setWslDistros] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,6 +93,7 @@ export function SessionPicker({ onNewSession, onAttach, onKill }: SessionPickerP
     setKillingId(sessionId);
     try {
       await ipc.daemonKillSession(sessionId);
+      onKill(sessionId);
       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     } catch {
       // ignore
@@ -94,7 +102,46 @@ export function SessionPicker({ onNewSession, onAttach, onKill }: SessionPickerP
     }
   };
 
-  const hasRunning = sessions.length > 0 || loading;
+  // Build set of ptyIds that belong to currently open tabs
+  const openTabPtyIds = new Set(tabGroups?.flatMap((g) => g.ptyIds) ?? []);
+
+  // Sessions not in any open tab → shown as background sessions
+  const orphaned = sessions.filter((s) => !openTabPtyIds.has(s.id));
+  const hasBackground = orphaned.length > 0 || loading;
+
+  const renderSessionItem = (s: DaemonSessionInfo, grouped = false) => (
+    <div
+      key={s.id}
+      className={`sp-session-item${grouped ? " sp-session-item--grouped" : ""}`}
+      onClick={() => onAttach(s.id)}
+      title={`${s.label} — ${s.cwd}`}
+    >
+      <div className="sp-session-icon">
+        <IconTerminal />
+      </div>
+      <div className="sp-session-info">
+        <span className="sp-session-label">{s.label}</span>
+        <span className="sp-session-cwd">{s.cwd}</span>
+      </div>
+      <span className="sp-session-age">{formatAge(s.last_active)}</span>
+      <button
+        className="sp-session-kill"
+        onClick={(e) => handleKill(e, s.id)}
+        disabled={killingId === s.id}
+        title="세션 종료"
+        aria-label="세션 종료"
+      >
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+          <path
+            d="M1 1l7 7M8 1L1 8"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  );
 
   return (
     <div className="sp-root">
@@ -165,11 +212,37 @@ export function SessionPicker({ onNewSession, onAttach, onKill }: SessionPickerP
         )}
       </div>
 
-      {/* ── Running Sessions ── */}
-      {hasRunning && (
+      {/* ── Open Tabs (attach to existing tab session) ── */}
+      {tabGroups && tabGroups.length > 0 && (
         <>
           <div className="sp-section-header sp-section-header--running">
-            <span className="sp-section-label">실행 중인 세션</span>
+            <span className="sp-section-label">열린 탭</span>
+          </div>
+          <div className="sp-shell-list">
+            {tabGroups.map((group) => (
+              <button
+                key={group.tabId}
+                className="sp-shell-item"
+                onClick={() => onAttach(group.ptyIds[0])}
+              >
+                <span className="sp-shell-icon sp-shell-icon--tab">
+                  <IconTerminal />
+                </span>
+                <span className="sp-shell-name">{group.label}</span>
+                <span className="sp-shell-desc">
+                  {group.ptyIds.length > 1 ? `${group.ptyIds.length}개 패널` : "연결"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── Background Sessions (detached, not in any open tab) ── */}
+      {hasBackground && (
+        <>
+          <div className="sp-section-header sp-section-header--running">
+            <span className="sp-section-label">백그라운드 세션</span>
             <button className="sp-refresh-btn" onClick={loadSessions} title="새로고침">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path
@@ -196,39 +269,7 @@ export function SessionPicker({ onNewSession, onAttach, onKill }: SessionPickerP
                 <div className="sp-spinner" />
               </div>
             ) : (
-              sessions.map((s) => (
-                <div
-                  key={s.id}
-                  className="sp-session-item"
-                  onClick={() => onAttach(s.id)}
-                  title={`${s.label} — ${s.cwd}`}
-                >
-                  <div className="sp-session-icon">
-                    <IconTerminal />
-                  </div>
-                  <div className="sp-session-info">
-                    <span className="sp-session-label">{s.label}</span>
-                    <span className="sp-session-cwd">{s.cwd}</span>
-                  </div>
-                  <span className="sp-session-age">{formatAge(s.last_active)}</span>
-                  <button
-                    className="sp-session-kill"
-                    onClick={(e) => handleKill(e, s.id)}
-                    disabled={killingId === s.id}
-                    title="세션 종료"
-                    aria-label="세션 종료"
-                  >
-                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                      <path
-                        d="M1 1l7 7M8 1L1 8"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))
+              orphaned.map((s) => renderSessionItem(s, false))
             )}
           </div>
         </>

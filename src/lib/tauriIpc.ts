@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { SessionData, DaemonSessionInfo } from "../types/terminal";
+import type { DaemonSessionInfo } from "../types/terminal";
 
 export interface PtyDataPayload {
   ptyId: string;
@@ -50,14 +50,6 @@ export const ipc = {
 
   async daemonKillSession(sessionId: string): Promise<void> {
     return invoke("daemon_kill_session", { sessionId });
-  },
-
-  async saveSession(data: SessionData): Promise<void> {
-    return invoke("save_session", { data });
-  },
-
-  async loadSession(): Promise<SessionData | null> {
-    return invoke<SessionData | null>("load_session");
   },
 
   onPtyData(handler: (payload: PtyDataPayload) => void): Promise<UnlistenFn> {

@@ -17,7 +17,6 @@ export interface Tab {
   shellProgram?: string; // e.g. "wsl.exe"
   shellArgs?: string[];  // e.g. ["-d", "Ubuntu"]
   pendingSessionPick?: boolean; // show session picker instead of terminals
-  hasActivity?: boolean; // has unread output since last viewed
 }
 
 export interface SshProfile {
@@ -27,20 +26,6 @@ export interface SshProfile {
   port: number;
   username: string;
   identityFile?: string;
-}
-
-export interface SessionData {
-  tabs: Array<{
-    id: string;
-    label: string;
-    cwd: string;
-    layout: Layout;
-    broadcastEnabled: boolean;
-    sshCommand?: string;
-    shellProgram?: string;
-    shellArgs?: string[];
-  }>;
-  activeTabId: string;
 }
 
 export interface DaemonSessionInfo {

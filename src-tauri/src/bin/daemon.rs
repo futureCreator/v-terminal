@@ -360,7 +360,7 @@ async fn create_session(
     }
     cmd.cwd(&cwd);
 
-    let _child = pair.slave.spawn_command(cmd).map_err(|e| format!("spawn: {e}"))?;
+    let child = pair.slave.spawn_command(cmd).map_err(|e| format!("spawn: {e}"))?;
 
     let writer_box = pair.master.take_writer().map_err(|e| format!("take_writer: {e}"))?;
     let reader = pair
@@ -392,6 +392,11 @@ async fn create_session(
     let id_clone = id.clone();
     let handle = tokio::runtime::Handle::current();
 
+    // Clone for child watcher before reader task moves them
+    let alive_w = alive.clone();
+    let exit_tx_w = exit_tx.clone();
+
+    // Reader task: forwards PTY output and detects EOF-based exit
     tokio::task::spawn_blocking(move || {
         use std::io::Read;
         let mut reader = reader;
@@ -412,6 +417,21 @@ async fn create_session(
         let _ = exit_tx.send(());
         handle.block_on(async {
             registry_clone.write().await.remove(&id_clone);
+        });
+    });
+
+    // Child watcher task: detects process exit independently of PTY reader.
+    // On Windows, the PTY reader may block even after the shell exits (e.g. after
+    // typing `exit` in PowerShell), so we watch the child process directly.
+    let registry_w = registry.clone();
+    let id_w = id.clone();
+    let handle_w = tokio::runtime::Handle::current();
+    tokio::task::spawn_blocking(move || {
+        let _ = child.wait();
+        alive_w.store(false, Ordering::Relaxed);
+        let _ = exit_tx_w.send(());
+        handle_w.block_on(async {
+            registry_w.write().await.remove(&id_w);
         });
     });
 

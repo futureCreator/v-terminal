@@ -14,63 +14,15 @@ import "./styles/globals.css";
 import "./App.css";
 
 export function App() {
-  const { tabs, activeTabId, addTab, removeTab, setLayout, toggleBroadcast, restoreFromSession, resolveSessionPick, setActiveTab, setTabActivity } =
+  const { tabs, activeTabId, addTab, removeTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab } =
     useTabStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
-  const sessionLoaded = useRef(false);
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const activePanelPtyIdRef = useRef<string | null>(null);
-  const [receivingTabs, setReceivingTabs] = useState<Set<string>>(new Set());
-  const activityTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const activeTabIdRef = useRef(activeTabId);
-  activeTabIdRef.current = activeTabId;
-
-  // Load persisted session on mount
-  useEffect(() => {
-    ipc.loadSession().then((session) => {
-      if (session && session.tabs.length > 0) {
-        restoreFromSession(session.tabs, session.activeTabId);
-      }
-    }).catch(() => {
-      // First launch, no session file
-    }).finally(() => {
-      sessionLoaded.current = true;
-    });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-save session whenever tabs or activeTabId changes
-  useEffect(() => {
-    if (!sessionLoaded.current) return;
-    const sessionData = {
-      tabs: tabs.map((t) => ({
-        id: t.id,
-        label: t.label,
-        cwd: t.cwd,
-        layout: t.layout,
-        broadcastEnabled: t.broadcastEnabled,
-        sshCommand: t.sshCommand,
-        shellProgram: t.shellProgram,
-        shellArgs: t.shellArgs,
-      })),
-      activeTabId,
-    };
-    ipc.saveSession(sessionData).catch(() => {});
-  }, [tabs, activeTabId]);
 
   const activateTab = useCallback((tabId: string) => {
     setActiveTab(tabId);
-    setReceivingTabs((prev) => {
-      if (!prev.has(tabId)) return prev;
-      const next = new Set(prev);
-      next.delete(tabId);
-      return next;
-    });
-    const timer = activityTimers.current.get(tabId);
-    if (timer) {
-      clearTimeout(timer);
-      activityTimers.current.delete(tabId);
-    }
   }, [setActiveTab]);
 
   // Ctrl+Tab / Ctrl+Shift+Tab: cycle through tabs
@@ -88,27 +40,6 @@ export function App() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [tabs, activeTabId, activateTab]);
-
-  const handleTabActivity = useCallback((tabId: string) => {
-    if (tabId === activeTabIdRef.current) return;
-    setTabActivity(tabId, true);
-    setReceivingTabs((prev) => {
-      const next = new Set(prev);
-      next.add(tabId);
-      return next;
-    });
-    const existing = activityTimers.current.get(tabId);
-    if (existing) clearTimeout(existing);
-    const timer = setTimeout(() => {
-      setReceivingTabs((prev) => {
-        const next = new Set(prev);
-        next.delete(tabId);
-        return next;
-      });
-      activityTimers.current.delete(tabId);
-    }, 1500);
-    activityTimers.current.set(tabId, timer);
-  }, [setTabActivity]);
 
   const handleLayoutChange = (layout: Layout) => {
     if (!activeTab) return;
@@ -148,6 +79,15 @@ export function App() {
     setSshModalOpen(false);
   };
 
+  const tabGroups = tabs
+    .filter((t) => !t.pendingSessionPick)
+    .map((t) => ({
+      tabId: t.id,
+      label: t.label,
+      ptyIds: t.panels.map((p) => p.ptyId).filter((id): id is string => id !== null),
+    }))
+    .filter((g) => g.ptyIds.length > 0);
+
   const handleNewSession = (tabId: string, opts?: { shellProgram?: string; shellArgs?: string[]; sshCommand?: string; label?: string }) => {
     resolveSessionPick(tabId, undefined, opts?.shellProgram, opts?.shellArgs, opts?.sshCommand, opts?.label);
   };
@@ -157,14 +97,8 @@ export function App() {
   };
 
   const handleTabClose = (tabId: string) => {
-    const tab = tabs.find((t) => t.id === tabId);
-    if (tab) {
-      for (const panel of tab.panels) {
-        if (panel.ptyId) {
-          ipc.daemonKillSession(panel.ptyId).catch(() => {});
-        }
-      }
-    }
+    // Don't kill sessions — TerminalPane cleanup handles detach automatically.
+    // Detached sessions remain available in the session picker.
     removeTab(tabId);
   };
 
@@ -175,7 +109,6 @@ export function App() {
         <TabBar
           onOpenSshManager={() => setSshModalOpen(true)}
           onCloseTab={handleTabClose}
-          receivingTabIds={receivingTabs}
           onActivateTab={activateTab}
         />
         <SplitToolbar
@@ -197,12 +130,12 @@ export function App() {
                 onNewSession={(opts) => handleNewSession(tab.id, opts)}
                 onAttach={(sessionId) => handleAttachSession(tab.id, sessionId)}
                 onKill={(sessionId) => ipc.daemonKillSession(sessionId).catch(() => {})}
+                tabGroups={tabGroups}
               />
             ) : (
               <PanelGrid
                 tab={tab}
                 onActivePanelChanged={tab.id === activeTabId ? (ptyId) => { activePanelPtyIdRef.current = ptyId; } : undefined}
-                onActivity={tab.id !== activeTabId ? () => handleTabActivity(tab.id) : undefined}
               />
             )}
           </div>

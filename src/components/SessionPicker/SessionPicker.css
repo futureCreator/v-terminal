@@ -115,6 +115,11 @@
   color: #30b06e;
 }
 
+.sp-shell-icon--tab {
+  background: color-mix(in srgb, #a066e0 14%, transparent);
+  color: #a066e0;
+}
+
 .sp-shell-name {
   flex: 1;
   font-size: 13px;
@@ -242,4 +247,38 @@
 .sp-session-kill:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* ── Tab groups ── */
+.sp-tab-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+
+.sp-tab-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 4px;
+}
+
+.sp-tab-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.sp-tab-group-count {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.sp-session-item--grouped {
+  padding-left: 20px;
 }

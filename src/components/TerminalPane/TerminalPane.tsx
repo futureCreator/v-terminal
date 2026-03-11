@@ -24,7 +24,6 @@ interface TerminalPaneProps {
   existingSessionId?: string;
   onPtyCreated: (ptyId: string) => void;
   onPtyKilled: () => void;
-  onActivity?: () => void;
   onFocus: () => void;
   onNextPanel?: () => void;
   onPrevPanel?: () => void;
@@ -42,7 +41,6 @@ export function TerminalPane({
   existingSessionId,
   onPtyCreated,
   onPtyKilled,
-  onActivity,
   onFocus,
   onNextPanel,
   onPrevPanel,
@@ -57,10 +55,8 @@ export function TerminalPane({
   // Store broadcast refs to avoid stale closures
   const broadcastRef = useRef(broadcastEnabled);
   const siblingsRef = useRef(siblingPtyIds);
-  const onActivityRef = useRef(onActivity);
   broadcastRef.current = broadcastEnabled;
   siblingsRef.current = siblingPtyIds;
-  onActivityRef.current = onActivity;
 
   const handleRestart = () => {
     setExited(false);
@@ -183,7 +179,6 @@ export function TerminalPane({
       unlistenData = await ipc.onPtyData((payload) => {
         if (payload.ptyId === ptyId && !disposed) {
           term.write(new Uint8Array(payload.data));
-          onActivityRef.current?.();
         }
       });
 

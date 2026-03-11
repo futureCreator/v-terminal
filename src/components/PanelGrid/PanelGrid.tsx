@@ -8,10 +8,9 @@ import "./PanelGrid.css";
 interface PanelGridProps {
   tab: Tab;
   onActivePanelChanged?: (ptyId: string | null) => void;
-  onActivity?: () => void;
 }
 
-export function PanelGrid({ tab, onActivePanelChanged, onActivity }: PanelGridProps) {
+export function PanelGrid({ tab, onActivePanelChanged }: PanelGridProps) {
   const { setPtyId, clearPtyId } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
 
@@ -80,7 +79,6 @@ export function PanelGrid({ tab, onActivePanelChanged, onActivity }: PanelGridPr
           existingSessionId={panel.existingSessionId}
           onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
           onPtyKilled={() => handlePtyKilled(panel.id)}
-          onActivity={onActivity}
           onFocus={() => setActivePanelId(panel.id)}
           onNextPanel={handleNextPanel}
           onPrevPanel={handlePrevPanel}
