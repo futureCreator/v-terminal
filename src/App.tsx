@@ -14,7 +14,7 @@ import "./styles/globals.css";
 import "./App.css";
 
 export function App() {
-  const { tabs, activeTabId, savedTabs, addTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab } =
+  const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab } =
     useTabStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -85,6 +85,18 @@ export function App() {
     saveAndRemoveTab(tabId);
   };
 
+  const handleTabKill = async (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab) {
+      await Promise.all(
+        tab.panels
+          .filter((p) => p.ptyId !== null)
+          .map((p) => ipc.daemonKillSession(p.ptyId!).catch(() => {}))
+      );
+    }
+    removeTab(tabId);
+  };
+
   const handleRestoreTab = (savedTabId: string) => {
     restoreSavedTab(savedTabId);
   };
@@ -104,6 +116,7 @@ export function App() {
         <TabBar
           onOpenSshManager={() => setSshModalOpen(true)}
           onCloseTab={handleTabClose}
+          onKillTab={handleTabKill}
           onActivateTab={activateTab}
         />
         <SplitToolbar
