@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { homeDir } from "@tauri-apps/api/path";
 import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
@@ -14,7 +15,7 @@ import "./styles/globals.css";
 import "./App.css";
 
 export function App() {
-  const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab } =
+  const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
     useTabStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -24,6 +25,21 @@ export function App() {
   const activateTab = useCallback((tabId: string) => {
     setActiveTab(tabId);
   }, [setActiveTab]);
+
+  // 앱 종료 시 열려있는 탭을 모두 백그라운드로 저장
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    getCurrentWindow()
+      .onCloseRequested(() => {
+        saveAllOpenTabsToBackground();
+      })
+      .then((fn) => {
+        unlisten = fn;
+      });
+    return () => {
+      unlisten?.();
+    };
+  }, [saveAllOpenTabsToBackground]);
 
   const handleLayoutChange = (layout: Layout) => {
     if (!activeTab) return;
@@ -63,21 +79,8 @@ export function App() {
     setSshModalOpen(false);
   };
 
-  const tabGroups = tabs
-    .filter((t) => !t.pendingSessionPick)
-    .map((t) => ({
-      tabId: t.id,
-      label: t.label,
-      ptyIds: t.panels.map((p) => p.ptyId).filter((id): id is string => id !== null),
-    }))
-    .filter((g) => g.ptyIds.length > 0);
-
   const handleNewSession = (tabId: string, opts?: { shellProgram?: string; shellArgs?: string[]; sshCommand?: string; label?: string }) => {
     resolveSessionPick(tabId, undefined, opts?.shellProgram, opts?.shellArgs, opts?.sshCommand, opts?.label);
-  };
-
-  const handleAttachSession = (tabId: string, sessionId: string) => {
-    resolveSessionPick(tabId, sessionId);
   };
 
   const handleTabClose = (tabId: string) => {
@@ -136,9 +139,6 @@ export function App() {
             {tab.pendingSessionPick ? (
               <SessionPicker
                 onNewSession={(opts) => handleNewSession(tab.id, opts)}
-                onAttach={(sessionId) => handleAttachSession(tab.id, sessionId)}
-                onKill={(sessionId) => ipc.daemonKillSession(sessionId).catch(() => {})}
-                tabGroups={tabGroups}
                 savedTabs={savedTabs}
                 onRestoreTab={handleRestoreTab}
                 onKillSavedTab={handleKillSavedTab}

@@ -8,6 +8,23 @@ function genId() {
   return uuidv4();
 }
 
+const SAVED_TABS_KEY = "v-terminal:saved-tabs";
+
+function loadSavedTabs(): SavedTab[] {
+  try {
+    const raw = localStorage.getItem(SAVED_TABS_KEY);
+    return raw ? (JSON.parse(raw) as SavedTab[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistSavedTabs(savedTabs: SavedTab[]) {
+  try {
+    localStorage.setItem(SAVED_TABS_KEY, JSON.stringify(savedTabs));
+  } catch {}
+}
+
 function makePanels(count: number): Panel[] {
   return Array.from({ length: count }, () => ({ id: genId(), ptyId: null }));
 }
@@ -49,6 +66,8 @@ interface TabStore {
     label?: string,
   ) => void;
 
+  // App lifecycle
+  saveAllOpenTabsToBackground: () => void;
 }
 
 const DEFAULT_CWD = "~";
@@ -78,7 +97,7 @@ export const useTabStore = create<TabStore>((set, get) => {
   return {
     tabs: [defaultTab],
     activeTabId: defaultTab.id,
-    savedTabs: [],
+    savedTabs: loadSavedTabs(),
 
     addTab: (cwd, label?, sshCommand?) => {
       const id = genId();
@@ -128,6 +147,7 @@ export const useTabStore = create<TabStore>((set, get) => {
             savedAt: Date.now(),
           };
           newSavedTabs = [...s.savedTabs, savedTab];
+          persistSavedTabs(newSavedTabs);
         }
 
         const newTabs = s.tabs.filter((t) => t.id !== id);
@@ -147,7 +167,11 @@ export const useTabStore = create<TabStore>((set, get) => {
     },
 
     removeSavedTab: (id) =>
-      set((s) => ({ savedTabs: s.savedTabs.filter((t) => t.id !== id) })),
+      set((s) => {
+        const savedTabs = s.savedTabs.filter((t) => t.id !== id);
+        persistSavedTabs(savedTabs);
+        return { savedTabs };
+      }),
 
     restoreSavedTab: (savedTabId) => {
       const savedTab = get().savedTabs.find((t) => t.id === savedTabId);
@@ -176,11 +200,15 @@ export const useTabStore = create<TabStore>((set, get) => {
         pendingSessionPick: false,
       };
 
-      set((s) => ({
-        tabs: [...s.tabs, tab],
-        activeTabId: newTabId,
-        savedTabs: s.savedTabs.filter((t) => t.id !== savedTabId),
-      }));
+      set((s) => {
+        const savedTabs = s.savedTabs.filter((t) => t.id !== savedTabId);
+        persistSavedTabs(savedTabs);
+        return {
+          tabs: [...s.tabs, tab],
+          activeTabId: newTabId,
+          savedTabs,
+        };
+      });
 
       return newTabId;
     },
@@ -291,6 +319,29 @@ export const useTabStore = create<TabStore>((set, get) => {
           };
         }),
       }));
+    },
+
+    saveAllOpenTabsToBackground: () => {
+      set((s) => {
+        const newSaved = s.tabs
+          .filter((t) => !t.pendingSessionPick)
+          .flatMap((t) => {
+            const activePanels = t.panels.filter((p) => p.ptyId !== null);
+            if (activePanels.length === 0) return [];
+            const savedTab: SavedTab = {
+              id: genId(),
+              label: t.label,
+              layout: t.layout,
+              panels: activePanels.map((p) => ({ panelId: p.id, ptyId: p.ptyId! })),
+              savedAt: Date.now(),
+            };
+            return [savedTab];
+          });
+        if (newSaved.length === 0) return s;
+        const allSaved = [...s.savedTabs, ...newSaved];
+        persistSavedTabs(allSaved);
+        return { savedTabs: allSaved };
+      });
     },
 
   };

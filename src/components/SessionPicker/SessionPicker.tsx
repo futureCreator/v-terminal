@@ -11,17 +11,8 @@ export interface NewSessionOptions {
   label?: string;
 }
 
-export interface TabSessionGroup {
-  tabId: string;
-  label: string;
-  ptyIds: string[];
-}
-
 interface SessionPickerProps {
   onNewSession: (opts?: NewSessionOptions) => void;
-  onAttach: (sessionId: string) => void;
-  onKill: (sessionId: string) => void;
-  tabGroups?: TabSessionGroup[];
   savedTabs?: SavedTab[];
   onRestoreTab?: (savedTabId: string) => void;
   onKillSavedTab?: (savedTabId: string) => Promise<void>;
@@ -82,12 +73,6 @@ const IconSavedTab = () => (
   </svg>
 );
 
-const IconRefresh = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-    <path d="M10.5 6A4.5 4.5 0 1 1 6 1.5a4.5 4.5 0 0 1 3.18 1.32L10.5 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10.5 1.5v2.5H8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 const IconClose = () => (
   <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
@@ -95,11 +80,10 @@ const IconClose = () => (
   </svg>
 );
 
-export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups, savedTabs, onRestoreTab, onKillSavedTab }: SessionPickerProps) {
+export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSavedTab }: SessionPickerProps) {
   const [sessions, setSessions] = useState<DaemonSessionInfo[]>([]);
   const [wslDistros, setWslDistros] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [killingId, setKillingId] = useState<string | null>(null);
   const [killingSavedTabId, setKillingSavedTabId] = useState<string | null>(null);
   const { profiles: sshProfiles } = useSshStore();
 
@@ -119,20 +103,6 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups, saved
       .catch(() => setWslDistros([]));
   }, [loadSessions]);
 
-  const handleKill = async (e: React.MouseEvent, sessionId: string) => {
-    e.stopPropagation();
-    setKillingId(sessionId);
-    try {
-      await ipc.daemonKillSession(sessionId);
-      onKill(sessionId);
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-    } catch {
-      // ignore
-    } finally {
-      setKillingId(null);
-    }
-  };
-
   const handleKillSavedTab = async (e: React.MouseEvent, savedTabId: string) => {
     e.stopPropagation();
     setKillingSavedTabId(savedTabId);
@@ -144,12 +114,7 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups, saved
     }
   };
 
-  const openTabPtyIds = new Set(tabGroups?.flatMap((g) => g.ptyIds) ?? []);
-  const savedTabPtyIds = new Set(savedTabs?.flatMap((t) => t.panels.map((p) => p.ptyId)) ?? []);
-  const orphaned = sessions.filter((s) => !openTabPtyIds.has(s.id) && !savedTabPtyIds.has(s.id));
-
   const hasSavedTabs = (savedTabs?.length ?? 0) > 0;
-  const hasOrphaned = !loading && orphaned.length > 0;
 
   return (
     <div className="sp-root">
@@ -261,55 +226,6 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups, saved
                   </div>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Orphaned Sessions ── */}
-        {hasOrphaned && (
-          <div className="sp-group">
-            <div className="sp-group-label">
-              <span>백그라운드 세션</span>
-              <button className="sp-group-action" onClick={loadSessions} title="새로고침">
-                <IconRefresh />
-              </button>
-            </div>
-            <div className="sp-group-body">
-              {loading ? (
-                <div className="sp-loading">
-                  <div className="sp-spinner" />
-                </div>
-              ) : (
-                orphaned.map((s) => (
-                  <div
-                    key={s.id}
-                    className="sp-row"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => onAttach(s.id)}
-                    onKeyDown={(e) => e.key === "Enter" && onAttach(s.id)}
-                    title={`${s.label} — ${s.cwd}`}
-                  >
-                    <span className="sp-row-icon sp-row-icon--orphan">
-                      <IconTerminal />
-                    </span>
-                    <span className="sp-row-content">
-                      <span className="sp-row-title">{s.label}</span>
-                      <span className="sp-row-subtitle sp-row-subtitle--mono">{s.cwd}</span>
-                    </span>
-                    <span className="sp-row-meta">{formatAge(s.last_active)}</span>
-                    <button
-                      className="sp-row-kill"
-                      onClick={(e) => handleKill(e, s.id)}
-                      disabled={killingId === s.id}
-                      title="세션 종료"
-                      aria-label="세션 종료"
-                    >
-                      <IconClose />
-                    </button>
-                  </div>
-                ))
-              )}
             </div>
           </div>
         )}

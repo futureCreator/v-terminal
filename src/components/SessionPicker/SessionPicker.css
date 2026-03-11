@@ -73,24 +73,6 @@
   padding: 0 6px;
 }
 
-.sp-group-action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: transparent;
-  color: var(--label-tertiary);
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.1s, color 0.1s;
-}
-
-.sp-group-action:hover {
-  background: var(--bg-tertiary);
-  color: var(--label-primary);
-}
 
 .sp-group-body {
   background: var(--bg-secondary);
@@ -174,10 +156,6 @@
   color: #bf5af2;
 }
 
-.sp-row-icon--orphan {
-  background: color-mix(in srgb, white 8%, transparent);
-  color: var(--label-secondary);
-}
 
 /* ─── Row Content ────────────────────────────────────────────── */
 .sp-row-content {
@@ -264,23 +242,3 @@
   pointer-events: none;
 }
 
-/* ─── Loading ────────────────────────────────────────────────── */
-.sp-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 56px;
-}
-
-.sp-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--separator);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: sp-spin 0.7s linear infinite;
-}
-
-@keyframes sp-spin {
-  to { transform: rotate(360deg); }
-}
