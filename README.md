@@ -14,6 +14,17 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.8 - 2026-03-12
+
+- Fixed window close button not closing the app — added missing `core:window:allow-destroy` capability required by Tauri v2's `onCloseRequested` internal `destroy()` call
+- Fixed maximize button not working — added missing `core:window:allow-toggle-maximize` capability for the `plugin:window|toggle_maximize` IPC command
+- Redesigned new tab (SessionPicker) screen to follow Apple HIG
+- Removed tab drag-and-drop; added terminal loading spinner while PTY initializes
+- Added tab context menu to distinguish "send to background" vs "kill process"
+- Fixed orphaned session section flickering during initial load
+- Persist tab state to localStorage and auto-save all open tabs to background on app close
+- Removed all global keyboard shortcuts to prevent conflicts with TUI applications
+
 ### v0.1.7 - 2026-03-11
 
 - Replaced in-process PTY manager with an out-of-process daemon (`v-terminal-daemon`) for persistent sessions — closing a tab detaches instead of killing the shell

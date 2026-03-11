@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import { useTabStore } from "../../store/tabStore";
 import "./TabBar.css";
@@ -85,19 +85,7 @@ interface TabItemProps {
 function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }: TabItemProps) {
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(label);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!contextMenu) return;
-    const handleClose = (e: PointerEvent) => {
-      if (!(e.target as HTMLElement).closest(".tab-context-menu")) {
-        setContextMenu(null);
-      }
-    };
-    document.addEventListener("pointerdown", handleClose, { capture: true });
-    return () => document.removeEventListener("pointerdown", handleClose, { capture: true });
-  }, [contextMenu]);
 
   const startEdit = () => {
     setDraftLabel(label);
@@ -116,25 +104,12 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
     else if (e.key === "Escape") setEditing(false);
   };
 
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const menuWidth = 196;
-    const menuHeight = 116;
-    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8);
-    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8);
-    setContextMenu({ x, y });
-  };
-
-  const closeMenu = () => setContextMenu(null);
-
   return (
     <div
       className={`tab-item${isActive ? " tab-item--active" : ""}`}
       data-tab-id={id}
       onClick={onActivate}
       onDoubleClick={startEdit}
-      onContextMenu={handleContextMenu}
     >
       {editing ? (
         <input
@@ -150,58 +125,29 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
       ) : (
         <span className="tab-item-label">{label}</span>
       )}
-      <button
-        className="tab-item-close"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        title="백그라운드로 보내기"
-        aria-label="백그라운드로 보내기"
-      >
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
-      </button>
-
-      {contextMenu && (
-        <div
-          className="tab-context-menu"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onPointerDown={(e) => e.stopPropagation()}
+      <div className="tab-item-actions">
+        <button
+          className="tab-item-btn tab-item-btn--bg"
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          title="백그라운드로 보내기"
+          aria-label="백그라운드로 보내기"
         >
-          <button
-            className="tab-context-menu-item"
-            onClick={() => { startEdit(); closeMenu(); }}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M7.5 1.5L10.5 4.5L4 11H1V8L7.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            이름 변경
-          </button>
-          <div className="tab-context-menu-separator" />
-          <button
-            className="tab-context-menu-item"
-            onClick={() => { onClose(); closeMenu(); }}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M6 1.5V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M3.5 5.5L6 8L8.5 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M1.5 10.5H10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-            백그라운드로 보내기
-          </button>
-          <button
-            className="tab-context-menu-item tab-context-menu-item--destructive"
-            onClick={() => { onKill(); closeMenu(); }}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <rect x="2.5" y="2.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-            </svg>
-            프로세스 종료
-          </button>
-        </div>
-      )}
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+            <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 8h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+        </button>
+        <button
+          className="tab-item-btn tab-item-btn--kill"
+          onClick={(e) => { e.stopPropagation(); onKill(); }}
+          title="프로세스 종료"
+          aria-label="프로세스 종료"
+        >
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+            <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }

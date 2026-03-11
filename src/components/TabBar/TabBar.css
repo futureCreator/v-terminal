@@ -24,8 +24,8 @@
   align-items: center;
   gap: 6px;
   padding: 0 12px 0 14px;
-  min-width: 100px;
-  max-width: 180px;
+  min-width: 110px;
+  max-width: 200px;
   height: 100%;
   cursor: default;
   position: relative;
@@ -82,95 +82,45 @@
   width: 100%;
 }
 
-.tab-item-close {
+.tab-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.tab-item:hover .tab-item-actions,
+.tab-item--active .tab-item-actions {
+  opacity: 1;
+}
+
+.tab-item-btn {
   width: 16px;
   height: 16px;
   border: none;
   background: transparent;
   color: var(--label-tertiary);
-  border-radius: 50%;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: color 0.1s, background 0.1s;
   padding: 0;
-  opacity: 0;
 }
 
-.tab-item:hover .tab-item-close,
-.tab-item--active .tab-item-close {
-  opacity: 1;
-}
-
-.tab-item-close:hover {
-  background: rgba(255,255,255,0.1);
+.tab-item-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
   color: var(--label-primary);
 }
 
-/* ── Tab Context Menu ──────────────────────────────────────────── */
-
-.tab-context-menu {
-  position: fixed;
-  z-index: 9999;
-  background: rgba(44, 44, 46, 0.94);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.64), 0 2px 8px rgba(0, 0, 0, 0.4);
-  padding: 4px;
-  min-width: 188px;
-  user-select: none;
-}
-
-.tab-context-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 0 10px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  color: var(--label-primary);
-  font-size: 12.5px;
-  font-family: inherit;
-  text-align: left;
-  cursor: default;
-  border-radius: var(--radius-sm);
-  transition: background 0.07s;
-}
-
-.tab-context-menu-item svg {
-  opacity: 0.65;
-  flex-shrink: 0;
-}
-
-.tab-context-menu-item:hover {
-  background: var(--accent);
-  color: white;
-}
-
-.tab-context-menu-item:hover svg {
-  opacity: 1;
-}
-
-.tab-context-menu-item--destructive {
+.tab-item-btn--kill:hover {
+  background: rgba(255, 59, 48, 0.2);
   color: var(--destructive);
 }
 
-.tab-context-menu-item--destructive:hover {
-  background: var(--destructive);
-  color: white;
-}
-
-.tab-context-menu-separator {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 3px 0;
-}
 
 .tabbar-add,
 .tabbar-ssh {
