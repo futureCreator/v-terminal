@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { mkdirSync, copyFileSync, existsSync, writeFileSync } from 'fs';
+import { mkdirSync, copyFileSync, existsSync, writeFileSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -31,5 +31,8 @@ execSync('cargo build --bin v-terminal-daemon', {
   stdio: 'inherit',
 });
 
+if (existsSync(destBinary)) {
+  unlinkSync(destBinary);
+}
 copyFileSync(srcBinary, destBinary);
 console.log(`Daemon ready -> ${destBinary}`);
