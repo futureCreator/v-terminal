@@ -55,7 +55,6 @@ struct Session {
     scrollback: Arc<Mutex<Scrollback>>,
     output_tx: broadcast::Sender<Vec<u8>>,
     exit_tx: broadcast::Sender<()>,
-    alive: Arc<AtomicBool>,
 }
 
 unsafe impl Send for Session {}
@@ -387,7 +386,6 @@ async fn create_session(
         scrollback: scrollback.clone(),
         output_tx: output_tx.clone(),
         exit_tx: exit_tx.clone(),
-        alive: alive.clone(),
     });
 
     let registry_clone = registry.clone();

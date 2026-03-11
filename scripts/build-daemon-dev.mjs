@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import { mkdirSync, copyFileSync, existsSync, writeFileSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createConnection } from 'net';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
@@ -25,11 +26,22 @@ if (!existsSync(destBinary)) {
   writeFileSync(destBinary, '');
 }
 
-console.log('Building v-terminal-daemon (debug)...');
-execSync('cargo build --bin v-terminal-daemon', {
-  cwd: join(projectRoot, 'src-tauri'),
-  stdio: 'inherit',
+// If daemon is already running, skip rebuild (locked exe on Windows)
+const daemonRunning = await new Promise((resolve) => {
+  const sock = createConnection({ host: '127.0.0.1', port: 57320 });
+  sock.once('connect', () => { sock.destroy(); resolve(true); });
+  sock.once('error', () => resolve(false));
 });
+
+if (daemonRunning) {
+  console.log('Daemon already running, skipping build.');
+} else {
+  console.log('Building v-terminal-daemon (debug)...');
+  execSync('cargo build --bin v-terminal-daemon', {
+    cwd: join(projectRoot, 'src-tauri'),
+    stdio: 'inherit',
+  });
+}
 
 // AV software may lock the newly compiled binary while scanning.
 // Retry a few times with a short delay.
@@ -52,5 +64,7 @@ function copyWithRetry(src, dest, retries = 10, delayMs = 1000) {
   }
 }
 
-copyWithRetry(srcBinary, destBinary);
-console.log(`Daemon ready -> ${destBinary}`);
+if (!daemonRunning) {
+  copyWithRetry(srcBinary, destBinary);
+  console.log(`Daemon ready -> ${destBinary}`);
+}
