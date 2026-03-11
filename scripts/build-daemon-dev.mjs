@@ -31,8 +31,26 @@ execSync('cargo build --bin v-terminal-daemon', {
   stdio: 'inherit',
 });
 
-if (existsSync(destBinary)) {
-  unlinkSync(destBinary);
+// AV software may lock the newly compiled binary while scanning.
+// Retry a few times with a short delay.
+function sleep(ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {}
 }
-copyFileSync(srcBinary, destBinary);
+
+function copyWithRetry(src, dest, retries = 10, delayMs = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      if (existsSync(dest)) unlinkSync(dest);
+      copyFileSync(src, dest);
+      return;
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      console.log(`Copy failed (${e.code}), retrying in ${delayMs}ms... (${i + 1}/${retries})`);
+      sleep(delayMs);
+    }
+  }
+}
+
+copyWithRetry(srcBinary, destBinary);
 console.log(`Daemon ready -> ${destBinary}`);
