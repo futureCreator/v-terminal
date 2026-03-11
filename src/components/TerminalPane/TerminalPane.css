@@ -35,6 +35,29 @@
   height: 100% !important;
 }
 
+.terminal-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-terminal);
+  z-index: 1;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.terminal-spinner {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--separator);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+
 .terminal-exit-panel {
   position: absolute;
   inset: 0;

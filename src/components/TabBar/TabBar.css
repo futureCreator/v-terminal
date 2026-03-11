@@ -27,13 +27,12 @@
   min-width: 100px;
   max-width: 180px;
   height: 100%;
-  cursor: grab;
+  cursor: default;
   position: relative;
   border-right: 1px solid var(--separator);
   background: transparent;
   transition: background 0.12s;
   flex-shrink: 0;
-  touch-action: none;
   user-select: none;
 }
 
@@ -110,22 +109,7 @@
   color: var(--label-primary);
 }
 
-.tab-item--dragging {
-  opacity: 0.4;
-}
-
-.tab-item--drag-over {
-  border-left: 2px solid var(--accent);
-  background: var(--bg-tertiary);
-}
-
 /* ── Tab Context Menu ──────────────────────────────────────────── */
-
-.tab-context-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-}
 
 .tab-context-menu {
   position: fixed;

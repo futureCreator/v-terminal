@@ -50,6 +50,7 @@ export function TerminalPane({
   const fitAddonRef = useRef<FitAddon | null>(null);
   const ptyIdRef = useRef<string | null>(null);
   const [exited, setExited] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [initKey, setInitKey] = useState(0);
 
   // Store broadcast refs to avoid stale closures
@@ -60,6 +61,7 @@ export function TerminalPane({
 
   const handleRestart = () => {
     setExited(false);
+    setLoading(true);
     setInitKey((k) => k + 1);
   };
 
@@ -129,6 +131,7 @@ export function TerminalPane({
 
       ptyIdRef.current = ptyId;
       terminalRegistry.set(ptyId, term);
+      setLoading(false);
       onPtyCreated(ptyId);
 
       // Auto-execute SSH command if provided
@@ -218,6 +221,11 @@ export function TerminalPane({
 
   return (
     <div className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`} style={style} onClick={onFocus}>
+      {loading && !exited && (
+        <div className="terminal-loading">
+          <div className="terminal-spinner" />
+        </div>
+      )}
       <div ref={containerRef} className="terminal-container" style={{ display: exited ? "none" : undefined }} />
       {exited && (
         <div className="terminal-exit-panel" onClick={handleRestart}>

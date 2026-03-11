@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import { useTabStore } from "../../store/tabStore";
 import "./TabBar.css";
@@ -11,79 +11,7 @@ interface TabBarProps {
 }
 
 export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
-  const { tabs, activeTabId, addTab, removeTab, setActiveTab, renameTab, reorderTabs } =
-    useTabStore();
-
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
-
-  const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const dragOverIdRef = useRef<string | null>(null);
-  const hasDraggedRef = useRef(false);
-  const preventClickRef = useRef(false);
-
-  const handleTabPointerDown = (e: React.PointerEvent<HTMLDivElement>, tabId: string) => {
-    if (e.button !== 0) return;
-    if ((e.target as HTMLElement).closest(".tab-item-close")) return;
-
-    const startX = e.clientX;
-    hasDraggedRef.current = false;
-    dragOverIdRef.current = null;
-
-    const onMove = (ev: PointerEvent) => {
-      const dx = Math.abs(ev.clientX - startX);
-      if (dx < 5 && !hasDraggedRef.current) return;
-
-      if (!hasDraggedRef.current) {
-        hasDraggedRef.current = true;
-        setDraggingId(tabId);
-        document.body.style.cursor = "grabbing";
-        document.body.style.userSelect = "none";
-      }
-
-      if (!tabsContainerRef.current) return;
-      const tabEls = Array.from(
-        tabsContainerRef.current.querySelectorAll<HTMLElement>("[data-tab-id]")
-      );
-      let foundId: string | null = null;
-
-      for (const el of tabEls) {
-        const rect = el.getBoundingClientRect();
-        if (ev.clientX >= rect.left && ev.clientX <= rect.right) {
-          foundId = el.dataset.tabId ?? null;
-          break;
-        }
-      }
-
-      if (foundId !== dragOverIdRef.current) {
-        dragOverIdRef.current = foundId;
-        setDragOverId(foundId);
-      }
-    };
-
-    const onUp = () => {
-      document.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerup", onUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-
-      if (hasDraggedRef.current) {
-        const toId = dragOverIdRef.current;
-        if (toId && toId !== tabId) {
-          reorderTabs(tabId, toId);
-        }
-        preventClickRef.current = true;
-      }
-
-      hasDraggedRef.current = false;
-      dragOverIdRef.current = null;
-      setDraggingId(null);
-      setDragOverId(null);
-    };
-
-    document.addEventListener("pointermove", onMove);
-    document.addEventListener("pointerup", onUp);
-  };
+  const { tabs, activeTabId, addTab, removeTab, setActiveTab, renameTab } = useTabStore();
 
   const handleAddTab = async () => {
     let cwd: string;
@@ -97,20 +25,14 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
 
   return (
     <div className="tabbar">
-      <div className="tabbar-tabs" ref={tabsContainerRef}>
+      <div className="tabbar-tabs">
         {tabs.map((tab) => (
           <TabItem
             key={tab.id}
             id={tab.id}
             label={tab.label}
             isActive={tab.id === activeTabId}
-            isDragging={tab.id === draggingId}
-            isDragOver={tab.id === dragOverId && tab.id !== draggingId}
             onActivate={() => {
-              if (preventClickRef.current) {
-                preventClickRef.current = false;
-                return;
-              }
               if (onActivateTab) {
                 onActivateTab(tab.id);
               } else {
@@ -120,7 +42,6 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
             onClose={() => (onCloseTab ? onCloseTab(tab.id) : removeTab(tab.id))}
             onKill={() => (onKillTab ? onKillTab(tab.id) : removeTab(tab.id))}
             onRename={(label) => renameTab(tab.id, label)}
-            onPointerDown={(e) => handleTabPointerDown(e, tab.id)}
           />
         ))}
       </div>
@@ -155,31 +76,28 @@ interface TabItemProps {
   id: string;
   label: string;
   isActive: boolean;
-  isDragging: boolean;
-  isDragOver: boolean;
   onActivate: () => void;
   onClose: () => void;
   onKill: () => void;
   onRename: (label: string) => void;
-  onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
-function TabItem({
-  id,
-  label,
-  isActive,
-  isDragging,
-  isDragOver,
-  onActivate,
-  onClose,
-  onKill,
-  onRename,
-  onPointerDown,
-}: TabItemProps) {
+function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }: TabItemProps) {
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(label);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handleClose = (e: PointerEvent) => {
+      if (!(e.target as HTMLElement).closest(".tab-context-menu")) {
+        setContextMenu(null);
+      }
+    };
+    document.addEventListener("pointerdown", handleClose, { capture: true });
+    return () => document.removeEventListener("pointerdown", handleClose, { capture: true });
+  }, [contextMenu]);
 
   const startEdit = () => {
     setDraftLabel(label);
@@ -212,11 +130,10 @@ function TabItem({
 
   return (
     <div
-      className={`tab-item${isActive ? " tab-item--active" : ""}${isDragOver ? " tab-item--drag-over" : ""}${isDragging ? " tab-item--dragging" : ""}`}
+      className={`tab-item${isActive ? " tab-item--active" : ""}`}
       data-tab-id={id}
       onClick={onActivate}
       onDoubleClick={startEdit}
-      onPointerDown={onPointerDown}
       onContextMenu={handleContextMenu}
     >
       {editing ? (
@@ -248,49 +165,42 @@ function TabItem({
       </button>
 
       {contextMenu && (
-        <>
-          <div
-            className="tab-context-backdrop"
-            onClick={closeMenu}
-            onContextMenu={(e) => { e.preventDefault(); closeMenu(); }}
-          />
-          <div
-            className="tab-context-menu"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-            onMouseDown={(e) => e.stopPropagation()}
+        <div
+          className="tab-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <button
+            className="tab-context-menu-item"
+            onClick={() => { startEdit(); closeMenu(); }}
           >
-            <button
-              className="tab-context-menu-item"
-              onClick={() => { startEdit(); closeMenu(); }}
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M7.5 1.5L10.5 4.5L4 11H1V8L7.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              이름 변경
-            </button>
-            <div className="tab-context-menu-separator" />
-            <button
-              className="tab-context-menu-item"
-              onClick={() => { onClose(); closeMenu(); }}
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M6 1.5V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                <path d="M3.5 5.5L6 8L8.5 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M1.5 10.5H10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              백그라운드로 보내기
-            </button>
-            <button
-              className="tab-context-menu-item tab-context-menu-item--destructive"
-              onClick={() => { onKill(); closeMenu(); }}
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect x="2.5" y="2.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-              </svg>
-              프로세스 종료
-            </button>
-          </div>
-        </>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M7.5 1.5L10.5 4.5L4 11H1V8L7.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            이름 변경
+          </button>
+          <div className="tab-context-menu-separator" />
+          <button
+            className="tab-context-menu-item"
+            onClick={() => { onClose(); closeMenu(); }}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M6 1.5V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M3.5 5.5L6 8L8.5 5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1.5 10.5H10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+            백그라운드로 보내기
+          </button>
+          <button
+            className="tab-context-menu-item tab-context-menu-item--destructive"
+            onClick={() => { onKill(); closeMenu(); }}
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <rect x="2.5" y="2.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
+            프로세스 종료
+          </button>
+        </div>
       )}
     </div>
   );
