@@ -5,7 +5,7 @@
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "node scripts/build-daemon-dev.mjs && pnpm dev",
     "beforeBuildCommand": "pnpm build",
     "beforeBundleCommand": "node scripts/copy-daemon.mjs"
   },
