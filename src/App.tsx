@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
@@ -14,7 +14,7 @@ import "./styles/globals.css";
 import "./App.css";
 
 export function App() {
-  const { tabs, activeTabId, addTab, removeTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab } =
+  const { tabs, activeTabId, savedTabs, addTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab } =
     useTabStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -24,22 +24,6 @@ export function App() {
   const activateTab = useCallback((tabId: string) => {
     setActiveTab(tabId);
   }, [setActiveTab]);
-
-  // Ctrl+Tab / Ctrl+Shift+Tab: cycle through tabs
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!e.ctrlKey || e.key !== "Tab") return;
-      e.preventDefault();
-      const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
-      if (currentIndex === -1 || tabs.length <= 1) return;
-      const nextIndex = e.shiftKey
-        ? (currentIndex - 1 + tabs.length) % tabs.length
-        : (currentIndex + 1) % tabs.length;
-      activateTab(tabs[nextIndex].id);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [tabs, activeTabId, activateTab]);
 
   const handleLayoutChange = (layout: Layout) => {
     if (!activeTab) return;
@@ -97,9 +81,20 @@ export function App() {
   };
 
   const handleTabClose = (tabId: string) => {
-    // Don't kill sessions — TerminalPane cleanup handles detach automatically.
-    // Detached sessions remain available in the session picker.
-    removeTab(tabId);
+    // Save tab layout + sessions before removing so it can be restored from SessionPicker.
+    saveAndRemoveTab(tabId);
+  };
+
+  const handleRestoreTab = (savedTabId: string) => {
+    restoreSavedTab(savedTabId);
+  };
+
+  const handleKillSavedTab = async (savedTabId: string) => {
+    const saved = savedTabs.find((t) => t.id === savedTabId);
+    if (saved) {
+      await Promise.all(saved.panels.map((p) => ipc.daemonKillSession(p.ptyId).catch(() => {})));
+    }
+    removeSavedTab(savedTabId);
   };
 
   return (
@@ -131,6 +126,9 @@ export function App() {
                 onAttach={(sessionId) => handleAttachSession(tab.id, sessionId)}
                 onKill={(sessionId) => ipc.daemonKillSession(sessionId).catch(() => {})}
                 tabGroups={tabGroups}
+                savedTabs={savedTabs}
+                onRestoreTab={handleRestoreTab}
+                onKillSavedTab={handleKillSavedTab}
               />
             ) : (
               <PanelGrid

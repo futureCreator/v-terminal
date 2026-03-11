@@ -249,6 +249,32 @@
   cursor: not-allowed;
 }
 
+/* ── Saved tab items ── */
+.sp-saved-tab-item {
+  align-items: center;
+}
+
+.sp-saved-tab-icon {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sp-panel-badge {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  background: var(--accent, #5e9cf5);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1px 3px;
+  border-radius: 4px;
+  min-width: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+
 /* ── Tab groups ── */
 .sp-tab-group {
   display: flex;

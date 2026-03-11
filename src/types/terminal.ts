@@ -35,3 +35,16 @@ export interface DaemonSessionInfo {
   created_at: number;
   last_active: number;
 }
+
+export interface SavedTabPanel {
+  panelId: string;
+  ptyId: string;
+}
+
+export interface SavedTab {
+  id: string;
+  label: string;
+  layout: Layout;
+  panels: SavedTabPanel[];
+  savedAt: number; // ms timestamp
+}

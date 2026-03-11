@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import type { Tab, Panel, Layout } from "../types/terminal";
+import type { Tab, Panel, Layout, SavedTab } from "../types/terminal";
 import { panelCount } from "../lib/layoutMath";
 
 // We import uuid lazily since we bundle it
@@ -15,13 +15,19 @@ function makePanels(count: number): Panel[] {
 interface TabStore {
   tabs: Tab[];
   activeTabId: string;
+  savedTabs: SavedTab[];
 
   // Tab actions
   addTab: (cwd: string, label?: string, sshCommand?: string) => string;
   removeTab: (id: string) => void;
+  saveAndRemoveTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   renameTab: (id: string, label: string) => void;
   reorderTabs: (fromId: string, toId: string) => void;
+
+  // Saved tab actions
+  removeSavedTab: (id: string) => void;
+  restoreSavedTab: (savedTabId: string) => string;
 
   // Layout actions
   setLayout: (tabId: string, layout: Layout) => { added: Panel[]; removed: Panel[] };
@@ -72,6 +78,7 @@ export const useTabStore = create<TabStore>((set, get) => {
   return {
     tabs: [defaultTab],
     activeTabId: defaultTab.id,
+    savedTabs: [],
 
     addTab: (cwd, label?, sshCommand?) => {
       const id = genId();
@@ -104,6 +111,78 @@ export const useTabStore = create<TabStore>((set, get) => {
             : s.activeTabId;
         return { tabs: newTabs, activeTabId };
       });
+    },
+
+    saveAndRemoveTab: (id) => {
+      set((s) => {
+        const tab = s.tabs.find((t) => t.id === id);
+        const activePanels = tab?.panels.filter((p) => p.ptyId !== null) ?? [];
+
+        let newSavedTabs = s.savedTabs;
+        if (tab && activePanels.length > 0) {
+          const savedTab: SavedTab = {
+            id: genId(),
+            label: tab.label,
+            layout: tab.layout,
+            panels: activePanels.map((p) => ({ panelId: p.id, ptyId: p.ptyId! })),
+            savedAt: Date.now(),
+          };
+          newSavedTabs = [...s.savedTabs, savedTab];
+        }
+
+        const newTabs = s.tabs.filter((t) => t.id !== id);
+        if (newTabs.length === 0) {
+          const t = createDefaultTab();
+          return { tabs: [t], activeTabId: t.id, savedTabs: newSavedTabs };
+        }
+
+        const activeTabId =
+          s.activeTabId === id
+            ? newTabs[Math.max(0, s.tabs.findIndex((t) => t.id === id) - 1)]?.id ??
+              newTabs[0].id
+            : s.activeTabId;
+
+        return { tabs: newTabs, activeTabId, savedTabs: newSavedTabs };
+      });
+    },
+
+    removeSavedTab: (id) =>
+      set((s) => ({ savedTabs: s.savedTabs.filter((t) => t.id !== id) })),
+
+    restoreSavedTab: (savedTabId) => {
+      const savedTab = get().savedTabs.find((t) => t.id === savedTabId);
+      if (!savedTab) return "";
+
+      const newTabId = genId();
+      const totalPanels = panelCount(savedTab.layout);
+      const panels: Panel[] = [];
+
+      for (let i = 0; i < totalPanels; i++) {
+        const savedPanel = savedTab.panels[i];
+        panels.push({
+          id: genId(),
+          ptyId: null,
+          existingSessionId: savedPanel?.ptyId,
+        });
+      }
+
+      const tab: Tab = {
+        id: newTabId,
+        label: savedTab.label,
+        cwd: DEFAULT_CWD,
+        layout: savedTab.layout,
+        panels,
+        broadcastEnabled: false,
+        pendingSessionPick: false,
+      };
+
+      set((s) => ({
+        tabs: [...s.tabs, tab],
+        activeTabId: newTabId,
+        savedTabs: s.savedTabs.filter((t) => t.id !== savedTabId),
+      }));
+
+      return newTabId;
     },
 
     setActiveTab: (id) => set({ activeTabId: id }),

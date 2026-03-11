@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { ipc } from "../../lib/tauriIpc";
 import { useSshStore } from "../../store/sshStore";
-import type { DaemonSessionInfo } from "../../types/terminal";
+import type { DaemonSessionInfo, SavedTab } from "../../types/terminal";
 import "./SessionPicker.css";
 
 export interface NewSessionOptions {
@@ -22,6 +22,9 @@ interface SessionPickerProps {
   onAttach: (sessionId: string) => void;
   onKill: (sessionId: string) => void;
   tabGroups?: TabSessionGroup[];
+  savedTabs?: SavedTab[];
+  onRestoreTab?: (savedTabId: string) => void;
+  onKillSavedTab?: (savedTabId: string) => Promise<void>;
 }
 
 function formatAge(secs: number): string {
@@ -65,11 +68,25 @@ const IconSsh = () => (
   </svg>
 );
 
-export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups }: SessionPickerProps) {
+const IconSavedTab = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <rect x="1" y="4" width="13" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+    <path d="M1 6.5V5.5A1.5 1.5 0 0 1 2.5 4H6V7H1v-.5z" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+  </svg>
+);
+
+const KillIcon = () => (
+  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+    <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+  </svg>
+);
+
+export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups, savedTabs, onRestoreTab, onKillSavedTab }: SessionPickerProps) {
   const [sessions, setSessions] = useState<DaemonSessionInfo[]>([]);
   const [wslDistros, setWslDistros] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [killingId, setKillingId] = useState<string | null>(null);
+  const [killingSavedTabId, setKillingSavedTabId] = useState<string | null>(null);
   const { profiles: sshProfiles } = useSshStore();
 
   const loadSessions = useCallback(() => {
@@ -102,17 +119,74 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups }: Ses
     }
   };
 
-  // Build set of ptyIds that belong to currently open tabs
+  const handleKillSavedTab = async (e: React.MouseEvent, savedTabId: string) => {
+    e.stopPropagation();
+    setKillingSavedTabId(savedTabId);
+    try {
+      await onKillSavedTab?.(savedTabId);
+      loadSessions();
+    } finally {
+      setKillingSavedTabId(null);
+    }
+  };
+
+  // ptyIds already accounted for (open tabs + saved tabs)
   const openTabPtyIds = new Set(tabGroups?.flatMap((g) => g.ptyIds) ?? []);
+  const savedTabPtyIds = new Set(savedTabs?.flatMap((t) => t.panels.map((p) => p.ptyId)) ?? []);
 
-  // Sessions not in any open tab → shown as background sessions
-  const orphaned = sessions.filter((s) => !openTabPtyIds.has(s.id));
-  const hasBackground = orphaned.length > 0 || loading;
+  // Truly orphaned sessions: not in any open tab, not in any saved tab
+  const orphaned = sessions.filter((s) => !openTabPtyIds.has(s.id) && !savedTabPtyIds.has(s.id));
 
-  const renderSessionItem = (s: DaemonSessionInfo, grouped = false) => (
+  const hasSavedTabs = (savedTabs?.length ?? 0) > 0;
+  const hasOrphaned = orphaned.length > 0 || loading;
+
+  const renderSavedTabItem = (savedTab: SavedTab) => {
+    const panelSessions = savedTab.panels
+      .map((p) => sessions.find((s) => s.id === p.ptyId))
+      .filter((s): s is DaemonSessionInfo => s !== undefined);
+
+    const firstCwd = panelSessions[0]?.cwd ?? "~";
+    const count = savedTab.panels.length;
+    const lastActive =
+      panelSessions.length > 0
+        ? Math.max(...panelSessions.map((s) => s.last_active))
+        : Math.floor(savedTab.savedAt / 1000);
+
+    return (
+      <div
+        key={savedTab.id}
+        className="sp-session-item sp-saved-tab-item"
+        onClick={() => onRestoreTab?.(savedTab.id)}
+        title={`${savedTab.label}${count > 1 ? ` — ${count}패널` : ""}`}
+      >
+        <div className="sp-shell-icon sp-shell-icon--tab sp-saved-tab-icon">
+          <IconSavedTab />
+          {count > 1 && <span className="sp-panel-badge">{count}</span>}
+        </div>
+        <div className="sp-session-info">
+          <span className="sp-session-label">{savedTab.label}</span>
+          <span className="sp-session-cwd">
+            {firstCwd}{count > 1 ? ` 외 ${count - 1}개` : ""}
+          </span>
+        </div>
+        <span className="sp-session-age">{formatAge(lastActive)}</span>
+        <button
+          className="sp-session-kill"
+          onClick={(e) => handleKillSavedTab(e, savedTab.id)}
+          disabled={killingSavedTabId === savedTab.id}
+          title="탭 종료"
+          aria-label="탭 종료"
+        >
+          <KillIcon />
+        </button>
+      </div>
+    );
+  };
+
+  const renderOrphanedSessionItem = (s: DaemonSessionInfo) => (
     <div
       key={s.id}
-      className={`sp-session-item${grouped ? " sp-session-item--grouped" : ""}`}
+      className="sp-session-item"
       onClick={() => onAttach(s.id)}
       title={`${s.label} — ${s.cwd}`}
     >
@@ -131,14 +205,7 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups }: Ses
         title="세션 종료"
         aria-label="세션 종료"
       >
-        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-          <path
-            d="M1 1l7 7M8 1L1 8"
-            stroke="currentColor"
-            strokeWidth="1.3"
-            strokeLinecap="round"
-          />
-        </svg>
+        <KillIcon />
       </button>
     </div>
   );
@@ -212,34 +279,20 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups }: Ses
         )}
       </div>
 
-      {/* ── Open Tabs (attach to existing tab session) ── */}
-      {tabGroups && tabGroups.length > 0 && (
+      {/* ── Background Tabs (saved on close) ── */}
+      {hasSavedTabs && (
         <>
           <div className="sp-section-header sp-section-header--running">
-            <span className="sp-section-label">열린 탭</span>
+            <span className="sp-section-label">백그라운드 탭</span>
           </div>
-          <div className="sp-shell-list">
-            {tabGroups.map((group) => (
-              <button
-                key={group.tabId}
-                className="sp-shell-item"
-                onClick={() => onAttach(group.ptyIds[0])}
-              >
-                <span className="sp-shell-icon sp-shell-icon--tab">
-                  <IconTerminal />
-                </span>
-                <span className="sp-shell-name">{group.label}</span>
-                <span className="sp-shell-desc">
-                  {group.ptyIds.length > 1 ? `${group.ptyIds.length}개 패널` : "연결"}
-                </span>
-              </button>
-            ))}
+          <div className="sp-session-list">
+            {savedTabs!.map((savedTab) => renderSavedTabItem(savedTab))}
           </div>
         </>
       )}
 
-      {/* ── Background Sessions (detached, not in any open tab) ── */}
-      {hasBackground && (
+      {/* ── Orphaned Sessions (no tab affiliation) ── */}
+      {hasOrphaned && (
         <>
           <div className="sp-section-header sp-section-header--running">
             <span className="sp-section-label">백그라운드 세션</span>
@@ -269,7 +322,7 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups }: Ses
                 <div className="sp-spinner" />
               </div>
             ) : (
-              orphaned.map((s) => renderSessionItem(s, false))
+              orphaned.map((s) => renderOrphanedSessionItem(s))
             )}
           </div>
         </>

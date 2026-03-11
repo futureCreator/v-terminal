@@ -100,28 +100,6 @@ export function TerminalPane({
       termRef.current = term;
       fitAddonRef.current = fitAddon;
 
-      // Clipboard key bindings
-      term.attachCustomKeyEventHandler((event: KeyboardEvent) => {
-        if (event.type !== "keydown") return true;
-        // Ctrl+C with selection → copy (not SIGINT)
-        if (event.ctrlKey && event.key === "c" && term.hasSelection()) {
-          navigator.clipboard.writeText(term.getSelection()).catch(() => {});
-          return false;
-        }
-        // Ctrl+V → prevent \x16 from being sent to PTY (paste handled via paste event)
-        if (event.ctrlKey && !event.shiftKey && event.key === "v") {
-          return false;
-        }
-        return true;
-      });
-
-      // Handle paste once via capture-phase paste event (covers both Ctrl+V and Ctrl+Shift+V)
-      term.textarea?.addEventListener("paste", (e: ClipboardEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const text = e.clipboardData?.getData("text/plain") ?? "";
-        if (text) term.paste(text);
-      }, true);
 
 
       const { cols, rows } = term;
