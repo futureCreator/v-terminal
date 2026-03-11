@@ -6,8 +6,8 @@
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "node scripts/build-daemon-dev.mjs && pnpm dev",
-    "beforeBuildCommand": "pnpm build",
-    "beforeBundleCommand": "node scripts/copy-daemon.mjs"
+    "beforeBuildCommand": "node scripts/build-daemon-release.mjs && pnpm build",
+    "beforeBundleCommand": ""
   },
   "app": {
     "withGlobalTauri": false,
