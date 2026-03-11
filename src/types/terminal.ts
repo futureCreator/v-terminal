@@ -2,7 +2,8 @@ export type Layout = 1 | 2 | 3 | 4 | 6 | 9;
 
 export interface Panel {
   id: string;
-  ptyId: string | null; // null until PTY is spawned
+  ptyId: string | null; // null until attached to a daemon session
+  existingSessionId?: string; // pre-selected from session picker (attach mode)
 }
 
 export interface Tab {
@@ -12,7 +13,11 @@ export interface Tab {
   layout: Layout;
   panels: Panel[];
   broadcastEnabled: boolean;
-  sshCommand?: string; // auto-execute after PTY start (e.g. ssh user@host)
+  sshCommand?: string;
+  shellProgram?: string; // e.g. "wsl.exe"
+  shellArgs?: string[];  // e.g. ["-d", "Ubuntu"]
+  pendingSessionPick?: boolean; // show session picker instead of terminals
+  hasActivity?: boolean; // has unread output since last viewed
 }
 
 export interface SshProfile {
@@ -32,6 +37,16 @@ export interface SessionData {
     layout: Layout;
     broadcastEnabled: boolean;
     sshCommand?: string;
+    shellProgram?: string;
+    shellArgs?: string[];
   }>;
   activeTabId: string;
+}
+
+export interface DaemonSessionInfo {
+  id: string;
+  label: string;
+  cwd: string;
+  created_at: number;
+  last_active: number;
 }

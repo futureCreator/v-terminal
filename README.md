@@ -14,6 +14,17 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.7 - 2026-03-11
+
+- Replaced in-process PTY manager with an out-of-process daemon (`v-terminal-daemon`) for persistent sessions — closing a tab detaches instead of killing the shell
+- Added SessionPicker UI on new tab: choose to start a new session or attach to an existing daemon session
+- Added tab activity indicator: background tabs show a dot badge when unread output arrives, with a pulse animation while data is streaming
+- Replaced HTML5 drag-and-drop with pointer-event-based tab reordering for smoother, ghost-free dragging
+- Changed 3-panel layout from three equal columns to a "large left + two stacked right" grid
+- Added Ctrl+Tab / Ctrl+Shift+Tab keyboard shortcuts to cycle through tabs
+- Replaced "press any key to close" exit overlay with a clickable "New Session" button to restart the shell
+- Added custom shell support (`shellProgram`, `shellArgs`) for WSL distros and other shells; added `get_wsl_distros` command on Windows
+
 ### v0.1.6 - 2026-03-11
 
 - Added Pretendard variable font as the primary UI font with `prefers-reduced-motion` support

@@ -9,6 +9,10 @@ edition = "2021"
 name = "v_terminal_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[[bin]]
+name = "v-terminal-daemon"
+path = "src/bin/daemon.rs"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

@@ -23,7 +23,7 @@ export function useResizeObserver(
         try {
           fitAddon.fit();
           const { cols, rows } = term;
-          ipc.ptyResize(ptyId, cols, rows).catch(() => {});
+          ipc.daemonResize(ptyId, cols, rows).catch(() => {});
         } catch {
           // Fit may fail if terminal is not fully initialized yet
         }

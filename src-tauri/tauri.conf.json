@@ -1,12 +1,13 @@
 {
   "productName": "v-terminal",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "identifier": "com.v-terminal.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "pnpm dev",
-    "beforeBuildCommand": "pnpm build"
+    "beforeBuildCommand": "pnpm build",
+    "beforeBundleCommand": "mkdir -p binaries && cp ../target/release/v-terminal-daemon \"binaries/v-terminal-daemon-$(rustc -vV | grep host | sed 's/host: //')\""
   },
   "app": {
     "withGlobalTauri": false,
@@ -39,7 +40,7 @@
       "icons/icon.ico"
     ],
     "resources": [],
-    "externalBin": [],
+    "externalBin": ["binaries/v-terminal-daemon"],
     "windows": {
       "wix": {},
       "nsis": {}

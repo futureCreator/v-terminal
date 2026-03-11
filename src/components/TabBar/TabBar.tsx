@@ -5,14 +5,85 @@ import "./TabBar.css";
 
 interface TabBarProps {
   onOpenSshManager: () => void;
+  onCloseTab?: (tabId: string) => void;
+  receivingTabIds?: Set<string>;
+  onActivateTab?: (tabId: string) => void;
 }
 
-export function TabBar({ onOpenSshManager }: TabBarProps) {
+export function TabBar({ onOpenSshManager, onCloseTab, receivingTabIds, onActivateTab }: TabBarProps) {
   const { tabs, activeTabId, addTab, removeTab, setActiveTab, renameTab, reorderTabs } =
     useTabStore();
 
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
-  const dragIdRef = useRef<string | null>(null);
+
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const dragOverIdRef = useRef<string | null>(null);
+  const hasDraggedRef = useRef(false);
+  const preventClickRef = useRef(false);
+
+  const handleTabPointerDown = (e: React.PointerEvent<HTMLDivElement>, tabId: string) => {
+    if (e.button !== 0) return;
+    if ((e.target as HTMLElement).closest(".tab-item-close")) return;
+
+    const startX = e.clientX;
+    hasDraggedRef.current = false;
+    dragOverIdRef.current = null;
+
+    const onMove = (ev: PointerEvent) => {
+      const dx = Math.abs(ev.clientX - startX);
+      if (dx < 5 && !hasDraggedRef.current) return;
+
+      if (!hasDraggedRef.current) {
+        hasDraggedRef.current = true;
+        setDraggingId(tabId);
+        document.body.style.cursor = "grabbing";
+        document.body.style.userSelect = "none";
+      }
+
+      if (!tabsContainerRef.current) return;
+      const tabEls = Array.from(
+        tabsContainerRef.current.querySelectorAll<HTMLElement>("[data-tab-id]")
+      );
+      let foundId: string | null = null;
+
+      for (const el of tabEls) {
+        const rect = el.getBoundingClientRect();
+        if (ev.clientX >= rect.left && ev.clientX <= rect.right) {
+          foundId = el.dataset.tabId ?? null;
+          break;
+        }
+      }
+
+      if (foundId !== dragOverIdRef.current) {
+        dragOverIdRef.current = foundId;
+        setDragOverId(foundId);
+      }
+    };
+
+    const onUp = () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+
+      if (hasDraggedRef.current) {
+        const toId = dragOverIdRef.current;
+        if (toId && toId !== tabId) {
+          reorderTabs(tabId, toId);
+        }
+        preventClickRef.current = true;
+      }
+
+      hasDraggedRef.current = false;
+      dragOverIdRef.current = null;
+      setDraggingId(null);
+      setDragOverId(null);
+    };
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+  };
 
   const handleAddTab = async () => {
     let cwd: string;
@@ -26,39 +97,31 @@ export function TabBar({ onOpenSshManager }: TabBarProps) {
 
   return (
     <div className="tabbar">
-      <div
-        className="tabbar-tabs"
-        onDragLeave={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-            setDragOverId(null);
-          }
-        }}
-      >
+      <div className="tabbar-tabs" ref={tabsContainerRef}>
         {tabs.map((tab) => (
           <TabItem
             key={tab.id}
             id={tab.id}
             label={tab.label}
             isActive={tab.id === activeTabId}
-            isDragOver={tab.id === dragOverId}
-            onActivate={() => setActiveTab(tab.id)}
-            onClose={() => removeTab(tab.id)}
-            onRename={(label) => renameTab(tab.id, label)}
-            onDragStart={() => {
-              dragIdRef.current = tab.id;
-            }}
-            onDragOver={() => setDragOverId(tab.id)}
-            onDrop={() => {
-              if (dragIdRef.current && dragIdRef.current !== tab.id) {
-                reorderTabs(dragIdRef.current, tab.id);
+            isDragging={tab.id === draggingId}
+            isDragOver={tab.id === dragOverId && tab.id !== draggingId}
+            hasActivity={tab.hasActivity ?? false}
+            isReceiving={receivingTabIds?.has(tab.id) ?? false}
+            onActivate={() => {
+              if (preventClickRef.current) {
+                preventClickRef.current = false;
+                return;
               }
-              setDragOverId(null);
-              dragIdRef.current = null;
+              if (onActivateTab) {
+                onActivateTab(tab.id);
+              } else {
+                setActiveTab(tab.id);
+              }
             }}
-            onDragEnd={() => {
-              setDragOverId(null);
-              dragIdRef.current = null;
-            }}
+            onClose={() => (onCloseTab ? onCloseTab(tab.id) : removeTab(tab.id))}
+            onRename={(label) => renameTab(tab.id, label)}
+            onPointerDown={(e) => handleTabPointerDown(e, tab.id)}
           />
         ))}
       </div>
@@ -93,27 +156,28 @@ interface TabItemProps {
   id: string;
   label: string;
   isActive: boolean;
+  isDragging: boolean;
   isDragOver: boolean;
+  hasActivity: boolean;
+  isReceiving: boolean;
   onActivate: () => void;
   onClose: () => void;
   onRename: (label: string) => void;
-  onDragStart: () => void;
-  onDragOver: () => void;
-  onDrop: () => void;
-  onDragEnd: () => void;
+  onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
 }
 
 function TabItem({
+  id,
   label,
   isActive,
+  isDragging,
   isDragOver,
+  hasActivity,
+  isReceiving,
   onActivate,
   onClose,
   onRename,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
+  onPointerDown,
 }: TabItemProps) {
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(label);
@@ -138,24 +202,11 @@ function TabItem({
 
   return (
     <div
-      className={`tab-item ${isActive ? "tab-item--active" : ""} ${isDragOver ? "tab-item--drag-over" : ""}`}
-      draggable
+      className={`tab-item${isActive ? " tab-item--active" : ""}${isDragOver ? " tab-item--drag-over" : ""}${isDragging ? " tab-item--dragging" : ""}`}
+      data-tab-id={id}
       onClick={onActivate}
       onDoubleClick={startEdit}
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = "move";
-        onDragStart();
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-        onDragOver();
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop();
-      }}
-      onDragEnd={onDragEnd}
+      onPointerDown={onPointerDown}
     >
       {editing ? (
         <input
@@ -170,6 +221,12 @@ function TabItem({
         />
       ) : (
         <span className="tab-item-label">{label}</span>
+      )}
+      {!isActive && hasActivity && (
+        <span
+          className={`tab-activity-dot${isReceiving ? " tab-activity-dot--receiving" : ""}`}
+          aria-hidden="true"
+        />
       )}
       <button
         className="tab-item-close"

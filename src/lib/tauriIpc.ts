@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { SessionData } from "../types/terminal";
+import type { SessionData, DaemonSessionInfo } from "../types/terminal";
 
 export interface PtyDataPayload {
   ptyId: string;
@@ -12,20 +12,44 @@ export interface PtyExitPayload {
 }
 
 export const ipc = {
-  async ptyCreate(cwd: string, cols: number, rows: number): Promise<string> {
-    return invoke<string>("pty_create", { cwd, cols, rows });
+  // Daemon session management
+  async daemonListSessions(): Promise<DaemonSessionInfo[]> {
+    return invoke<DaemonSessionInfo[]>("daemon_list_sessions");
   },
 
-  async ptyWrite(ptyId: string, data: Uint8Array): Promise<void> {
-    return invoke("pty_write", { ptyId, data: Array.from(data) });
+  async daemonCreateSession(
+    cwd: string,
+    cols: number,
+    rows: number,
+    label?: string,
+    shellProgram?: string,
+    shellArgs?: string[]
+  ): Promise<string> {
+    return invoke<string>("daemon_create_session", { cwd, cols, rows, label, shellProgram, shellArgs });
   },
 
-  async ptyResize(ptyId: string, cols: number, rows: number): Promise<void> {
-    return invoke("pty_resize", { ptyId, cols, rows });
+  async getWslDistros(): Promise<string[]> {
+    return invoke<string[]>("get_wsl_distros");
   },
 
-  async ptyKill(ptyId: string): Promise<void> {
-    return invoke("pty_kill", { ptyId });
+  async daemonAttach(sessionId: string): Promise<number[]> {
+    return invoke<number[]>("daemon_attach", { sessionId });
+  },
+
+  async daemonDetach(sessionId: string): Promise<void> {
+    return invoke("daemon_detach", { sessionId });
+  },
+
+  async daemonWrite(sessionId: string, data: Uint8Array): Promise<void> {
+    return invoke("daemon_write", { sessionId, data: Array.from(data) });
+  },
+
+  async daemonResize(sessionId: string, cols: number, rows: number): Promise<void> {
+    return invoke("daemon_resize", { sessionId, cols, rows });
+  },
+
+  async daemonKillSession(sessionId: string): Promise<void> {
+    return invoke("daemon_kill_session", { sessionId });
   },
 
   async saveSession(data: SessionData): Promise<void> {

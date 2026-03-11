@@ -8,9 +8,10 @@ import "./PanelGrid.css";
 interface PanelGridProps {
   tab: Tab;
   onActivePanelChanged?: (ptyId: string | null) => void;
+  onActivity?: () => void;
 }
 
-export function PanelGrid({ tab, onActivePanelChanged }: PanelGridProps) {
+export function PanelGrid({ tab, onActivePanelChanged, onActivity }: PanelGridProps) {
   const { setPtyId, clearPtyId } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
 
@@ -68,13 +69,18 @@ export function PanelGrid({ tab, onActivePanelChanged }: PanelGridProps) {
       {tab.panels.map((panel, index) => (
         <TerminalPane
           key={panel.id}
+          style={tab.layout === 3 && index === 0 ? { gridRow: "1 / 3" } : undefined}
           cwd={tab.cwd}
           isActive={panel.id === activePanelId}
           broadcastEnabled={tab.broadcastEnabled}
           siblingPtyIds={siblingPtyIds}
           sshCommand={index === 0 ? tab.sshCommand : undefined}
+          shellProgram={tab.shellProgram}
+          shellArgs={tab.shellArgs}
+          existingSessionId={panel.existingSessionId}
           onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
           onPtyKilled={() => handlePtyKilled(panel.id)}
+          onActivity={onActivity}
           onFocus={() => setActivePanelId(panel.id)}
           onNextPanel={handleNextPanel}
           onPrevPanel={handlePrevPanel}

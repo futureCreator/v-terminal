@@ -75,16 +75,20 @@ export function usePty({
 
       const { cols, rows } = term;
 
-      // Spawn PTY
+      // Spawn daemon session
       try {
-        currentPtyId = await ipc.ptyCreate(cwd, cols, rows);
+        currentPtyId = await ipc.daemonCreateSession(cwd, cols, rows);
+        const scrollback = await ipc.daemonAttach(currentPtyId);
+        if (scrollback.length > 0) {
+          term.write(new Uint8Array(scrollback));
+        }
       } catch (e) {
-        term.write(`\r\n\x1b[31mFailed to start PTY: ${e}\x1b[0m\r\n`);
+        term.write(`\r\n\x1b[31mFailed to start session: ${e}\x1b[0m\r\n`);
         return;
       }
 
       if (disposed) {
-        ipc.ptyKill(currentPtyId).catch(() => {});
+        ipc.daemonDetach(currentPtyId).catch(() => {});
         term.dispose();
         return;
       }
@@ -97,12 +101,12 @@ export function usePty({
         if (!currentPtyId) return;
         const encoded = new TextEncoder().encode(data);
 
-        ipc.ptyWrite(currentPtyId, encoded).catch(() => {});
+        ipc.daemonWrite(currentPtyId, encoded).catch(() => {});
 
         if (broadcastEnabled) {
           for (const sibId of siblingPtyIds) {
             if (sibId !== currentPtyId) {
-              ipc.ptyWrite(sibId, encoded).catch(() => {});
+              ipc.daemonWrite(sibId, encoded).catch(() => {});
             }
           }
         }
@@ -131,7 +135,7 @@ export function usePty({
       unlistenExit?.();
       if (currentPtyId) {
         terminalRegistry.delete(currentPtyId);
-        ipc.ptyKill(currentPtyId).catch(() => {});
+        ipc.daemonDetach(currentPtyId).catch(() => {}); // detach but don't kill - session persists
       }
       term?.dispose();
       fitAddonRef.current = null;

@@ -13,26 +13,36 @@ export const terminalRegistry = new Map<string, Terminal>();
 
 
 interface TerminalPaneProps {
+  style?: React.CSSProperties;
   cwd: string;
   isActive: boolean;
   broadcastEnabled: boolean;
   siblingPtyIds: string[];
   sshCommand?: string;
+  shellProgram?: string;
+  shellArgs?: string[];
+  existingSessionId?: string;
   onPtyCreated: (ptyId: string) => void;
   onPtyKilled: () => void;
+  onActivity?: () => void;
   onFocus: () => void;
   onNextPanel?: () => void;
   onPrevPanel?: () => void;
 }
 
 export function TerminalPane({
+  style,
   cwd,
   isActive,
   broadcastEnabled,
   siblingPtyIds,
   sshCommand,
+  shellProgram,
+  shellArgs,
+  existingSessionId,
   onPtyCreated,
   onPtyKilled,
+  onActivity,
   onFocus,
   onNextPanel,
   onPrevPanel,
@@ -42,13 +52,20 @@ export function TerminalPane({
   const fitAddonRef = useRef<FitAddon | null>(null);
   const ptyIdRef = useRef<string | null>(null);
   const [exited, setExited] = useState(false);
+  const [initKey, setInitKey] = useState(0);
 
   // Store broadcast refs to avoid stale closures
   const broadcastRef = useRef(broadcastEnabled);
   const siblingsRef = useRef(siblingPtyIds);
+  const onActivityRef = useRef(onActivity);
   broadcastRef.current = broadcastEnabled;
   siblingsRef.current = siblingPtyIds;
+  onActivityRef.current = onActivity;
 
+  const handleRestart = () => {
+    setExited(false);
+    setInitKey((k) => k + 1);
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -115,14 +132,23 @@ export function TerminalPane({
 
       let ptyId: string;
       try {
-        ptyId = await ipc.ptyCreate(cwd, cols, rows);
+        if (existingSessionId) {
+          ptyId = existingSessionId;
+        } else {
+          ptyId = await ipc.daemonCreateSession(cwd, cols, rows, undefined, shellProgram, shellArgs);
+        }
+        // Attach and get scrollback
+        const scrollback = await ipc.daemonAttach(ptyId);
+        if (scrollback.length > 0) {
+          term.write(new Uint8Array(scrollback));
+        }
       } catch (e) {
-        term.write(`\r\n\x1b[31mFailed to start shell: ${e}\x1b[0m\r\n`);
+        term.write(`\r\n\x1b[31mFailed to start session: ${e}\x1b[0m\r\n`);
         return;
       }
 
       if (disposed) {
-        await ipc.ptyKill(ptyId).catch(() => {});
+        await ipc.daemonDetach(ptyId).catch(() => {});
         term.dispose();
         return;
       }
@@ -134,17 +160,17 @@ export function TerminalPane({
       // Auto-execute SSH command if provided
       if (sshCommand) {
         const encoded = new TextEncoder().encode(sshCommand + "\r");
-        ipc.ptyWrite(ptyId, encoded).catch(() => {});
+        ipc.daemonWrite(ptyId, encoded).catch(() => {});
       }
 
       // Input
       term.onData((data) => {
         const encoded = new TextEncoder().encode(data);
-        ipc.ptyWrite(ptyId, encoded).catch(() => {});
+        ipc.daemonWrite(ptyId, encoded).catch(() => {});
         if (broadcastRef.current) {
           for (const sibId of siblingsRef.current) {
             if (sibId !== ptyId) {
-              ipc.ptyWrite(sibId, encoded).catch(() => {});
+              ipc.daemonWrite(sibId, encoded).catch(() => {});
             }
           }
         }
@@ -157,12 +183,12 @@ export function TerminalPane({
       unlistenData = await ipc.onPtyData((payload) => {
         if (payload.ptyId === ptyId && !disposed) {
           term.write(new Uint8Array(payload.data));
+          onActivityRef.current?.();
         }
       });
 
       unlistenExit = await ipc.onPtyExit((payload) => {
         if (payload.ptyId === ptyId && !disposed) {
-          term.write("\r\n\x1b[2m[Process exited. Press any key to close.]\x1b[0m\r\n");
           setExited(true);
           onPtyKilled();
         }
@@ -178,7 +204,7 @@ export function TerminalPane({
             try {
               fitAddon.fit();
               const { cols: c, rows: r } = term;
-              ipc.ptyResize(ptyId, c, r).catch(() => {});
+              ipc.daemonResize(ptyId, c, r).catch(() => {});
             } catch {}
           }, 50);
         });
@@ -198,7 +224,7 @@ export function TerminalPane({
       const ptyId = ptyIdRef.current;
       if (ptyId) {
         terminalRegistry.delete(ptyId);
-        ipc.ptyKill(ptyId).catch(() => {});
+        ipc.daemonDetach(ptyId).catch(() => {}); // detach but don't kill - session persists
         ptyIdRef.current = null;
       }
       const container = containerRef.current as (HTMLElement & { __observer?: ResizeObserver }) | null;
@@ -208,7 +234,7 @@ export function TerminalPane({
       fitAddonRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cwd]);
+  }, [cwd, initKey]);
 
   // Focus terminal when panel becomes active
   useEffect(() => {
@@ -218,11 +244,15 @@ export function TerminalPane({
   }, [isActive]);
 
   return (
-    <div className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`} onClick={onFocus}>
-      <div ref={containerRef} className="terminal-container" />
+    <div className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`} style={style} onClick={onFocus}>
+      <div ref={containerRef} className="terminal-container" style={{ display: exited ? "none" : undefined }} />
       {exited && (
-        <div className="terminal-exit-overlay">
-          <span>Process exited</span>
+        <div className="terminal-exit-panel" onClick={handleRestart}>
+          <svg className="terminal-exit-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 5.5L7.5 10L3 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M10 14.5H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          <span className="terminal-exit-label">New Session</span>
         </div>
       )}
     </div>

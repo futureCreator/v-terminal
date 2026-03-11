@@ -35,17 +35,37 @@
   height: 100% !important;
 }
 
-.terminal-exit-overlay {
+.terminal-exit-panel {
   position: absolute;
-  bottom: var(--spacing-sm);
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.7);
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  background: var(--bg-terminal);
+  color: var(--label-tertiary);
+  transition: color 0.15s;
+}
+
+.terminal-exit-panel:hover {
   color: var(--label-secondary);
+}
+
+.terminal-exit-panel:hover .terminal-exit-icon {
+  opacity: 0.7;
+}
+
+.terminal-exit-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+
+.terminal-exit-label {
+  font-family: "Pretendard", -apple-system, sans-serif;
   font-size: 11px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  backdrop-filter: blur(4px);
-  pointer-events: none;
-  white-space: nowrap;
+  letter-spacing: 0.02em;
 }

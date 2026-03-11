@@ -30,12 +30,25 @@ interface TabStore {
   setPtyId: (tabId: string, panelId: string, ptyId: string) => void;
   clearPtyId: (tabId: string, panelId: string) => void;
 
+  // Activity indicator
+  setTabActivity: (tabId: string, value: boolean) => void;
+
   // Broadcast
   toggleBroadcast: (tabId: string) => void;
 
+  // Session picker
+  resolveSessionPick: (
+    tabId: string,
+    existingSessionId?: string,
+    shellProgram?: string,
+    shellArgs?: string[],
+    sshCommand?: string,
+    label?: string,
+  ) => void;
+
   // Session restore
   restoreFromSession: (
-    tabs: Array<{ id: string; label: string; cwd: string; layout: Layout; broadcastEnabled: boolean; sshCommand?: string }>,
+    tabs: Array<{ id: string; label: string; cwd: string; layout: Layout; broadcastEnabled: boolean; sshCommand?: string; shellProgram?: string; shellArgs?: string[] }>,
     activeTabId: string
   ) => void;
 }
@@ -57,6 +70,7 @@ function createDefaultTab(): Tab {
     layout,
     panels: makePanels(panelCount(layout)),
     broadcastEnabled: false,
+    pendingSessionPick: true,
   };
 }
 
@@ -78,6 +92,7 @@ export const useTabStore = create<TabStore>((set, get) => {
         panels: makePanels(panelCount(layout)),
         broadcastEnabled: false,
         sshCommand,
+        pendingSessionPick: !sshCommand, // show picker if no auto-SSH
       };
       set((s) => ({ tabs: [...s.tabs, tab], activeTabId: id }));
       return id;
@@ -99,7 +114,11 @@ export const useTabStore = create<TabStore>((set, get) => {
       });
     },
 
-    setActiveTab: (id) => set({ activeTabId: id }),
+    setActiveTab: (id) =>
+      set((s) => ({
+        activeTabId: id,
+        tabs: s.tabs.map((t) => (t.id === id ? { ...t, hasActivity: false } : t)),
+      })),
 
     renameTab: (id, label) =>
       set((s) => ({
@@ -176,6 +195,11 @@ export const useTabStore = create<TabStore>((set, get) => {
         ),
       })),
 
+    setTabActivity: (tabId, value) =>
+      set((s) => ({
+        tabs: s.tabs.map((t) => (t.id === tabId ? { ...t, hasActivity: value } : t)),
+      })),
+
     toggleBroadcast: (tabId) =>
       set((s) => ({
         tabs: s.tabs.map((t) =>
@@ -184,6 +208,28 @@ export const useTabStore = create<TabStore>((set, get) => {
             : t
         ),
       })),
+
+    resolveSessionPick: (tabId, existingSessionId?, shellProgram?, shellArgs?, sshCommand?, label?) => {
+      set((s) => ({
+        tabs: s.tabs.map((t) => {
+          if (t.id !== tabId) return t;
+          const panels = existingSessionId
+            ? t.panels.map((p, i) =>
+                i === 0 ? { ...p, existingSessionId } : p
+              )
+            : t.panels;
+          return {
+            ...t,
+            pendingSessionPick: false,
+            panels,
+            shellProgram,
+            shellArgs,
+            sshCommand: sshCommand ?? t.sshCommand,
+            label: label ?? t.label,
+          };
+        }),
+      }));
+    },
 
     restoreFromSession: (savedTabs, activeTabId) => {
       // Bump counter past any restored "Terminal N" labels
@@ -199,6 +245,9 @@ export const useTabStore = create<TabStore>((set, get) => {
         panels: makePanels(panelCount(st.layout)),
         broadcastEnabled: st.broadcastEnabled,
         sshCommand: st.sshCommand,
+        shellProgram: st.shellProgram,
+        shellArgs: st.shellArgs,
+        pendingSessionPick: false,
       }));
       set({
         tabs: tabs.length > 0 ? tabs : [createDefaultTab()],
