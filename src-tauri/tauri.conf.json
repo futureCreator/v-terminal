@@ -7,7 +7,7 @@
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
-    "beforeBundleCommand": "mkdir -p binaries && cp ../target/release/v-terminal-daemon \"binaries/v-terminal-daemon-$(rustc -vV | grep host | sed 's/host: //')\""
+    "beforeBundleCommand": "node scripts/copy-daemon.mjs"
   },
   "app": {
     "withGlobalTauri": false,
