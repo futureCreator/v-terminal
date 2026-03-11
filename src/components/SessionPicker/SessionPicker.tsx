@@ -138,7 +138,7 @@ export function SessionPicker({ onNewSession, onAttach, onKill, tabGroups, saved
   const orphaned = sessions.filter((s) => !openTabPtyIds.has(s.id) && !savedTabPtyIds.has(s.id));
 
   const hasSavedTabs = (savedTabs?.length ?? 0) > 0;
-  const hasOrphaned = orphaned.length > 0 || loading;
+  const hasOrphaned = !loading && orphaned.length > 0;
 
   const renderSavedTabItem = (savedTab: SavedTab) => {
     const panelSessions = savedTab.panels
