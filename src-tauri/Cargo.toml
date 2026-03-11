@@ -4,6 +4,7 @@ version = "0.1.6"
 description = "v-terminal — A fast Tauri terminal with xterm.js"
 authors = []
 edition = "2021"
+default-run = "v-terminal"
 
 [lib]
 name = "v_terminal_lib"
