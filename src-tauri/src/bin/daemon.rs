@@ -360,7 +360,7 @@ async fn create_session(
     }
     cmd.cwd(&cwd);
 
-    let child = pair.slave.spawn_command(cmd).map_err(|e| format!("spawn: {e}"))?;
+    let mut child = pair.slave.spawn_command(cmd).map_err(|e| format!("spawn: {e}"))?;
 
     let writer_box = pair.master.take_writer().map_err(|e| format!("take_writer: {e}"))?;
     let reader = pair

@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { mkdirSync, copyFileSync, existsSync, writeFileSync, unlinkSync } from 'fs';
+import { mkdirSync, copyFileSync, existsSync, writeFileSync, unlinkSync, renameSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createConnection } from 'net';
@@ -35,6 +35,22 @@ const daemonRunning = await new Promise((resolve) => {
 
 if (daemonRunning) {
   console.log('Daemon already running, skipping build.');
+  // On Windows, tauri-build copies binaries/ → target/debug/v-terminal-daemon.exe and
+  // panics with "Access Denied" if that file is the currently-running daemon process.
+  // Windows allows renaming a running executable (FILE_SHARE_DELETE), so we rename the
+  // locked file out of the way and create a fresh unlocked copy at the original path.
+  // The running daemon keeps working from the renamed path; tauri-build gets a clean file.
+  if (isWindows && existsSync(srcBinary)) {
+    const oldBinary = `${srcBinary}.old`;
+    try {
+      if (existsSync(oldBinary)) unlinkSync(oldBinary);
+      renameSync(srcBinary, oldBinary);
+      copyFileSync(oldBinary, srcBinary);
+      console.log('Unlocked daemon binary for tauri-build (Windows).');
+    } catch (e) {
+      console.warn(`Could not unlock daemon binary: ${e.message}`);
+    }
+  }
 } else {
   console.log('Building v-terminal-daemon (debug)...');
   execSync('cargo build --bin v-terminal-daemon', {
