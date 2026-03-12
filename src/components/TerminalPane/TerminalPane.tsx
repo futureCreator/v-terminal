@@ -107,19 +107,27 @@ export function TerminalPane({
       const { cols, rows } = term;
 
       let ptyId: string;
+      let scrollback: number[] = [];
       try {
         if (existingSessionId) {
-          ptyId = existingSessionId;
+          try {
+            ptyId = existingSessionId;
+            scrollback = await ipc.daemonAttach(ptyId);
+          } catch {
+            // Session no longer exists (e.g. daemon restarted) — create a fresh one
+            ptyId = await ipc.daemonCreateSession(cwd, cols, rows, undefined, shellProgram, shellArgs);
+            scrollback = await ipc.daemonAttach(ptyId);
+          }
         } else {
           ptyId = await ipc.daemonCreateSession(cwd, cols, rows, undefined, shellProgram, shellArgs);
+          scrollback = await ipc.daemonAttach(ptyId);
         }
-        // Attach and get scrollback
-        const scrollback = await ipc.daemonAttach(ptyId);
         if (scrollback.length > 0) {
           term.write(new Uint8Array(scrollback));
         }
       } catch (e) {
         term.write(`\r\n\x1b[31mFailed to start session: ${e}\x1b[0m\r\n`);
+        setLoading(false);
         return;
       }
 
