@@ -139,7 +139,7 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
               </span>
               <span className="sp-row-content">
                 <span className="sp-row-title">로컬 쉘</span>
-                <span className="sp-row-subtitle">cmd / PowerShell</span>
+                <span className="sp-row-subtitle">PowerShell</span>
               </span>
             </button>
 

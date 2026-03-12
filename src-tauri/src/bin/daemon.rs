@@ -348,7 +348,16 @@ async fn create_session(
 
     let shell = shell_program.unwrap_or_else(|| {
         #[cfg(windows)]
-        { std::env::var("COMSPEC").unwrap_or_else(|_| "cmd.exe".to_string()) }
+        {
+            // Prefer PowerShell 7 (pwsh.exe), fall back to Windows PowerShell, then cmd.exe
+            if std::process::Command::new("pwsh.exe").arg("-NoProfile").arg("-Command").arg("exit").status().is_ok() {
+                "pwsh.exe".to_string()
+            } else if std::process::Command::new("powershell.exe").arg("-NoProfile").arg("-Command").arg("exit").status().is_ok() {
+                "powershell.exe".to_string()
+            } else {
+                std::env::var("COMSPEC").unwrap_or_else(|_| "cmd.exe".to_string())
+            }
+        }
         #[cfg(not(windows))]
         { std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string()) }
     });
