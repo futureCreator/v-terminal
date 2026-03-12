@@ -14,6 +14,10 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.12 - 2026-03-13
+
+- Fixed Windows installer failing when app or daemon is already running — added NSIS preinstall hook to force-kill `v-terminal.exe` and `v-terminal-daemon.exe` before file extraction
+
 ### v0.1.11 - 2026-03-13
 
 - Fixed double paste on Windows: Ctrl+V was pasting twice because both the custom key handler and the native paste event both triggered — now only blocks xterm's keydown processing and lets the native paste event handle it (same approach as macOS Cmd+V)
