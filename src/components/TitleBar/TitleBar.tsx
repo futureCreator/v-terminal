@@ -10,9 +10,15 @@ export function TitleBar() {
 
   useEffect(() => {
     let unlisten: (() => void) | null = null;
+    // Register listener first, then query current status to avoid race condition
+    // where the "connected" event fires before the listener is set up.
     ipc.onDaemonStatus((status) => {
       setDaemonStatus(status === "connected" ? "connected" : "reconnecting");
-    }).then((fn) => { unlisten = fn; });
+    }).then((fn) => {
+      unlisten = fn;
+      // After listener is registered, fetch current status in case we missed the event
+      ipc.getDaemonStatus().then((status) => setDaemonStatus(status)).catch(() => {});
+    });
     return () => { unlisten?.(); };
   }, []);
 

@@ -47,6 +47,12 @@ pub struct DaemonSessionInfo {
     pub last_active: u64,
 }
 
+#[tauri::command]
+pub async fn get_daemon_status(state: State<'_, AppState>) -> Result<String, String> {
+    let connected = state.daemon_client.lock().await.is_some();
+    Ok(if connected { "connected".to_string() } else { "reconnecting".to_string() })
+}
+
 async fn client(state: &State<'_, AppState>) -> Result<DaemonClient, String> {
     state
         .daemon_client

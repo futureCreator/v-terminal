@@ -60,6 +60,10 @@ export const ipc = {
     return listen<PtyExitPayload>("pty-exit", (event) => handler(event.payload));
   },
 
+  async getDaemonStatus(): Promise<"connected" | "reconnecting"> {
+    return invoke<string>("get_daemon_status") as Promise<"connected" | "reconnecting">;
+  },
+
   onDaemonStatus(handler: (status: "connected" | "reconnecting") => void): Promise<UnlistenFn> {
     return listen<string>("daemon-status", (event) =>
       handler(event.payload as "connected" | "reconnecting")

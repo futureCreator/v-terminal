@@ -107,6 +107,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            daemon_commands::get_daemon_status,
             daemon_commands::daemon_list_sessions,
             daemon_commands::daemon_create_session,
             daemon_commands::daemon_attach,
