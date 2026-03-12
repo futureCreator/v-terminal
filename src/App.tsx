@@ -7,6 +7,7 @@ import { SplitToolbar } from "./components/SplitToolbar/SplitToolbar";
 import { PanelGrid } from "./components/PanelGrid/PanelGrid";
 import { SessionPicker } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
+import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { useTabStore } from "./store/tabStore";
 import { ipc } from "./lib/tauriIpc";
 import type { Layout, SshProfile } from "./types/terminal";
@@ -159,6 +160,7 @@ export function App() {
           onConnectInPanel={handleSshConnectInPanel}
         />
       )}
+      <DaemonStatusBanner />
     </div>
   );
 }

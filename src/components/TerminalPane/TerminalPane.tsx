@@ -50,6 +50,8 @@ export function TerminalPane({
   const fitAddonRef = useRef<FitAddon | null>(null);
   const ptyIdRef = useRef<string | null>(null);
   const [exited, setExited] = useState(false);
+  const exitedRef = useRef(exited);
+  exitedRef.current = exited;
   const [loading, setLoading] = useState(true);
   const [initKey, setInitKey] = useState(0);
 
@@ -64,6 +66,19 @@ export function TerminalPane({
     setLoading(true);
     setInitKey((k) => k + 1);
   };
+
+  // When daemon dies, mark this pane as exited so the user can start a new session
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    ipc.onDaemonStatus((status) => {
+      if (status === "reconnecting" && !exitedRef.current && ptyIdRef.current) {
+        setExited(true);
+        onPtyKilled();
+      }
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;

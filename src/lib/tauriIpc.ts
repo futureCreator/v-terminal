@@ -59,4 +59,10 @@ export const ipc = {
   onPtyExit(handler: (payload: PtyExitPayload) => void): Promise<UnlistenFn> {
     return listen<PtyExitPayload>("pty-exit", (event) => handler(event.payload));
   },
+
+  onDaemonStatus(handler: (status: "connected" | "reconnecting") => void): Promise<UnlistenFn> {
+    return listen<string>("daemon-status", (event) =>
+      handler(event.payload as "connected" | "reconnecting")
+    );
+  },
 };

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
-use tokio::sync::{Mutex, oneshot};
+use tokio::sync::{Mutex, oneshot, watch};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
@@ -11,6 +11,7 @@ use uuid::Uuid;
 pub struct DaemonClient {
     write_tx: tokio::sync::mpsc::UnboundedSender<String>,
     pending: Arc<Mutex<HashMap<String, oneshot::Sender<Value>>>>,
+    alive_rx: watch::Receiver<bool>,
 }
 
 impl DaemonClient {
@@ -25,6 +26,7 @@ impl DaemonClient {
             Arc::new(Mutex::new(HashMap::new()));
 
         let (write_tx, mut write_rx) = tokio::sync::mpsc::unbounded_channel::<String>();
+        let (alive_tx, alive_rx) = watch::channel(true);
 
         // Writer task
         let w = writer_half.clone();
@@ -52,9 +54,29 @@ impl DaemonClient {
                     }
                 }
             }
+            // Signal disconnect; lib.rs watchdog handles reconnection and event emission
+            let _ = alive_tx.send(false);
         });
 
-        Ok(Self { write_tx, pending })
+        Ok(Self { write_tx, pending, alive_rx })
+    }
+
+    /// Resolves when the TCP connection to the daemon is lost.
+    pub async fn wait_for_disconnect(&self) {
+        let mut rx = self.alive_rx.clone();
+        if !*rx.borrow() {
+            return;
+        }
+        loop {
+            match rx.changed().await {
+                Ok(()) => {
+                    if !*rx.borrow() {
+                        return;
+                    }
+                }
+                Err(_) => return,
+            }
+        }
     }
 
     pub async fn send(&self, mut cmd: Value) -> Result<Value, String> {

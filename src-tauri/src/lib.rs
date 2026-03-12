@@ -5,7 +5,7 @@ mod state;
 use commands::{daemon_commands, session_commands};
 use daemon::client::DaemonClient;
 use state::app_state::AppState;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 async fn ensure_daemon_and_connect(app: tauri::AppHandle) -> Result<DaemonClient, String> {
     // Try connecting to already-running daemon first
@@ -43,6 +43,55 @@ async fn ensure_daemon_and_connect(app: tauri::AppHandle) -> Result<DaemonClient
     Err("daemon did not start in time".to_string())
 }
 
+fn start_daemon_watchdog(app: tauri::AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        let mut backoff_ms = 500u64;
+        let mut first_connect = true;
+
+        loop {
+            // Keep retrying until connected
+            let client = loop {
+                match ensure_daemon_and_connect(app.clone()).await {
+                    Ok(c) => {
+                        backoff_ms = 500;
+                        break c;
+                    }
+                    Err(e) => {
+                        eprintln!("daemon connect failed: {e}, retrying in {backoff_ms}ms");
+                        tokio::time::sleep(std::time::Duration::from_millis(backoff_ms)).await;
+                        backoff_ms = (backoff_ms * 2).min(10_000);
+                    }
+                }
+            };
+
+            // Store client in app state
+            {
+                let state = app.state::<AppState>();
+                *state.daemon_client.lock().await = Some(client.clone());
+            }
+
+            if first_connect {
+                first_connect = false;
+                eprintln!("daemon connected");
+            } else {
+                eprintln!("daemon reconnected");
+            }
+            let _ = app.emit("daemon-status", "connected");
+
+            // Block until connection drops
+            client.wait_for_disconnect().await;
+
+            // Clear stale client and notify frontend
+            {
+                let state = app.state::<AppState>();
+                *state.daemon_client.lock().await = None;
+            }
+            eprintln!("daemon disconnected, reconnecting...");
+            let _ = app.emit("daemon-status", "reconnecting");
+        }
+    });
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app_state = AppState::new();
@@ -54,17 +103,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .manage(app_state)
         .setup(|app| {
-            let app_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                match ensure_daemon_and_connect(app_handle.clone()).await {
-                    Ok(client) => {
-                        let state = app_handle.state::<AppState>();
-                        *state.daemon_client.lock().await = Some(client);
-                        eprintln!("daemon connected");
-                    }
-                    Err(e) => eprintln!("daemon error: {e}"),
-                }
-            });
+            start_daemon_watchdog(app.handle().clone());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
