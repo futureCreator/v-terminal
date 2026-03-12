@@ -73,6 +73,16 @@ export function App() {
     setSshModalOpen(false);
   };
 
+  const handleSshConnectInAllPanels = (profile: SshProfile) => {
+    if (!activeTab) return;
+    const cmd = buildSshCommand(profile);
+    const encoded = new TextEncoder().encode(cmd + "\r");
+    activeTab.panels
+      .filter((p) => p.ptyId !== null)
+      .forEach((p) => ipc.daemonWrite(p.ptyId!, encoded).catch(() => {}));
+    setSshModalOpen(false);
+  };
+
   const handleSshConnect = async (profile: SshProfile) => {
     let cwd: string;
     try {
@@ -164,6 +174,7 @@ export function App() {
           onClose={() => setSshModalOpen(false)}
           onConnect={handleSshConnect}
           onConnectInPanel={handleSshConnectInPanel}
+          onConnectInAllPanels={activeTab && activeTab.panels.length > 1 ? handleSshConnectInAllPanels : undefined}
         />
       )}
       <DaemonStatusBanner />
