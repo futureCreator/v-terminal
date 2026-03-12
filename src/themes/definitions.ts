@@ -449,7 +449,7 @@ export const THEMES: Record<string, ThemeDefinition> = {
 };
 
 export const THEME_GROUPS: ThemeGroup[] = [
-  { label: "Apple",      themes: [dark, light] },
+  { label: "Apple",      themes: [light, dark] },
   { label: "Popular",    themes: [dracula, monokai, tokyoNight, oneDark, ayu, nord] },
   { label: "Catppuccin", themes: [catppuccinLatte, catppuccinFrappe, catppuccinMacchiato, catppuccinMocha] },
   { label: "Solarized",  themes: [solarizedLight, solarizedDark, solarizedOsaka] },

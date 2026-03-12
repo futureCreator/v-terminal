@@ -14,6 +14,11 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.10 - 2026-03-13
+
+- Fixed theme picker appearing behind terminal panels — render via React Portal into document.body to escape topbar backdrop-filter stacking context
+- Fixed Apple theme group order in theme picker: Light now appears above Dark
+
 ### v0.1.9 - 2026-03-13
 
 - Fixed PowerShell detection on Windows: replaced process-spawn probing with PATH directory search, resolving silent fallback to cmd.exe in headless daemon environments

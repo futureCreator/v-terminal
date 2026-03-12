@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useThemeStore } from "../../store/themeStore";
 import { THEME_GROUPS } from "../../themes/definitions";
 import "./ThemePicker.css";
@@ -35,7 +36,7 @@ export function ThemePicker({ anchorRef, isOpen, onClose }: ThemePickerProps) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div ref={pickerRef} className="theme-picker">
       <div className="theme-picker-header">Theme</div>
 
@@ -75,7 +76,8 @@ export function ThemePicker({ anchorRef, isOpen, onClose }: ThemePickerProps) {
           ))}
         </div>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
 

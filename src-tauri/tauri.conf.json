@@ -1,6 +1,6 @@
 {
   "productName": "v-terminal",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "identifier": "com.v-terminal.app",
   "build": {
     "frontendDist": "../dist",
