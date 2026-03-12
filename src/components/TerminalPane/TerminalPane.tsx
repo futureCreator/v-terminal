@@ -168,6 +168,29 @@ export function TerminalPane({
         ipc.daemonWrite(ptyId, encoded).catch(() => {});
       }
 
+      // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
+      term.attachCustomKeyEventHandler((e) => {
+        if (e.type !== "keydown") return true;
+
+        if (e.ctrlKey && e.key === "c") {
+          const selection = term.getSelection();
+          if (selection) {
+            navigator.clipboard.writeText(selection).catch(() => {});
+            return false;
+          }
+          return true; // no selection → pass as SIGINT
+        }
+
+        if (e.ctrlKey && e.key === "v") {
+          navigator.clipboard.readText().then((text) => {
+            term.paste(text);
+          }).catch(() => {});
+          return false;
+        }
+
+        return true;
+      });
+
       // Input
       term.onData((data) => {
         const encoded = new TextEncoder().encode(data);
