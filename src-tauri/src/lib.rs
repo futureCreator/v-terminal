@@ -25,12 +25,20 @@ async fn ensure_daemon_and_connect(app: tauri::AppHandle) -> Result<DaemonClient
         { exe_dir.join("v-terminal-daemon") }
     };
 
-    std::process::Command::new(&daemon_exe)
-        .stdin(std::process::Stdio::null())
+    #[allow(unused_mut)]
+    let mut cmd = std::process::Command::new(&daemon_exe);
+    cmd.stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .spawn()
-        .map_err(|e| format!("spawn daemon: {e}"))?;
+        .stderr(std::process::Stdio::null());
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    cmd.spawn().map_err(|e| format!("spawn daemon: {e}"))?;
 
     // Wait up to 5s for daemon to be ready
     for _ in 0..50 {
