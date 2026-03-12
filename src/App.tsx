@@ -9,7 +9,9 @@ import { SessionPicker } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { useTabStore } from "./store/tabStore";
+import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { ipc } from "./lib/tauriIpc";
+import { terminalRegistry } from "./components/TerminalPane/TerminalPane";
 import type { Layout, SshProfile } from "./types/terminal";
 import "./styles/theme.css";
 import "./styles/globals.css";
@@ -18,10 +20,31 @@ import "./App.css";
 export function App() {
   const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
     useTabStore();
+  const { themeId } = useThemeStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const activePanelPtyIdRef = useRef<string | null>(null);
+
+  // Apply theme CSS variables to document and update all open terminals
+  useEffect(() => {
+    const applyTheme = () => {
+      const def = resolveThemeDefinition(themeId);
+      const el = document.documentElement;
+      Object.entries(def.cssVars).forEach(([key, val]) => el.style.setProperty(key, val));
+      for (const term of terminalRegistry.values()) {
+        term.options.theme = def.xterm;
+      }
+    };
+
+    applyTheme();
+
+    if (themeId === "auto") {
+      const mq = window.matchMedia("(prefers-color-scheme: dark)");
+      mq.addEventListener("change", applyTheme);
+      return () => mq.removeEventListener("change", applyTheme);
+    }
+  }, [themeId]);
 
   const activateTab = useCallback((tabId: string) => {
     setActiveTab(tabId);

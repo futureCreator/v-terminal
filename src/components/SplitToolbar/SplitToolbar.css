@@ -80,3 +80,28 @@
 .broadcast-btn--active:hover {
   background: rgba(255,159,10,0.2);
 }
+
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label-tertiary);
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--label-primary);
+  background: var(--bg-tertiary);
+}
+
+.theme-toggle-btn--open {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}

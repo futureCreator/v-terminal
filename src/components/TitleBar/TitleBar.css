@@ -1,6 +1,6 @@
 .titlebar {
   height: 36px;
-  background: rgba(36, 36, 38, 0.9);
+  background: var(--bg-titlebar);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;

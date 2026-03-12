@@ -3,9 +3,9 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { ipc } from "../../lib/tauriIpc";
-import { XTERM_DARK_THEME } from "../../lib/xtermTheme";
 import { ensureFontLoaded } from "../../lib/fontLoader";
 import { useTabStore } from "../../store/tabStore";
+import { useThemeStore, resolveThemeDefinition } from "../../store/themeStore";
 import "@xterm/xterm/css/xterm.css";
 import "./TerminalPane.css";
 
@@ -45,6 +45,10 @@ export function TerminalPane({
   onNextPanel,
   onPrevPanel,
 }: TerminalPaneProps) {
+  const { themeId } = useThemeStore();
+  const themeRef = useRef(themeId);
+  themeRef.current = themeId;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -90,11 +94,12 @@ export function TerminalPane({
     const init = async () => {
       await ensureFontLoaded();
 
+      const xtermTheme = resolveThemeDefinition(themeRef.current).xterm;
       const term = new Terminal({
         fontFamily: '"JetBrainsMonoNerdFont", "JetBrains Mono", "Nanum Gothic Coding", monospace',
         fontSize: 14,
         lineHeight: 1.2,
-        theme: XTERM_DARK_THEME,
+        theme: xtermTheme,
         allowTransparency: false,
         fastScrollModifier: "alt",
         scrollback: 5000,

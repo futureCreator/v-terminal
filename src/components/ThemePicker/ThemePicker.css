@@ -1,0 +1,137 @@
+.theme-picker {
+  position: fixed;
+  top: 68px;
+  right: 8px;
+  z-index: 1000;
+  width: 210px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  animation: theme-picker-in 0.12s ease-out;
+  scrollbar-width: none;
+}
+
+.theme-picker::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes theme-picker-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.theme-picker-header {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--label-tertiary);
+  padding: 4px 8px 6px;
+  user-select: none;
+}
+
+/* ── Group ──────────────────────────────────────────────────── */
+.theme-picker-group {
+  margin-bottom: 2px;
+}
+
+.theme-picker-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--label-tertiary);
+  padding: 6px 8px 3px;
+  user-select: none;
+  border-top: 1px solid var(--separator);
+  margin-top: 2px;
+}
+
+.theme-picker-group:first-of-type .theme-picker-group-label {
+  border-top: none;
+  margin-top: 0;
+}
+
+/* ── Item ───────────────────────────────────────────────────── */
+.theme-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  color: var(--label-secondary);
+}
+
+.theme-picker-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--label-primary);
+}
+
+.theme-picker-item--active {
+  color: var(--label-primary);
+}
+
+/* ── Auto icon ──────────────────────────────────────────────── */
+.theme-picker-auto-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--label-secondary);
+  flex-shrink: 0;
+}
+
+.theme-picker-item--active .theme-picker-auto-icon {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* ── Swatch ─────────────────────────────────────────────────── */
+.theme-picker-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 28px;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+  padding: 3px 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.theme-picker-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Name & Check ───────────────────────────────────────────── */
+.theme-picker-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.theme-picker-check {
+  color: var(--accent);
+  flex-shrink: 0;
+}

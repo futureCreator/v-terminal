@@ -6,6 +6,8 @@
   --bg-elevated:     #242426;   /* title bar, raised surfaces */
   --bg-terminal:     #1c1c1e;   /* terminal pane */
   --bg-panel-border: #3a3a3c;
+  --bg-titlebar:     rgba(36, 36, 38, 0.9);
+  --bg-topbar:       rgba(44, 44, 46, 0.88);
 
   /* ── Labels ──────────────────────────────────────────────────── */
   --label-primary:   rgba(255,255,255,0.85);
@@ -49,3 +51,4 @@
   --separator: rgba(255,255,255,0.08);
   --separator-strong: rgba(255,255,255,0.15);
 }
+
