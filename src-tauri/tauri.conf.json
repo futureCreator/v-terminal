@@ -44,7 +44,7 @@
     "windows": {
       "wix": {},
       "nsis": {
-        "customNsis": "nsis/preinstall.nsh"
+        "installerHooks": "nsis/preinstall.nsh"
       }
     }
   }
