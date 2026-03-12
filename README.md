@@ -14,6 +14,16 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.9 - 2026-03-13
+
+- Fixed PowerShell detection on Windows: replaced process-spawn probing with PATH directory search, resolving silent fallback to cmd.exe in headless daemon environments
+- Default to PowerShell on Windows: prefer PowerShell 7 (pwsh.exe) → Windows PowerShell 5.1 (powershell.exe) → cmd.exe
+- Added "Open in All Panels" button to SSH connection modal
+- Added persistent daemon status indicator to TitleBar with auto-reconnect on disconnect
+- Fixed race conditions in daemon status indicator showing stale state on startup
+- Fixed fallback to new session when a restored tab's daemon session no longer exists
+- Fixed Windows build: declare `child` as `mut` to allow `child.wait()` call
+
 ### v0.1.8 - 2026-03-12
 
 - Fixed window close button not closing the app — added missing `core:window:allow-destroy` capability required by Tauri v2's `onCloseRequested` internal `destroy()` call
