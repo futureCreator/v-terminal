@@ -188,10 +188,8 @@ export function TerminalPane({
         }
 
         if (e.ctrlKey && e.key === "v") {
-          // Windows/Linux Ctrl+V: native paste event is unreliable in Tauri WebView, so manually read clipboard.
-          navigator.clipboard.readText().then((text) => {
-            term.paste(text);
-          }).catch(() => {});
+          // Windows/Linux Ctrl+V: block xterm's keydown processing to prevent double paste.
+          // The browser's native paste DOM event fires independently and xterm.js handles it once.
           return false;
         }
 

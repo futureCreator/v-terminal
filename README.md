@@ -14,6 +14,10 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.11 - 2026-03-13
+
+- Fixed double paste on Windows: Ctrl+V was pasting twice because both the custom key handler and the native paste event both triggered — now only blocks xterm's keydown processing and lets the native paste event handle it (same approach as macOS Cmd+V)
+
 ### v0.1.10 - 2026-03-13
 
 - Fixed theme picker appearing behind terminal panels — render via React Portal into document.body to escape topbar backdrop-filter stacking context
