@@ -1,9 +1,39 @@
+import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { ipc } from "../../lib/tauriIpc";
 import "./TitleBar.css";
 
 export function TitleBar() {
   const win = getCurrentWindow();
   const isWindows = navigator.platform.toUpperCase().includes("WIN");
+  const [daemonStatus, setDaemonStatus] = useState<"connected" | "reconnecting" | null>(null);
+
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    ipc.onDaemonStatus((status) => {
+      setDaemonStatus(status === "connected" ? "connected" : "reconnecting");
+    }).then((fn) => { unlisten = fn; });
+    return () => { unlisten?.(); };
+  }, []);
+
+  const dotClass = daemonStatus === "connected"
+    ? "daemon-dot--connected"
+    : daemonStatus === "reconnecting"
+    ? "daemon-dot--reconnecting"
+    : "daemon-dot--unknown";
+
+  const statusLabel = daemonStatus === "connected"
+    ? "연결됨"
+    : daemonStatus === "reconnecting"
+    ? "재연결 중…"
+    : "연결 중…";
+
+  const indicator = (
+    <div className="daemon-indicator" title={`데몬 ${statusLabel}`}>
+      <span className={`daemon-dot ${dotClass}`} />
+      <span className="daemon-indicator-label">{statusLabel}</span>
+    </div>
+  );
 
   if (isWindows) {
     return (
@@ -11,6 +41,7 @@ export function TitleBar() {
         <span className="titlebar-app-name" data-tauri-drag-region>
           v-terminal
         </span>
+        {indicator}
         <div className="titlebar-win-controls">
           <button
             className="win-btn win-btn--minimize"
@@ -49,7 +80,6 @@ export function TitleBar() {
 
   return (
     <div className="titlebar" data-tauri-drag-region>
-      <div className="titlebar-spacer" data-tauri-drag-region />
       <div className="titlebar-traffic-lights">
         <button
           className="traffic-light traffic-close"
@@ -82,6 +112,8 @@ export function TitleBar() {
           </svg>
         </button>
       </div>
+      <div className="titlebar-spacer" data-tauri-drag-region />
+      {indicator}
     </div>
   );
 }

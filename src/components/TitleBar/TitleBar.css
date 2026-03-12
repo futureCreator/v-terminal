@@ -60,6 +60,61 @@
   -webkit-app-region: drag;
 }
 
+/* ── Daemon status indicator ──────────────────────────────────── */
+.daemon-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 var(--spacing-md);
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+  cursor: default;
+  /* Windows: push to right */
+  margin-left: auto;
+}
+
+/* macOS: already pushed by spacer, no extra margin needed */
+.titlebar:not(.titlebar--windows) .daemon-indicator {
+  margin-left: 0;
+}
+
+.daemon-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.daemon-dot--connected {
+  background: var(--success);
+  box-shadow: 0 0 5px rgba(48, 209, 88, 0.55);
+}
+
+.daemon-dot--reconnecting {
+  background: var(--warning);
+  animation: daemon-dot-pulse 1s ease-in-out infinite;
+}
+
+.daemon-dot--unknown {
+  background: var(--label-disabled);
+}
+
+@keyframes daemon-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.daemon-indicator-label {
+  font-family: "Pretendard", -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--label-tertiary);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* ── Windows titlebar ─────────────────────────────────────────── */
 .titlebar--windows {
   padding: 0;
@@ -82,7 +137,6 @@
   align-items: stretch;
   height: 100%;
   flex-shrink: 0;
-  margin-left: auto;
   -webkit-app-region: no-drag;
 }
 
