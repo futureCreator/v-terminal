@@ -349,17 +349,32 @@ async fn create_session(
     let shell = shell_program.unwrap_or_else(|| {
         #[cfg(windows)]
         {
-            // Prefer PowerShell 7 (pwsh.exe), fall back to Windows PowerShell, then cmd.exe
-            if std::process::Command::new("pwsh.exe").arg("-NoProfile").arg("-Command").arg("exit").status().is_ok() {
+            // Search PATH for an executable by name
+            fn in_path(exe: &str) -> bool {
+                std::env::var("PATH")
+                    .unwrap_or_default()
+                    .split(';')
+                    .any(|dir| std::path::Path::new(dir).join(exe).exists())
+            }
+
+            // Prefer PowerShell 7 (pwsh.exe), fall back to Windows PowerShell 5.1, then cmd.exe
+            if in_path("pwsh.exe") {
                 "pwsh.exe".to_string()
-            } else if std::process::Command::new("powershell.exe").arg("-NoProfile").arg("-Command").arg("exit").status().is_ok() {
+            } else if in_path("powershell.exe")
+                || std::path::Path::new(
+                    r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe",
+                )
+                .exists()
+            {
                 "powershell.exe".to_string()
             } else {
                 std::env::var("COMSPEC").unwrap_or_else(|_| "cmd.exe".to_string())
             }
         }
         #[cfg(not(windows))]
-        { std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string()) }
+        {
+            std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string())
+        }
     });
     let mut cmd = CommandBuilder::new(&shell);
     if let Some(args) = shell_args {
