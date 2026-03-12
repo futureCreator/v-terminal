@@ -10,16 +10,32 @@ export function TitleBar() {
 
   useEffect(() => {
     let unlisten: (() => void) | null = null;
-    // Register listener first, then query current status to avoid race condition
-    // where the "connected" event fires before the listener is set up.
+    let cancelled = false;
+
+    const syncStatus = () => {
+      ipc.getDaemonStatus().then((status) => {
+        if (!cancelled) setDaemonStatus(status);
+      }).catch(() => {});
+    };
+
+    // Query immediately — covers the case where daemon was already connected
+    // before the event listener below has a chance to register.
+    syncStatus();
+
     ipc.onDaemonStatus((status) => {
-      setDaemonStatus(status === "connected" ? "connected" : "reconnecting");
+      if (!cancelled) setDaemonStatus(status === "connected" ? "connected" : "reconnecting");
     }).then((fn) => {
+      if (cancelled) { fn(); return; }
       unlisten = fn;
-      // After listener is registered, fetch current status in case we missed the event
-      ipc.getDaemonStatus().then((status) => setDaemonStatus(status)).catch(() => {});
+      // Query again after listener is registered to catch any events that fired
+      // in the gap between the first syncStatus() call and listener registration.
+      syncStatus();
     });
-    return () => { unlisten?.(); };
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
   }, []);
 
   const dotClass = daemonStatus === "connected"

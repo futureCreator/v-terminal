@@ -29,16 +29,22 @@ export function App() {
 
   // 앱 종료 시 열려있는 탭을 모두 백그라운드로 저장
   useEffect(() => {
-    let unlisten: (() => void) | null = null;
+    let cancelled = false;
+    let unlistenFn: (() => void) | null = null;
     getCurrentWindow()
       .onCloseRequested(() => {
         saveAllOpenTabsToBackground();
       })
       .then((fn) => {
-        unlisten = fn;
+        if (cancelled) {
+          fn(); // cleanup이 먼저 실행된 경우 즉시 해제
+        } else {
+          unlistenFn = fn;
+        }
       });
     return () => {
-      unlisten?.();
+      cancelled = true;
+      unlistenFn?.();
     };
   }, [saveAllOpenTabsToBackground]);
 
