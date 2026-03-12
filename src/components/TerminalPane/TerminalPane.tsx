@@ -181,7 +181,14 @@ export function TerminalPane({
           return true; // no selection → pass as SIGINT
         }
 
+        if (e.metaKey && e.key === "v") {
+          // macOS Cmd+V: block xterm's keydown processing to prevent double paste.
+          // The browser's native paste DOM event fires independently and xterm.js handles it once.
+          return false;
+        }
+
         if (e.ctrlKey && e.key === "v") {
+          // Windows/Linux Ctrl+V: native paste event is unreliable in Tauri WebView, so manually read clipboard.
           navigator.clipboard.readText().then((text) => {
             term.paste(text);
           }).catch(() => {});
