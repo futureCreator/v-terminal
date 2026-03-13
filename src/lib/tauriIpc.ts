@@ -19,20 +19,29 @@ const ptyDataHandlers = new Map<string, (data: Uint8Array) => void>();
 const ptyExitHandlers = new Map<string, () => void>();
 let ptyDataUnlisten: UnlistenFn | null = null;
 let ptyExitUnlisten: UnlistenFn | null = null;
+// In-flight promises prevent duplicate registrations when multiple panels mount concurrently.
+let ptyDataListenerPromise: Promise<void> | null = null;
+let ptyExitListenerPromise: Promise<void> | null = null;
 
 async function ensurePtyDataListener(): Promise<void> {
   if (ptyDataUnlisten) return;
-  ptyDataUnlisten = await listen<PtyDataPayload>("pty-data", (event) => {
-    const { ptyId, data } = event.payload;
-    ptyDataHandlers.get(ptyId)?.(new Uint8Array(data));
-  });
+  if (!ptyDataListenerPromise) {
+    ptyDataListenerPromise = listen<PtyDataPayload>("pty-data", (event) => {
+      const { ptyId, data } = event.payload;
+      ptyDataHandlers.get(ptyId)?.(new Uint8Array(data));
+    }).then((unlisten) => { ptyDataUnlisten = unlisten; });
+  }
+  return ptyDataListenerPromise;
 }
 
 async function ensurePtyExitListener(): Promise<void> {
   if (ptyExitUnlisten) return;
-  ptyExitUnlisten = await listen<PtyExitPayload>("pty-exit", (event) => {
-    ptyExitHandlers.get(event.payload.ptyId)?.();
-  });
+  if (!ptyExitListenerPromise) {
+    ptyExitListenerPromise = listen<PtyExitPayload>("pty-exit", (event) => {
+      ptyExitHandlers.get(event.payload.ptyId)?.();
+    }).then((unlisten) => { ptyExitUnlisten = unlisten; });
+  }
+  return ptyExitListenerPromise;
 }
 
 export const ipc = {

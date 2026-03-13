@@ -260,7 +260,9 @@ async fn dispatch(
                         }
                     }
                 });
-                sub_tasks.insert(session_id.clone(), task);
+                if let Some(old) = sub_tasks.insert(session_id.clone(), task) {
+                    old.abort();
+                }
             } else {
                 drop(reg);
                 let mut resp = serde_json::json!({
