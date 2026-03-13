@@ -1,7 +1,5 @@
 # v-terminal
 
-![](img/default.png)
-
 A fast, native terminal emulator built with Tauri + React + xterm.js. Designed for Windows with persistent sessions, multi-panel layouts, and a polished Apple HIG-compliant UI.
 
 ## Tech Stack
