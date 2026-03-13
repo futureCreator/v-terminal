@@ -4,55 +4,13 @@
   padding: 0 6px;
   flex-shrink: 0;
   border-left: 1px solid var(--separator);
-  gap: 2px;
 }
 
-/* Segmented control – Apple HIG mutually exclusive group */
-.split-toolbar-group {
-  display: flex;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 6px;
-  padding: 2px;
-  gap: 1px;
-  margin: 0 2px;
+.more-wrap {
+  position: relative;
 }
 
-.split-btn {
-  width: 26px;
-  height: 22px;
-  border: none;
-  background: transparent;
-  color: var(--label-tertiary);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: color 0.1s, background 0.1s;
-  padding: 0;
-}
-
-.split-btn:hover {
-  color: var(--label-secondary);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.split-btn--active {
-  background: var(--bg-tertiary);
-  color: var(--label-primary);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
-}
-
-.split-btn--active:hover {
-  color: var(--accent);
-  background: var(--bg-tertiary);
-}
-
-/* Unified standalone toolbar icon buttons */
-.palette-btn,
-.broadcast-btn,
-.theme-toggle-btn {
+.more-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,32 +25,147 @@
   transition: color 0.1s, background 0.1s;
 }
 
-.palette-btn:hover,
-.broadcast-btn:hover,
-.theme-toggle-btn:hover {
+.more-btn:hover {
   color: var(--label-primary);
   background: var(--bg-tertiary);
 }
 
-.broadcast-btn--active {
-  color: var(--broadcast);
-  background: var(--broadcast-dim);
-}
-
-.broadcast-btn--active:hover {
-  color: var(--broadcast);
-  background: rgba(255, 159, 10, 0.2);
-}
-
-.theme-toggle-btn--open {
+.more-btn--open {
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
-.split-toolbar-sep {
-  width: 1px;
-  height: 16px;
+/* ── Dropdown menu ──────────────────────────────────────────── */
+.more-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 234px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  z-index: 1000;
+  animation: more-menu-in 0.12s ease-out;
+}
+
+@keyframes more-menu-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Layout section ─────────────────────────────────────────── */
+.more-menu-section {
+  padding-bottom: 2px;
+}
+
+.more-menu-section-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--label-tertiary);
+  padding: 4px 8px 5px;
+  user-select: none;
+}
+
+.more-menu-layout-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px 2px;
+}
+
+.more-menu-layout-btn {
+  flex: 1;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--label-tertiary);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+  padding: 0;
+}
+
+.more-menu-layout-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--label-secondary);
+}
+
+.more-menu-layout-btn--active {
+  background: var(--bg-tertiary);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Separator ──────────────────────────────────────────────── */
+.more-menu-sep {
+  height: 1px;
   background: var(--separator);
-  margin: 0 4px;
-  flex-shrink: 0;
+  margin: 3px 4px;
+}
+
+/* ── Menu items ─────────────────────────────────────────────── */
+.more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--label-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  text-align: left;
+  font-family: inherit;
+}
+
+.more-menu-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--label-primary);
+}
+
+.more-menu-item--broadcast {
+  color: var(--broadcast);
+}
+
+.more-menu-item--broadcast:hover {
+  color: var(--broadcast);
+}
+
+.more-menu-item-label {
+  flex: 1;
+}
+
+/* ── Broadcast badge ────────────────────────────────────────── */
+.more-menu-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--broadcast);
+  background: var(--broadcast-dim);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+/* ── Keyboard shortcut hint ─────────────────────────────────── */
+.more-menu-kbd {
+  font-size: 11px;
+  color: var(--label-tertiary);
+  background: rgba(128, 128, 128, 0.14);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }

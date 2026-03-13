@@ -1,16 +1,15 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import { useTabStore } from "../../store/tabStore";
 import "./TabBar.css";
 
 interface TabBarProps {
-  onOpenSshManager: () => void;
   onCloseTab?: (tabId: string) => void;
   onKillTab?: (tabId: string) => void;
   onActivateTab?: (tabId: string) => void;
 }
 
-export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
+export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
   const { tabs, activeTabId, addTab, removeTab, setActiveTab, renameTab } = useTabStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -80,22 +79,35 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
       )}
       <div className="tabbar-tabs" ref={scrollContainerRef}>
         {tabs.map((tab) => (
-          <TabItem
-            key={tab.id}
-            id={tab.id}
-            label={tab.label}
-            isActive={tab.id === activeTabId}
-            onActivate={() => {
-              if (onActivateTab) {
-                onActivateTab(tab.id);
-              } else {
-                setActiveTab(tab.id);
-              }
-            }}
-            onClose={() => (onCloseTab ? onCloseTab(tab.id) : removeTab(tab.id))}
-            onKill={() => (onKillTab ? onKillTab(tab.id) : removeTab(tab.id))}
-            onRename={(label) => renameTab(tab.id, label)}
-          />
+          <Fragment key={tab.id}>
+            <TabItem
+              id={tab.id}
+              label={tab.label}
+              isActive={tab.id === activeTabId}
+              onActivate={() => {
+                if (onActivateTab) {
+                  onActivateTab(tab.id);
+                } else {
+                  setActiveTab(tab.id);
+                }
+              }}
+              onClose={() => (onCloseTab ? onCloseTab(tab.id) : removeTab(tab.id))}
+              onKill={() => (onKillTab ? onKillTab(tab.id) : removeTab(tab.id))}
+              onRename={(label) => renameTab(tab.id, label)}
+            />
+            {tab.id === activeTabId && (
+              <button
+                className="tabbar-add-inline"
+                onClick={handleAddTab}
+                title="New Tab"
+                aria-label="New tab"
+              >
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                  <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
+          </Fragment>
         ))}
       </div>
       {canScrollRight && (
@@ -109,32 +121,6 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
           </svg>
         </button>
       )}
-      <div className="tabbar-sep" />
-      <button
-        className="tabbar-add"
-        onClick={handleAddTab}
-        title="New Tab"
-        aria-label="New tab"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </button>
-      <button
-        className="tabbar-ssh"
-        onClick={onOpenSshManager}
-        title="SSH Connections"
-        aria-label="SSH connections"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="1" y="2.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-          <rect x="1" y="9.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-          <circle cx="12.5" cy="4.5" r="1" fill="currentColor" />
-          <circle cx="12.5" cy="11.5" r="1" fill="currentColor" />
-          <circle cx="10" cy="4.5" r="0.7" fill="currentColor" opacity="0.5" />
-          <circle cx="10" cy="11.5" r="0.7" fill="currentColor" opacity="0.5" />
-        </svg>
-      </button>
     </div>
   );
 }

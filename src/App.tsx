@@ -524,7 +524,6 @@ export function App() {
       <TitleBar />
       <div className="topbar">
         <TabBar
-          onOpenSshManager={() => setSshModalOpen(true)}
           onCloseTab={handleTabClose}
           onKillTab={handleTabKill}
           onActivateTab={activateTab}
@@ -535,6 +534,7 @@ export function App() {
           onLayoutChange={handleLayoutChange}
           onToggleBroadcast={handleToggleBroadcast}
           onOpenPalette={() => setPaletteOpen(true)}
+          onOpenSshManager={() => setSshModalOpen(true)}
         />
       </div>
       <div className="app-content">

@@ -148,20 +148,12 @@
   opacity: 0.7;
 }
 
-.tabbar-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--separator);
+.tabbar-add-inline {
   flex-shrink: 0;
-  margin: 0 4px;
-}
-
-.tabbar-add,
-.tabbar-ssh {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 100%;
   border: none;
+  border-right: 1px solid var(--separator);
   background: transparent;
   color: var(--label-tertiary);
   display: flex;
@@ -169,18 +161,14 @@
   justify-content: center;
   cursor: pointer;
   transition: color 0.1s, background 0.1s;
-  border-radius: var(--radius-sm);
   padding: 0;
 }
 
-.tabbar-add:hover,
-.tabbar-ssh:hover {
+.tabbar-add-inline:hover {
   color: var(--label-primary);
   background: var(--bg-tertiary);
 }
 
-.tabbar-add:active,
-.tabbar-ssh:active {
-  background: var(--bg-tertiary);
+.tabbar-add-inline:active {
   opacity: 0.7;
 }
