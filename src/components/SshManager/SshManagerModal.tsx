@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSshStore } from "../../store/sshStore";
 import type { SshProfile } from "../../types/terminal";
 import "./SshManagerModal.css";
@@ -30,6 +30,18 @@ function profileToForm(p: SshProfile): FormState {
   };
 }
 
+const AVATAR_COLORS = [
+  "#0A84FF", "#30D158", "#FF9F0A", "#BF5AF2", "#32ADE6", "#FF6961", "#FF375F", "#AC8E68",
+];
+
+function getAvatarColor(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnectInAllPanels }: Props) {
   const { profiles, addProfile, removeProfile, updateProfile } = useSshStore();
 
@@ -38,6 +50,31 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
   const [form, setForm] = useState<FormState>(() =>
     profiles[0] ? profileToForm(profiles[0]) : emptyForm
   );
+  const [showConnectMenu, setShowConnectMenu] = useState(false);
+  const connectMenuRef = useRef<HTMLDivElement>(null);
+
+  const hasExtraConnectOptions = !!(onConnectInPanel || onConnectInAllPanels);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showConnectMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (connectMenuRef.current && !connectMenuRef.current.contains(e.target as Node)) {
+        setShowConnectMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showConnectMenu]);
+
+  // ESC to close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
 
   const selectProfile = (id: string) => {
     const p = profiles.find((x) => x.id === id);
@@ -64,6 +101,18 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
     };
   };
 
+  const resolveProfile = (): SshProfile | null => {
+    const data = buildProfileData();
+    if (!data.host || !data.username) return null;
+    if (isNew) {
+      return addProfile(data);
+    } else if (selectedId) {
+      updateProfile(selectedId, data);
+      return { id: selectedId, ...data };
+    }
+    return null;
+  };
+
   const handleSave = () => {
     const data = buildProfileData();
     if (!data.host || !data.username) return;
@@ -88,44 +137,20 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
   };
 
   const handleConnect = () => {
-    const data = buildProfileData();
-    if (!data.host || !data.username) return;
-    let profile: SshProfile;
-    if (isNew) {
-      profile = addProfile(data);
-    } else if (selectedId) {
-      updateProfile(selectedId, data);
-      profile = { id: selectedId, ...data };
-    } else return;
-    onConnect(profile);
+    const profile = resolveProfile();
+    if (profile) onConnect(profile);
   };
 
   const handleConnectInPanel = () => {
     if (!onConnectInPanel) return;
-    const data = buildProfileData();
-    if (!data.host || !data.username) return;
-    let profile: SshProfile;
-    if (isNew) {
-      profile = addProfile(data);
-    } else if (selectedId) {
-      updateProfile(selectedId, data);
-      profile = { id: selectedId, ...data };
-    } else return;
-    onConnectInPanel(profile);
+    const profile = resolveProfile();
+    if (profile) onConnectInPanel(profile);
   };
 
   const handleConnectInAllPanels = () => {
     if (!onConnectInAllPanels) return;
-    const data = buildProfileData();
-    if (!data.host || !data.username) return;
-    let profile: SshProfile;
-    if (isNew) {
-      profile = addProfile(data);
-    } else if (selectedId) {
-      updateProfile(selectedId, data);
-      profile = { id: selectedId, ...data };
-    } else return;
-    onConnectInAllPanels(profile);
+    const profile = resolveProfile();
+    if (profile) onConnectInAllPanels(profile);
   };
 
   const setField = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -133,14 +158,36 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
 
   const canConnect = form.host.trim() !== "" && form.username.trim() !== "";
 
+  // SSH command preview
+  const sshPreview = canConnect
+    ? (() => {
+        let cmd = `ssh ${form.username.trim()}@${form.host.trim()}`;
+        const port = parseInt(form.port) || 22;
+        if (port !== 22) cmd += ` -p ${port}`;
+        if (form.identityFile.trim()) cmd += ` -i "${form.identityFile.trim()}"`;
+        return cmd;
+      })()
+    : null;
+
   return (
     <div
       className="ssh-overlay"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="ssh-modal">
+        {/* Header */}
         <div className="ssh-modal-header">
-          <span className="ssh-modal-title">SSH Connection</span>
+          <div className="ssh-modal-title-group">
+            <svg className="ssh-modal-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M1 5.5h12" stroke="currentColor" strokeWidth="1.3" />
+              <circle cx="3" cy="4.25" r="0.6" fill="currentColor" />
+              <circle cx="5" cy="4.25" r="0.6" fill="currentColor" />
+              <path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+            <span className="ssh-modal-title">SSH Connection</span>
+          </div>
           <button className="ssh-modal-close" onClick={onClose} aria-label="Close">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path
@@ -156,44 +203,70 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
         <div className="ssh-modal-body">
           {/* Profile list */}
           <div className="ssh-profile-list">
-            <div className="ssh-list-heading">Saved Servers</div>
-            {profiles.length === 0 ? (
-              <div className="ssh-empty-state">
-                <svg className="ssh-empty-icon" width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <rect x="4" y="8" width="24" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M4 13h24" stroke="currentColor" strokeWidth="1.5" />
-                  <circle cx="8" cy="10.5" r="1" fill="currentColor" />
-                  <circle cx="12" cy="10.5" r="1" fill="currentColor" />
-                  <circle cx="16" cy="10.5" r="1" fill="currentColor" />
+            <div className="ssh-list-header">
+              <span className="ssh-list-heading">Saved Servers</span>
+              <button
+                className="ssh-list-add-icon"
+                onClick={startNew}
+                aria-label="Add Server"
+                title="Add Server"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path
+                    d="M5 1v8M1 5h8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
                 </svg>
-                <div className="ssh-empty-title">No saved servers</div>
-                <div className="ssh-empty-desc">Click the button below<br />to add your first server</div>
-              </div>
-            ) : (
-              profiles.map((p) => (
-                <div
-                  key={p.id}
-                  className={`ssh-profile-item ${p.id === selectedId && !isNew ? "ssh-profile-item--active" : ""}`}
-                  onClick={() => selectProfile(p.id)}
-                >
-                  <div className="ssh-profile-name">{p.name}</div>
-                  <div className="ssh-profile-host">
-                    {p.username}@{p.host}:{p.port}
-                  </div>
+              </button>
+            </div>
+
+            <div className="ssh-profile-scroll">
+              {profiles.length === 0 ? (
+                <div className="ssh-empty-state">
+                  <svg className="ssh-empty-icon" width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect x="3" y="7" width="22" height="16" rx="2.5" stroke="currentColor" strokeWidth="1.3" />
+                    <path d="M3 12h22" stroke="currentColor" strokeWidth="1.3" />
+                    <circle cx="6.5" cy="9.5" r="0.75" fill="currentColor" />
+                    <circle cx="9.5" cy="9.5" r="0.75" fill="currentColor" />
+                  </svg>
+                  <div className="ssh-empty-title">No saved servers</div>
+                  <div className="ssh-empty-desc">Click + to add your first server</div>
                 </div>
-              ))
-            )}
-            <button className="ssh-list-add-btn" onClick={startNew}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path
-                  d="M5 1v8M1 5h8"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Add Server
-            </button>
+              ) : (
+                profiles.map((p) => {
+                  const initial = (p.name || p.host).charAt(0).toUpperCase();
+                  const color = getAvatarColor(p.name || p.host);
+                  const isActive = p.id === selectedId && !isNew;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`ssh-profile-item ${isActive ? "ssh-profile-item--active" : ""}`}
+                      onClick={() => selectProfile(p.id)}
+                      onDoubleClick={() => {
+                        const prof = profiles.find((x) => x.id === p.id);
+                        if (prof) onConnect(prof);
+                      }}
+                      title={`${p.username}@${p.host}:${p.port} — Double-click to connect`}
+                    >
+                      <div
+                        className="ssh-profile-avatar"
+                        style={{ background: color + "22", color }}
+                      >
+                        {initial}
+                      </div>
+                      <div className="ssh-profile-info">
+                        <div className="ssh-profile-name">{p.name}</div>
+                        <div className="ssh-profile-host">
+                          {p.username}@{p.host}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           {/* Form */}
@@ -204,7 +277,9 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
                 className="ssh-input"
                 value={form.name}
                 onChange={setField("name")}
-                placeholder={form.username && form.host ? `${form.username}@${form.host}` : "My Server"}
+                placeholder={
+                  form.username && form.host ? `${form.username}@${form.host}` : "My Server"
+                }
               />
             </div>
             <div className="ssh-field-row">
@@ -228,7 +303,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
               </div>
             </div>
             <div className="ssh-field">
-              <label className="ssh-label">User</label>
+              <label className="ssh-label">Username</label>
               <input
                 className="ssh-input"
                 value={form.username}
@@ -237,7 +312,10 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
               />
             </div>
             <div className="ssh-field">
-              <label className="ssh-label">Identity File (optional)</label>
+              <label className="ssh-label">
+                Identity File{" "}
+                <span className="ssh-label-optional">(optional)</span>
+              </label>
               <input
                 className="ssh-input"
                 value={form.identityFile}
@@ -245,52 +323,105 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
                 placeholder="~/.ssh/id_rsa"
               />
             </div>
-            <div className="ssh-form-actions">
-              <button
-                className="ssh-btn ssh-btn--secondary"
-                onClick={handleSave}
-                disabled={!canConnect}
-              >
-                Save
-              </button>
-              {!isNew && (
-                <button className="ssh-btn ssh-btn--danger" onClick={handleDelete}>
-                  Delete
-                </button>
-              )}
-            </div>
+
+            {/* SSH Command Preview */}
+            {sshPreview && (
+              <div className="ssh-preview">
+                <div className="ssh-preview-label">Command Preview</div>
+                <div className="ssh-preview-code">{sshPreview}</div>
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Footer */}
         <div className="ssh-modal-footer">
           <button className="ssh-btn ssh-btn--secondary" onClick={onClose}>
             Cancel
           </button>
-          {onConnectInPanel && (
-            <button
-              className="ssh-btn ssh-btn--secondary"
-              onClick={handleConnectInPanel}
-              disabled={!canConnect}
-            >
-              Open in Current Panel
+          {!isNew && (
+            <button className="ssh-btn ssh-btn--danger" onClick={handleDelete}>
+              Delete
             </button>
           )}
-          {onConnectInAllPanels && (
-            <button
-              className="ssh-btn ssh-btn--secondary"
-              onClick={handleConnectInAllPanels}
-              disabled={!canConnect}
-            >
-              Open in All Panels
-            </button>
-          )}
+          <div className="ssh-footer-gap" />
           <button
-            className="ssh-btn ssh-btn--primary"
-            onClick={handleConnect}
+            className="ssh-btn ssh-btn--secondary"
+            onClick={handleSave}
             disabled={!canConnect}
           >
-            Connect in New Tab
+            Save
           </button>
+          {hasExtraConnectOptions ? (
+            <div className="ssh-connect-split" ref={connectMenuRef}>
+              <button
+                className="ssh-btn ssh-btn--primary ssh-connect-main"
+                onClick={handleConnect}
+                disabled={!canConnect}
+              >
+                Connect
+              </button>
+              <button
+                className="ssh-btn ssh-btn--primary ssh-connect-chevron"
+                onClick={() => setShowConnectMenu((v) => !v)}
+                disabled={!canConnect}
+                aria-label="More connection options"
+              >
+                <svg width="8" height="5" viewBox="0 0 8 5" fill="none">
+                  <path
+                    d="M1 1l3 3 3-3"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              {showConnectMenu && (
+                <div className="ssh-connect-menu">
+                  <button
+                    className="ssh-connect-menu-item"
+                    onClick={() => {
+                      handleConnect();
+                      setShowConnectMenu(false);
+                    }}
+                  >
+                    Connect in New Tab
+                  </button>
+                  {onConnectInPanel && (
+                    <button
+                      className="ssh-connect-menu-item"
+                      onClick={() => {
+                        handleConnectInPanel();
+                        setShowConnectMenu(false);
+                      }}
+                    >
+                      Open in Current Panel
+                    </button>
+                  )}
+                  {onConnectInAllPanels && (
+                    <button
+                      className="ssh-connect-menu-item"
+                      onClick={() => {
+                        handleConnectInAllPanels();
+                        setShowConnectMenu(false);
+                      }}
+                    >
+                      Open in All Panels
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              className="ssh-btn ssh-btn--primary"
+              onClick={handleConnect}
+              disabled={!canConnect}
+            >
+              Connect
+            </button>
+          )}
         </div>
       </div>
     </div>
