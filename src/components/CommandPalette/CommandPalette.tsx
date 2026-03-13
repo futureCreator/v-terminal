@@ -4,50 +4,102 @@ import { useThemeStore } from "../../store/themeStore";
 import { THEME_GROUPS } from "../../themes/definitions";
 import "./CommandPalette.css";
 
+export interface PaletteCommand {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  isActive?: boolean;
+  action: () => void;
+}
+
+export interface PaletteSection {
+  category: string;
+  commands: PaletteCommand[];
+}
+
 interface Command {
   id: string;
   label: string;
-  groupLabel: string | null;
-  swatch: readonly [string, string, string, string, string] | null;
+  category: string;
+  subSection: string | null;
+  icon: React.ReactNode;
+  isActive?: boolean;
   action: () => void;
 }
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  extraSections?: PaletteSection[];
 }
 
-export function CommandPalette({ isOpen, onClose }: Props) {
+export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
   const { themeId, setThemeId } = useThemeStore();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Build flat command list: auto first, then all themes in group order
   const commands = useMemo<Command[]>(() => {
-    const list: Command[] = [
-      {
-        id: "theme:auto",
-        label: "Auto (System)",
-        groupLabel: null,
-        swatch: null,
-        action: () => setThemeId("auto"),
-      },
-    ];
+    const list: Command[] = [];
+
+    // Extra sections first (e.g., tab navigation)
+    for (const section of extraSections) {
+      for (const cmd of section.commands) {
+        list.push({
+          id: cmd.id,
+          label: cmd.label,
+          category: section.category,
+          subSection: null,
+          icon: cmd.icon,
+          isActive: cmd.isActive,
+          action: cmd.action,
+        });
+      }
+    }
+
+    // Theme commands
+    const activeThemeKey = themeId === "auto" ? "theme:auto" : `theme:${themeId}`;
+
+    list.push({
+      id: "theme:auto",
+      label: "Auto (System)",
+      category: "테마",
+      subSection: null,
+      icon: (
+        <span className="cp-auto-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="1.5" width="12" height="8.5" rx="1.5" stroke="currentColor" strokeWidth="1.1" />
+            <path d="M4.5 12h5M7 10v2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+          </svg>
+        </span>
+      ),
+      isActive: activeThemeKey === "theme:auto",
+      action: () => setThemeId("auto"),
+    });
+
     for (const group of THEME_GROUPS) {
       for (const theme of group.themes) {
         list.push({
           id: `theme:${theme.id}`,
           label: theme.name,
-          groupLabel: group.label,
-          swatch: theme.swatch,
+          category: "테마",
+          subSection: group.label,
+          icon: (
+            <span className="cp-swatch" style={{ background: theme.swatch[0] }}>
+              {theme.swatch.slice(1).map((color: string, i: number) => (
+                <span key={i} className="cp-swatch-dot" style={{ background: color }} />
+              ))}
+            </span>
+          ),
+          isActive: activeThemeKey === `theme:${theme.id}`,
           action: () => setThemeId(theme.id),
         });
       }
     }
+
     return list;
-  }, [setThemeId]);
+  }, [extraSections, themeId, setThemeId]);
 
   const q = query.trim().toLowerCase();
 
@@ -56,7 +108,8 @@ export function CommandPalette({ isOpen, onClose }: Props) {
     return commands.filter(
       (c) =>
         c.label.toLowerCase().includes(q) ||
-        (c.groupLabel?.toLowerCase().includes(q) ?? false)
+        (c.subSection?.toLowerCase().includes(q) ?? false) ||
+        c.category.toLowerCase().includes(q)
     );
   }, [commands, q]);
 
@@ -101,39 +154,20 @@ export function CommandPalette({ isOpen, onClose }: Props) {
     }
   };
 
-  const activeThemeKey = themeId === "auto" ? "theme:auto" : `theme:${themeId}`;
-
   if (!isOpen) return null;
 
   const renderItem = (cmd: Command, cmdIndex: number) => {
     const isHighlighted = cmdIndex === activeIndex;
-    const isActive = cmd.id === activeThemeKey;
     return (
       <div
         key={cmd.id}
-        className={`cp-item${isHighlighted ? " cp-item--highlighted" : ""}${isActive ? " cp-item--active" : ""}`}
+        className={`cp-item${isHighlighted ? " cp-item--highlighted" : ""}${cmd.isActive ? " cp-item--active" : ""}`}
         onMouseEnter={() => setActiveIndex(cmdIndex)}
         onMouseDown={(e) => { e.preventDefault(); execute(cmd); }}
       >
-        {cmd.swatch ? (
-          <span
-            className="cp-swatch"
-            style={{ background: cmd.swatch[0] }}
-          >
-            {cmd.swatch.slice(1).map((color, i) => (
-              <span key={i} className="cp-swatch-dot" style={{ background: color }} />
-            ))}
-          </span>
-        ) : (
-          <span className="cp-auto-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="1.5" width="12" height="8.5" rx="1.5" stroke="currentColor" strokeWidth="1.1" />
-              <path d="M4.5 12h5M7 10v2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-            </svg>
-          </span>
-        )}
+        {cmd.icon}
         <span className="cp-item-label">{cmd.label}</span>
-        {isActive && (
+        {cmd.isActive && (
           <svg className="cp-item-check" width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -142,35 +176,44 @@ export function CommandPalette({ isOpen, onClose }: Props) {
     );
   };
 
-  // Grouped view: no search query
+  // Grouped view: no search query — groups by category then subSection
   const renderGrouped = () => {
-    let cmdIndex = 0;
-    const autoCmd = commands[0];
-    const autoRendered = renderItem(autoCmd, cmdIndex++);
+    const categoryOrder: string[] = [];
+    const categoryMap = new Map<string, { sectionOrder: (string | null)[]; sectionMap: Map<string | null, Command[]> }>();
+    const cmdIndexMap = new Map<string, number>();
+    let idx = 0;
 
-    const groups = THEME_GROUPS.map((group) => {
-      const items = group.themes.map((theme) => {
-        const cmd = commands.find((c) => c.id === `theme:${theme.id}`)!;
-        const el = renderItem(cmd, cmdIndex++);
-        return el;
-      });
-      return { label: group.label, items };
-    });
+    for (const cmd of commands) {
+      if (!categoryMap.has(cmd.category)) {
+        categoryOrder.push(cmd.category);
+        categoryMap.set(cmd.category, { sectionOrder: [], sectionMap: new Map() });
+      }
+      const cat = categoryMap.get(cmd.category)!;
+      if (!cat.sectionMap.has(cmd.subSection)) {
+        cat.sectionOrder.push(cmd.subSection);
+        cat.sectionMap.set(cmd.subSection, []);
+      }
+      cat.sectionMap.get(cmd.subSection)!.push(cmd);
+      cmdIndexMap.set(cmd.id, idx++);
+    }
 
-    return (
-      <>
-        <div className="cp-section">
-          <div className="cp-section-label">테마</div>
-          {autoRendered}
+    return categoryOrder.map((catLabel, catIdx) => {
+      const { sectionOrder, sectionMap } = categoryMap.get(catLabel)!;
+      return (
+        <div key={catLabel} className={`cp-category${catIdx > 0 ? " cp-category--divided" : ""}`}>
+          <div className="cp-category-label">{catLabel}</div>
+          {sectionOrder.map((secLabel) => {
+            const cmds = sectionMap.get(secLabel)!;
+            return (
+              <div key={secLabel ?? "__root"} className="cp-section">
+                {secLabel && <div className="cp-section-label">{secLabel}</div>}
+                {cmds.map((cmd) => renderItem(cmd, cmdIndexMap.get(cmd.id)!))}
+              </div>
+            );
+          })}
         </div>
-        {groups.map((g) => (
-          <div key={g.label} className="cp-section">
-            <div className="cp-section-label">{g.label}</div>
-            {g.items}
-          </div>
-        ))}
-      </>
-    );
+      );
+    });
   };
 
   // Flat view: search query active

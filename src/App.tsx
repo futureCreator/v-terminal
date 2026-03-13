@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { homeDir } from "@tauri-apps/api/path";
 import { TitleBar } from "./components/TitleBar/TitleBar";
@@ -9,6 +9,7 @@ import { SessionPicker } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
+import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { ipc } from "./lib/tauriIpc";
@@ -69,6 +70,50 @@ export function App() {
   const activateTab = useCallback((tabId: string) => {
     setActiveTab(tabId);
   }, [setActiveTab]);
+
+  const handlePrevTab = useCallback(() => {
+    if (tabs.length <= 1) return;
+    const idx = tabs.findIndex((t) => t.id === activeTabId);
+    const prevIdx = idx <= 0 ? tabs.length - 1 : idx - 1;
+    setActiveTab(tabs[prevIdx].id);
+  }, [tabs, activeTabId, setActiveTab]);
+
+  const handleNextTab = useCallback(() => {
+    if (tabs.length <= 1) return;
+    const idx = tabs.findIndex((t) => t.id === activeTabId);
+    const nextIdx = idx >= tabs.length - 1 ? 0 : idx + 1;
+    setActiveTab(tabs[nextIdx].id);
+  }, [tabs, activeTabId, setActiveTab]);
+
+  const tabPaletteSection = useMemo<PaletteSection>(() => ({
+    category: "탭",
+    commands: [
+      {
+        id: "tab:prev",
+        label: "이전 탭",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M8.5 3.5L5 7l3.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        ),
+        action: handlePrevTab,
+      },
+      {
+        id: "tab:next",
+        label: "다음 탭",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M5.5 3.5L9 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        ),
+        action: handleNextTab,
+      },
+    ],
+  }), [handlePrevTab, handleNextTab]);
 
   // 앱 종료 시 열려있는 탭을 모두 백그라운드로 저장
   useEffect(() => {
@@ -221,7 +266,7 @@ export function App() {
         />
       )}
       <DaemonStatusBanner />
-      <CommandPalette isOpen={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <CommandPalette isOpen={paletteOpen} onClose={() => setPaletteOpen(false)} extraSections={[tabPaletteSection]} />
     </div>
   );
 }

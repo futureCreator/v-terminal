@@ -105,13 +105,19 @@
   display: none;
 }
 
-/* ── Section (group header) ───────────────────────────────────── */
+/* ── Category (top-level group) ───────────────────────────────── */
 
-.cp-section {
+.cp-category {
   margin-bottom: 2px;
 }
 
-.cp-section-label {
+.cp-category--divided {
+  border-top: 1px solid var(--separator);
+  margin-top: 4px;
+  padding-top: 2px;
+}
+
+.cp-category-label {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.07em;
@@ -121,8 +127,39 @@
   user-select: none;
 }
 
-.cp-section:first-child .cp-section-label {
+.cp-category:first-child .cp-category-label {
   padding-top: 4px;
+}
+
+/* ── Section (sub-group within a category) ────────────────────── */
+
+.cp-section {
+  margin-bottom: 2px;
+}
+
+.cp-section-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--label-tertiary);
+  opacity: 0.7;
+  padding: 6px 10px 2px 12px;
+  user-select: none;
+}
+
+/* ── Generic command icon (non-theme) ─────────────────────────── */
+
+.cp-cmd-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--label-secondary);
+  flex-shrink: 0;
 }
 
 /* ── Item ─────────────────────────────────────────────────────── */
