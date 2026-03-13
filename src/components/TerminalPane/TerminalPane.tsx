@@ -243,7 +243,9 @@ export function TerminalPane({
 
               fitAddon.fit();
 
-              if (!isAtBottom) {
+              if (isAtBottom) {
+                term.scrollToBottom();
+              } else {
                 term.scrollToLine(savedViewportY);
               }
 
