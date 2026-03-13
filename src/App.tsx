@@ -113,11 +113,11 @@ export function App() {
   }, []);
 
   const tabPaletteSection = useMemo<PaletteSection>(() => ({
-    category: "탭",
+    category: "Tab",
     commands: [
       {
         id: "tab:close",
-        label: "현재 탭 닫기",
+        label: "Close Current Tab",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -129,7 +129,7 @@ export function App() {
       },
       {
         id: "tab:new",
-        label: "새 탭 열기",
+        label: "New Tab",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -141,7 +141,7 @@ export function App() {
       },
       {
         id: "tab:broadcast",
-        label: activeTab?.broadcastEnabled ? "브로드캐스트 끄기" : "브로드캐스트 켜기",
+        label: activeTab?.broadcastEnabled ? "Disable Broadcast" : "Enable Broadcast",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -157,7 +157,7 @@ export function App() {
       ...(activeTab && activeTab.panels.length > 1 ? [
         {
           id: "panel:zoom",
-          label: "현재 패널 확대/축소",
+          label: "Zoom Current Panel",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -169,7 +169,7 @@ export function App() {
         },
         {
           id: "panel:prev",
-          label: "이전 패널",
+          label: "Previous Panel",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -183,7 +183,7 @@ export function App() {
         },
         {
           id: "panel:next",
-          label: "다음 패널",
+          label: "Next Panel",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -196,29 +196,33 @@ export function App() {
           action: () => panelNavRef.current?.nextPanel(),
         },
       ] : []),
-      ...tabs.map((tab) => ({
-        id: `tab:switch:${tab.id}`,
-        label: tab.label,
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="3" width="12" height="9" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M4 4.5V1.5M10 4.5V1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-          </span>
-        ),
-        isActive: tab.id === activeTabId,
-        action: () => setActiveTab(tab.id),
-      })),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, activeTab, tabs, activeTabId, setActiveTab]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, activeTab]);
+
+  const tabListPaletteSection = useMemo<PaletteSection>(() => ({
+    category: "Tab List",
+    commands: tabs.map((tab) => ({
+      id: `tab:switch:${tab.id}`,
+      label: tab.label,
+      icon: (
+        <span className="cp-cmd-icon">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <rect x="1" y="3" width="12" height="9" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+            <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2" />
+            <path d="M4 4.5V1.5M10 4.5V1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </span>
+      ),
+      isActive: tab.id === activeTabId,
+      action: () => setActiveTab(tab.id),
+    })),
+  }), [tabs, activeTabId, setActiveTab]);
 
   const layoutPaletteSection = useMemo<PaletteSection>(() => {
     const LAYOUT_OPTIONS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = [
       {
         value: 1,
-        label: "1 패널",
+        label: "1 Panel",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="16" height="12" viewBox="0 0 18 14" fill="none">
@@ -229,7 +233,7 @@ export function App() {
       },
       {
         value: 2,
-        label: "2 패널",
+        label: "2 Panels",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="16" height="12" viewBox="0 0 18 14" fill="none">
@@ -241,7 +245,7 @@ export function App() {
       },
       {
         value: 3,
-        label: "3 패널",
+        label: "3 Panels",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="16" height="12" viewBox="0 0 18 14" fill="none">
@@ -254,7 +258,7 @@ export function App() {
       },
       {
         value: 4,
-        label: "4 패널",
+        label: "4 Panels",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="16" height="12" viewBox="0 0 18 14" fill="none">
@@ -268,7 +272,7 @@ export function App() {
       },
       {
         value: 6,
-        label: "6 패널",
+        label: "6 Panels",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="16" height="12" viewBox="0 0 20 14" fill="none">
@@ -284,7 +288,7 @@ export function App() {
       },
       {
         value: 9,
-        label: "9 패널",
+        label: "9 Panels",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 20 16" fill="none">
@@ -309,7 +313,7 @@ export function App() {
     ];
 
     return {
-      category: "레이아웃",
+      category: "Layout",
       commands: LAYOUT_OPTIONS.map(({ value, label, icon }) => ({
         id: `layout:${value}`,
         label,
@@ -475,6 +479,7 @@ export function App() {
         }}
         extraSections={[
           tabPaletteSection,
+          tabListPaletteSection,
           layoutPaletteSection,
           ...(sshPaletteSection ? [sshPaletteSection] : []),
         ]}

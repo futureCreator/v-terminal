@@ -45,13 +45,13 @@ export function TitleBar() {
     : "daemon-dot--unknown";
 
   const statusLabel = daemonStatus === "connected"
-    ? "연결됨"
+    ? "Connected"
     : daemonStatus === "reconnecting"
-    ? "재연결 중…"
-    : "연결 중…";
+    ? "Reconnecting…"
+    : "Connecting…";
 
   const indicator = (
-    <div className="daemon-indicator" title={`데몬 ${statusLabel}`}>
+    <div className="daemon-indicator" title={`Daemon ${statusLabel}`}>
       <span className={`daemon-dot ${dotClass}`} />
       <span className="daemon-indicator-label">{statusLabel}</span>
     </div>

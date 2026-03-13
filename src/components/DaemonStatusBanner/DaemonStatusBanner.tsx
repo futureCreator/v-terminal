@@ -40,7 +40,7 @@ export function DaemonStatusBanner() {
       {state === "reconnecting" && (
         <>
           <span className="daemon-banner__spinner" aria-hidden="true" />
-          <span>데몬 연결이 끊어졌습니다. 재연결 중…</span>
+          <span>Daemon disconnected. Reconnecting…</span>
         </>
       )}
       {state === "reconnected" && (
@@ -48,7 +48,7 @@ export function DaemonStatusBanner() {
           <svg className="daemon-banner__check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M3 8.5L6.5 12L13 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span>데몬에 재연결되었습니다</span>
+          <span>Daemon reconnected</span>
         </>
       )}
     </div>

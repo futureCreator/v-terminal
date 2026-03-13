@@ -64,7 +64,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     list.push({
       id: "theme:auto",
       label: "Auto (System)",
-      category: "테마",
+      category: "Theme",
       subSection: null,
       icon: (
         <span className="cp-auto-icon">
@@ -83,7 +83,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
         list.push({
           id: `theme:${theme.id}`,
           label: theme.name,
-          category: "테마",
+          category: "Theme",
           subSection: group.label,
           icon: (
             <span className="cp-swatch" style={{ background: theme.swatch[0] }}>
@@ -228,7 +228,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
       className="cp-backdrop"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="cp-panel" role="dialog" aria-modal="true" aria-label="커맨드 팔레트">
+      <div className="cp-panel" role="dialog" aria-modal="true" aria-label="Command Palette">
         {/* Search row */}
         <div className="cp-search-row">
           <svg className="cp-search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none">
@@ -238,7 +238,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder="명령어 검색..."
+            placeholder="Search commands..."
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
             onKeyDown={handleKeyDown}
@@ -251,7 +251,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
         {/* Command list */}
         <div ref={listRef} className="cp-list">
           {filtered.length === 0 ? (
-            <div className="cp-empty">결과 없음</div>
+            <div className="cp-empty">No results</div>
           ) : q ? (
             renderFiltered()
           ) : (
@@ -261,9 +261,9 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
 
         {/* Footer hint */}
         <div className="cp-footer">
-          <span className="cp-hint"><kbd>↑↓</kbd> 탐색</span>
-          <span className="cp-hint"><kbd>↵</kbd> 실행</span>
-          <span className="cp-hint"><kbd>Ctrl K</kbd> 닫기</span>
+          <span className="cp-hint"><kbd>↑↓</kbd> Navigate</span>
+          <span className="cp-hint"><kbd>↵</kbd> Execute</span>
+          <span className="cp-hint"><kbd>Ctrl K</kbd> Close</span>
         </div>
       </div>
     </div>,

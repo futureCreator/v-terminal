@@ -20,10 +20,10 @@ interface SessionPickerProps {
 
 function formatAge(secs: number): string {
   const diff = Math.floor(Date.now() / 1000) - secs;
-  if (diff < 60) return "방금 전";
-  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
-  return `${Math.floor(diff / 86400)}일 전`;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 function buildSshCommand(profile: { username: string; host: string; port: number; identityFile?: string }): string {
@@ -125,20 +125,20 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
           <div className="sp-hero-icon">
             <IconTerminalHero />
           </div>
-          <span className="sp-hero-title">새 세션</span>
-          <span className="sp-hero-subtitle">연결 방식을 선택하세요</span>
+          <span className="sp-hero-title">New Session</span>
+          <span className="sp-hero-subtitle">Choose a connection type</span>
         </div>
 
         {/* ── Connection Group ── */}
         <div className="sp-group">
-          <div className="sp-group-label">연결</div>
+          <div className="sp-group-label">Connection</div>
           <div className="sp-group-body">
             <button className="sp-row" onClick={() => onNewSession()}>
               <span className="sp-row-icon sp-row-icon--local">
                 <IconTerminal />
               </span>
               <span className="sp-row-content">
-                <span className="sp-row-title">로컬 쉘</span>
+                <span className="sp-row-title">Local Shell</span>
                 <span className="sp-row-subtitle">PowerShell</span>
               </span>
             </button>
@@ -180,7 +180,7 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
         {/* ── Background Tabs ── */}
         {hasSavedTabs && (
           <div className="sp-group">
-            <div className="sp-group-label">백그라운드 탭</div>
+            <div className="sp-group-label">Background Tabs</div>
             <div className="sp-group-body">
               {savedTabs!.map((savedTab) => {
                 const panelSessions = savedTab.panels
@@ -201,7 +201,7 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
                     tabIndex={0}
                     onClick={() => onRestoreTab?.(savedTab.id)}
                     onKeyDown={(e) => e.key === "Enter" && onRestoreTab?.(savedTab.id)}
-                    title={`${savedTab.label}${count > 1 ? ` — ${count}패널` : ""}`}
+                    title={`${savedTab.label}${count > 1 ? ` — ${count} panels` : ""}`}
                   >
                     <span className="sp-row-icon sp-row-icon--tab">
                       <IconSavedTab />
@@ -210,7 +210,7 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
                     <span className="sp-row-content">
                       <span className="sp-row-title">{savedTab.label}</span>
                       <span className="sp-row-subtitle sp-row-subtitle--mono">
-                        {firstCwd}{count > 1 ? ` 외 ${count - 1}개` : ""}
+                        {firstCwd}{count > 1 ? ` +${count - 1} more` : ""}
                       </span>
                     </span>
                     <span className="sp-row-meta">{formatAge(lastActive)}</span>
@@ -218,8 +218,8 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
                       className="sp-row-kill"
                       onClick={(e) => handleKillSavedTab(e, savedTab.id)}
                       disabled={killingSavedTabId === savedTab.id}
-                      title="탭 종료"
-                      aria-label="탭 종료"
+                      title="Close Tab"
+                      aria-label="Close tab"
                     >
                       <IconClose />
                     </button>

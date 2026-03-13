@@ -140,7 +140,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
     >
       <div className="ssh-modal">
         <div className="ssh-modal-header">
-          <span className="ssh-modal-title">SSH 연결</span>
+          <span className="ssh-modal-title">SSH Connection</span>
           <button className="ssh-modal-close" onClick={onClose} aria-label="Close">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path
@@ -156,7 +156,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
         <div className="ssh-modal-body">
           {/* Profile list */}
           <div className="ssh-profile-list">
-            <div className="ssh-list-heading">저장된 서버</div>
+            <div className="ssh-list-heading">Saved Servers</div>
             {profiles.length === 0 ? (
               <div className="ssh-empty-state">
                 <svg className="ssh-empty-icon" width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -166,8 +166,8 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
                   <circle cx="12" cy="10.5" r="1" fill="currentColor" />
                   <circle cx="16" cy="10.5" r="1" fill="currentColor" />
                 </svg>
-                <div className="ssh-empty-title">저장된 서버 없음</div>
-                <div className="ssh-empty-desc">아래 버튼을 눌러<br />첫 번째 서버를 추가하세요</div>
+                <div className="ssh-empty-title">No saved servers</div>
+                <div className="ssh-empty-desc">Click the button below<br />to add your first server</div>
               </div>
             ) : (
               profiles.map((p) => (
@@ -192,14 +192,14 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
                   strokeLinecap="round"
                 />
               </svg>
-              새 서버 추가
+              Add Server
             </button>
           </div>
 
           {/* Form */}
           <div className="ssh-form">
             <div className="ssh-field">
-              <label className="ssh-label">이름</label>
+              <label className="ssh-label">Name</label>
               <input
                 className="ssh-input"
                 value={form.name}
@@ -209,7 +209,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
             </div>
             <div className="ssh-field-row">
               <div className="ssh-field ssh-field--flex">
-                <label className="ssh-label">호스트</label>
+                <label className="ssh-label">Host</label>
                 <input
                   className="ssh-input"
                   value={form.host}
@@ -218,7 +218,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
                 />
               </div>
               <div className="ssh-field ssh-field--port">
-                <label className="ssh-label">포트</label>
+                <label className="ssh-label">Port</label>
                 <input
                   className="ssh-input"
                   value={form.port}
@@ -228,7 +228,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
               </div>
             </div>
             <div className="ssh-field">
-              <label className="ssh-label">사용자</label>
+              <label className="ssh-label">User</label>
               <input
                 className="ssh-input"
                 value={form.username}
@@ -237,7 +237,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
               />
             </div>
             <div className="ssh-field">
-              <label className="ssh-label">키 파일 (선택)</label>
+              <label className="ssh-label">Identity File (optional)</label>
               <input
                 className="ssh-input"
                 value={form.identityFile}
@@ -251,11 +251,11 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
                 onClick={handleSave}
                 disabled={!canConnect}
               >
-                저장
+                Save
               </button>
               {!isNew && (
                 <button className="ssh-btn ssh-btn--danger" onClick={handleDelete}>
-                  삭제
+                  Delete
                 </button>
               )}
             </div>
@@ -264,7 +264,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
 
         <div className="ssh-modal-footer">
           <button className="ssh-btn ssh-btn--secondary" onClick={onClose}>
-            취소
+            Cancel
           </button>
           {onConnectInPanel && (
             <button
@@ -272,7 +272,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
               onClick={handleConnectInPanel}
               disabled={!canConnect}
             >
-              현재 패널에서 열기
+              Open in Current Panel
             </button>
           )}
           {onConnectInAllPanels && (
@@ -281,7 +281,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
               onClick={handleConnectInAllPanels}
               disabled={!canConnect}
             >
-              전체 패널에 열기
+              Open in All Panels
             </button>
           )}
           <button
@@ -289,7 +289,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
             onClick={handleConnect}
             disabled={!canConnect}
           >
-            연결하여 탭 열기
+            Connect in New Tab
           </button>
         </div>
       </div>

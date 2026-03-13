@@ -129,8 +129,8 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
         <button
           className="tab-item-btn tab-item-btn--bg"
           onClick={(e) => { e.stopPropagation(); onClose(); }}
-          title="백그라운드로 보내기"
-          aria-label="백그라운드로 보내기"
+          title="Send to Background"
+          aria-label="Send to background"
         >
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
             <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
@@ -140,8 +140,8 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
         <button
           className="tab-item-btn tab-item-btn--kill"
           onClick={(e) => { e.stopPropagation(); onKill(); }}
-          title="프로세스 종료"
-          aria-label="프로세스 종료"
+          title="Kill Process"
+          aria-label="Kill process"
         >
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
             <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
