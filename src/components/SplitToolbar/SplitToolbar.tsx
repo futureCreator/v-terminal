@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { Layout } from "../../types/terminal";
-import { ThemePicker } from "../ThemePicker/ThemePicker";
+import { useThemeStore } from "../../store/themeStore";
+import { THEME_GROUPS } from "../../themes/definitions";
 import "./SplitToolbar.css";
 
 const LAYOUTS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = [
@@ -116,11 +117,16 @@ export function SplitToolbar({
   onOpenSshManager,
   onAddTab,
 }: SplitToolbarProps) {
+  const { themeId, setThemeId } = useThemeStore();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [themeOpen, setThemeOpen] = useState(false);
+  const [view, setView] = useState<"main" | "appearance">("main");
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) setView("main");
+  }, [menuOpen]);
 
   useEffect(() => {
     if (menuOpen && moreButtonRef.current) {
@@ -174,7 +180,7 @@ export function SplitToolbar({
           <button
             ref={moreButtonRef}
             className={`more-btn${menuOpen ? " more-btn--open" : ""}`}
-            onClick={() => { setMenuOpen((v) => !v); setThemeOpen(false); }}
+            onClick={() => { setMenuOpen((v) => !v); }}
             title="More options"
             aria-label="More options"
             aria-expanded={menuOpen}
@@ -192,96 +198,152 @@ export function SplitToolbar({
               role="menu"
               style={{ top: menuPos.top, right: menuPos.right }}
             >
-              {/* Layout */}
-              <div className="more-menu-section">
-                <span className="more-menu-section-label">Layout</span>
-                <div className="more-menu-layout-row">
-                  {LAYOUTS.map(({ value, label, icon }) => (
-                    <button
-                      key={value}
-                      className={`more-menu-layout-btn${activeLayout === value ? " more-menu-layout-btn--active" : ""}`}
-                      onClick={() => { onLayoutChange(value); setMenuOpen(false); }}
-                      title={label}
-                      aria-label={label}
-                      aria-pressed={activeLayout === value}
-                    >
-                      {icon}
-                    </button>
+              {view === "main" ? (
+                <>
+                  {/* Layout */}
+                  <div className="more-menu-section">
+                    <span className="more-menu-section-label">Layout</span>
+                    <div className="more-menu-layout-row">
+                      {LAYOUTS.map(({ value, label, icon }) => (
+                        <button
+                          key={value}
+                          className={`more-menu-layout-btn${activeLayout === value ? " more-menu-layout-btn--active" : ""}`}
+                          onClick={() => { onLayoutChange(value); setMenuOpen(false); }}
+                          title={label}
+                          aria-label={label}
+                          aria-pressed={activeLayout === value}
+                        >
+                          {icon}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="more-menu-sep" />
+                  {/* Command Palette */}
+                  <button
+                    className="more-menu-item"
+                    onClick={() => { onOpenPalette(); setMenuOpen(false); }}
+                    role="menuitem"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                      <path d="M4 6.5l2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M8.5 10.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                    <span className="more-menu-item-label">Command Palette</span>
+                    <span className="more-menu-kbd">Ctrl+K</span>
+                  </button>
+                  <div className="more-menu-sep" />
+                  {/* Broadcast */}
+                  <button
+                    className={`more-menu-item${broadcastEnabled ? " more-menu-item--broadcast" : ""}`}
+                    onClick={() => { onToggleBroadcast(); setMenuOpen(false); }}
+                    role="menuitem"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+                      <path d="M5.5 5.5A3.5 3.5 0 0 0 5.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                      <path d="M10.5 5.5A3.5 3.5 0 0 1 10.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                      <path d="M3.5 3.5A6.36 6.36 0 0 0 3.5 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                      <path d="M12.5 3.5A6.36 6.36 0 0 1 12.5 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                    <span className="more-menu-item-label">Broadcast Input</span>
+                    {broadcastEnabled && <span className="more-menu-badge">ON</span>}
+                  </button>
+                  <div className="more-menu-sep" />
+                  {/* SSH */}
+                  <button
+                    className="more-menu-item"
+                    onClick={() => { onOpenSshManager(); setMenuOpen(false); }}
+                    role="menuitem"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <rect x="1" y="2.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                      <rect x="1" y="9.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                      <circle cx="12.5" cy="4.5" r="1" fill="currentColor" />
+                      <circle cx="12.5" cy="11.5" r="1" fill="currentColor" />
+                      <circle cx="10" cy="4.5" r="0.7" fill="currentColor" opacity="0.5" />
+                      <circle cx="10" cy="11.5" r="0.7" fill="currentColor" opacity="0.5" />
+                    </svg>
+                    <span className="more-menu-item-label">SSH Connections</span>
+                  </button>
+                  <div className="more-menu-sep" />
+                  {/* Appearance */}
+                  <button
+                    className="more-menu-item"
+                    onClick={() => setView("appearance")}
+                    role="menuitem"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.2" />
+                      <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                    <span className="more-menu-item-label">Appearance</span>
+                    <svg className="more-menu-chevron" width="6" height="10" viewBox="0 0 6 10" fill="none">
+                      <path d="M1 1.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <div className="more-menu-appearance">
+                  {/* Back */}
+                  <button className="more-menu-back" onClick={() => setView("main")}>
+                    <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+                      <path d="M5.5 1.5L1.5 6l4 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    Back
+                  </button>
+                  <div className="more-menu-sep" />
+                  {/* Auto */}
+                  <button
+                    className={`more-menu-theme-item${themeId === "auto" ? " more-menu-theme-item--active" : ""}`}
+                    onClick={() => { setThemeId("auto"); setMenuOpen(false); }}
+                  >
+                    <span className="more-menu-theme-auto">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <rect x="1" y="1.5" width="12" height="8.5" rx="1.5" stroke="currentColor" strokeWidth="1.1" />
+                        <path d="M4.5 12h5M7 10v2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+                      </svg>
+                    </span>
+                    <span className="more-menu-theme-name">Auto</span>
+                    {themeId === "auto" && <ThemeCheckIcon />}
+                  </button>
+                  {/* Groups */}
+                  {THEME_GROUPS.map((group) => (
+                    <div key={group.label} className="more-menu-theme-group">
+                      <div className="more-menu-theme-group-label">{group.label}</div>
+                      {group.themes.map((theme) => (
+                        <button
+                          key={theme.id}
+                          className={`more-menu-theme-item${themeId === theme.id ? " more-menu-theme-item--active" : ""}`}
+                          onClick={() => { setThemeId(theme.id); setMenuOpen(false); }}
+                        >
+                          <span className="more-menu-theme-swatch" style={{ background: theme.swatch[0] }}>
+                            {theme.swatch.slice(1).map((color, i) => (
+                              <span key={i} className="more-menu-theme-dot" style={{ background: color }} />
+                            ))}
+                          </span>
+                          <span className="more-menu-theme-name">{theme.name}</span>
+                          {themeId === theme.id && <ThemeCheckIcon />}
+                        </button>
+                      ))}
+                    </div>
                   ))}
                 </div>
-              </div>
-              <div className="more-menu-sep" />
-              {/* Command Palette */}
-              <button
-                className="more-menu-item"
-                onClick={() => { onOpenPalette(); setMenuOpen(false); }}
-                role="menuitem"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M4 6.5l2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M8.5 10.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span className="more-menu-item-label">Command Palette</span>
-                <span className="more-menu-kbd">Ctrl+K</span>
-              </button>
-              <div className="more-menu-sep" />
-              {/* Broadcast */}
-              <button
-                className={`more-menu-item${broadcastEnabled ? " more-menu-item--broadcast" : ""}`}
-                onClick={() => { onToggleBroadcast(); setMenuOpen(false); }}
-                role="menuitem"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-                  <path d="M5.5 5.5A3.5 3.5 0 0 0 5.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                  <path d="M10.5 5.5A3.5 3.5 0 0 1 10.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                  <path d="M3.5 3.5A6.36 6.36 0 0 0 3.5 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                  <path d="M12.5 3.5A6.36 6.36 0 0 1 12.5 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span className="more-menu-item-label">Broadcast Input</span>
-                {broadcastEnabled && <span className="more-menu-badge">ON</span>}
-              </button>
-              <div className="more-menu-sep" />
-              {/* SSH */}
-              <button
-                className="more-menu-item"
-                onClick={() => { onOpenSshManager(); setMenuOpen(false); }}
-                role="menuitem"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <rect x="1" y="2.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <rect x="1" y="9.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <circle cx="12.5" cy="4.5" r="1" fill="currentColor" />
-                  <circle cx="12.5" cy="11.5" r="1" fill="currentColor" />
-                  <circle cx="10" cy="4.5" r="0.7" fill="currentColor" opacity="0.5" />
-                  <circle cx="10" cy="11.5" r="0.7" fill="currentColor" opacity="0.5" />
-                </svg>
-                <span className="more-menu-item-label">SSH Connections</span>
-              </button>
-              <div className="more-menu-sep" />
-              {/* Appearance */}
-              <button
-                className="more-menu-item"
-                onClick={() => { setMenuOpen(false); setThemeOpen(true); }}
-                role="menuitem"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span className="more-menu-item-label">Appearance</span>
-              </button>
+              )}
             </div>,
             document.body
           )}
         </div>
       </div>
-      <ThemePicker
-        anchorRef={moreButtonRef}
-        isOpen={themeOpen}
-        onClose={() => setThemeOpen(false)}
-      />
     </>
+  );
+}
+
+function ThemeCheckIcon() {
+  return (
+    <svg className="more-menu-theme-check" width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
