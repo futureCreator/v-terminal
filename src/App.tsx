@@ -108,27 +108,13 @@ export function App() {
     if (activeTab) saveAndRemoveTab(activeTab.id);
   }, [activeTab, saveAndRemoveTab]);
 
-  const handleToggleFullscreen = useCallback(async () => {
-    const win = getCurrentWindow();
-    const isFullscreen = await win.isFullscreen();
-    await win.setFullscreen(!isFullscreen);
+  const handleTogglePanelZoom = useCallback(() => {
+    panelNavRef.current?.toggleZoom();
   }, []);
 
   const tabPaletteSection = useMemo<PaletteSection>(() => ({
     category: "탭",
     commands: [
-      {
-        id: "window:fullscreen",
-        label: "전체화면 토글",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M1 5V2h3M10 2h3v3M13 9v3h-3M4 13H1v-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        ),
-        action: handleToggleFullscreen,
-      },
       {
         id: "tab:close",
         label: "현재 탭 닫기",
@@ -169,6 +155,18 @@ export function App() {
         action: handleToggleBroadcast,
       },
       ...(activeTab && activeTab.panels.length > 1 ? [
+        {
+          id: "panel:zoom",
+          label: "현재 패널 확대/축소",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 5V2h3M10 2h3v3M13 9v3h-3M4 13H1v-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          ),
+          action: handleTogglePanelZoom,
+        },
         {
           id: "panel:prev",
           label: "이전 패널",
@@ -214,7 +212,7 @@ export function App() {
         action: () => setActiveTab(tab.id),
       })),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleToggleFullscreen, activeTab, tabs, activeTabId, setActiveTab]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, activeTab, tabs, activeTabId, setActiveTab]);
 
   const layoutPaletteSection = useMemo<PaletteSection>(() => {
     const LAYOUT_OPTIONS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = [
