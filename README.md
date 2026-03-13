@@ -90,6 +90,21 @@ pnpm daemon:start    # Start daemon for debugging
 pnpm daemon:stop     # Stop daemon
 ```
 
+## Changelog
+
+### v0.1.15 - 2026-03-13
+
+- **fix**: Toolbar icon alignment — removed gap/separator double-spacing in SplitToolbar
+- **fix**: Terminal URL click now opens in the system browser via Tauri shell plugin
+- **feat**: Command palette open button added to the toolbar
+- **fix**: Panel zoom replaces fullscreen toggle
+- **refactor**: UI text fully switched to English; tab list categories separated in command palette
+- **fix**: Command palette previous/next tab removed; fullscreen permission added
+- **fix**: Command palette fullscreen toggle and focus restoration
+- **feat**: Expanded command palette with layout, SSH, tab, and panel commands
+- **fix**: Korean IME input reliability improvements in terminal
+- **fix**: Preserve terminal scroll position on window resize/maximize
+
 ## Version Management
 
 When bumping the version, **both files must be updated together**:
