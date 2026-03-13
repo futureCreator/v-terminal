@@ -168,8 +168,14 @@ export function TerminalPane({
         ipc.daemonWrite(ptyId, encoded).catch(() => {});
       }
 
+      // IME composition state — prevents custom key handler from interfering with Korean/CJK input
+      let isComposing = false;
+
       // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
       term.attachCustomKeyEventHandler((e) => {
+        // During IME composition, hand control back to xterm's internal handler
+        if (isComposing) return true;
+
         if (e.type !== "keydown") return true;
 
         if (e.ctrlKey && e.key === "c") {
@@ -211,6 +217,8 @@ export function TerminalPane({
 
       // Focus tracking
       term.textarea?.addEventListener("focus", () => onFocus());
+      term.textarea?.addEventListener("compositionstart", () => { isComposing = true; });
+      term.textarea?.addEventListener("compositionend", () => { isComposing = false; });
 
       // Output
       unlistenData = await ipc.onPtyData((payload) => {
@@ -285,7 +293,7 @@ export function TerminalPane({
   }, [isActive]);
 
   return (
-    <div className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`} style={style} onClick={onFocus}>
+    <div className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`} style={style} onClick={() => { onFocus(); termRef.current?.focus(); }}>
       {loading && !exited && (
         <div className="terminal-loading">
           <div className="terminal-spinner" />
