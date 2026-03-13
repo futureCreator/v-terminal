@@ -63,7 +63,7 @@
   background: transparent;
   border: none;
   outline: none;
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-family: "Pretendard", sans-serif;
   font-size: 14px;
   font-weight: 400;
   color: var(--label-primary);
@@ -78,7 +78,7 @@
 .cp-kbd {
   display: inline-flex;
   align-items: center;
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-family: "Pretendard", sans-serif;
   font-size: 10px;
   font-weight: 500;
   color: var(--label-tertiary);
@@ -284,7 +284,7 @@
 .cp-hint kbd {
   display: inline-flex;
   align-items: center;
-  font-family: "Pretendard Variable", "Pretendard", sans-serif;
+  font-family: "Pretendard", sans-serif;
   font-size: 10px;
   font-weight: 500;
   color: var(--label-tertiary);

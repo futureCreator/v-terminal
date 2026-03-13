@@ -28,15 +28,15 @@
 }
 
 .daemon-banner--reconnecting {
-  background: rgba(255, 214, 10, 0.1);
-  border-top: 1px solid rgba(255, 214, 10, 0.22);
-  color: #ffd60a;
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--warning) 22%, transparent);
+  color: var(--warning);
 }
 
 .daemon-banner--reconnected {
-  background: rgba(48, 209, 88, 0.1);
-  border-top: 1px solid rgba(48, 209, 88, 0.22);
-  color: #30d158;
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--success) 22%, transparent);
+  color: var(--success);
 }
 
 /* Spinner (only for reconnecting) */
@@ -44,8 +44,8 @@
   display: block;
   width: 11px;
   height: 11px;
-  border: 1.5px solid rgba(255, 214, 10, 0.25);
-  border-top-color: #ffd60a;
+  border: 1.5px solid color-mix(in srgb, var(--warning) 25%, transparent);
+  border-top-color: var(--warning);
   border-radius: 50%;
   animation: daemon-spin 0.75s linear infinite;
   flex-shrink: 0;

@@ -80,7 +80,7 @@
 
 .daemon-dot--connected {
   background: var(--success);
-  box-shadow: 0 0 5px rgba(48, 209, 88, 0.55);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--success) 55%, transparent);
 }
 
 .daemon-dot--reconnecting {

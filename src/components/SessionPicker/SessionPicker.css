@@ -152,18 +152,18 @@
 }
 
 .sp-row-icon--wsl {
-  background: color-mix(in srgb, #f18400 18%, transparent);
-  color: #f18400;
+  background: color-mix(in srgb, var(--icon-wsl) 18%, transparent);
+  color: var(--icon-wsl);
 }
 
 .sp-row-icon--ssh {
-  background: color-mix(in srgb, #30d158 16%, transparent);
-  color: #30d158;
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
 }
 
 .sp-row-icon--tab {
-  background: color-mix(in srgb, #bf5af2 16%, transparent);
-  color: #bf5af2;
+  background: color-mix(in srgb, var(--icon-tab) 16%, transparent);
+  color: var(--icon-tab);
 }
 
 
@@ -364,8 +364,8 @@
 .sp-card-panels {
   font-size: 10px;
   font-weight: 600;
-  color: #bf5af2;
-  background: color-mix(in srgb, #bf5af2 14%, transparent);
+  color: var(--icon-tab);
+  background: color-mix(in srgb, var(--icon-tab) 14%, transparent);
   padding: 1px 6px;
   border-radius: 20px;
 }

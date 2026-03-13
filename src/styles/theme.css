@@ -50,5 +50,9 @@
   /* ── Separators ──────────────────────────────────────────────── */
   --separator: rgba(255,255,255,0.08);
   --separator-strong: rgba(255,255,255,0.15);
+
+  /* ── Semantic icon colors ─────────────────────────────────────── */
+  --icon-wsl: #f18400;
+  --icon-tab: #bf5af2;
 }
 

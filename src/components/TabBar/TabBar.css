@@ -113,12 +113,12 @@
 }
 
 .tab-item-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--label-primary) 12%, transparent);
   color: var(--label-primary);
 }
 
 .tab-item-btn--kill:hover {
-  background: rgba(255, 59, 48, 0.2);
+  background: color-mix(in srgb, var(--destructive) 20%, transparent);
   color: var(--destructive);
 }
 

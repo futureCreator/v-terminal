@@ -137,11 +137,11 @@
 }
 
 .ssh-profile-item--active {
-  background: rgba(10, 132, 255, 0.14);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .ssh-profile-item--active:hover {
-  background: rgba(10, 132, 255, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .ssh-profile-avatar {
@@ -262,7 +262,7 @@
 
 .ssh-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .ssh-input::placeholder {
@@ -344,7 +344,7 @@
 }
 
 .ssh-btn--secondary:hover:not(:disabled) {
-  background: rgba(128, 128, 128, 0.2);
+  background: color-mix(in srgb, var(--label-secondary) 20%, transparent);
 }
 
 .ssh-btn--danger {
@@ -354,7 +354,7 @@
 }
 
 .ssh-btn--danger:hover:not(:disabled) {
-  background: rgba(255, 69, 58, 0.1);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
 /* ── Split Connect Button ──────────────────────────────────── */
@@ -371,7 +371,7 @@
 .ssh-connect-chevron {
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
   padding: 6px 8px;
-  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: 1px solid color-mix(in srgb, white 20%, transparent) !important;
   border: none;
 }
 
