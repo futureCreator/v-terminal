@@ -90,6 +90,14 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.1.16 - 2026-03-13
+
+- **fix**: Terminal I/O triple-duplication bug resolved
+- **refactor**: Tab bar right-side button alignment and design consistency
+- **refactor**: Daemon status indicator simplified to a dot next to the title bar
+- **refactor**: Tab bar icon design and spacing unified
+- **refactor**: Clean code refactoring and performance improvements
+
 ### v0.1.15 - 2026-03-13
 
 - **fix**: Toolbar icon alignment — removed gap/separator double-spacing in SplitToolbar
