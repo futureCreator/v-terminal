@@ -14,6 +14,10 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.13 - 2026-03-13
+
+- Fixed Windows uninstaller failing when app or daemon is running — added NSIS pre-uninstall hook to force-kill processes before file deletion
+
 ### v0.1.12 - 2026-03-13
 
 - Fixed Windows installer failing when app or daemon is already running — added NSIS preinstall hook to force-kill `v-terminal.exe` and `v-terminal-daemon.exe` before file extraction
