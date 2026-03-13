@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
+import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { ipc } from "../../lib/tauriIpc";
 import { ensureFontLoaded } from "../../lib/fontLoader";
 import { useTabStore } from "../../store/tabStore";
@@ -110,7 +111,7 @@ export function TerminalPane({
 
       const fitAddon = new FitAddon();
       term.loadAddon(fitAddon);
-      term.loadAddon(new WebLinksAddon());
+      term.loadAddon(new WebLinksAddon((_event, uri) => { openUrl(uri).catch(() => {}); }));
 
       if (disposed || !containerRef.current) {
         term.dispose();
