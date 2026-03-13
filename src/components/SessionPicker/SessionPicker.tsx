@@ -68,10 +68,26 @@ const IconSavedTab = () => (
   </svg>
 );
 
-
 const IconClose = () => (
   <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
     <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+  </svg>
+);
+
+const IconEmptyState = () => (
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+    {/* Monitor outline */}
+    <rect x="6" y="8" width="52" height="36" rx="6" stroke="currentColor" strokeWidth="2" strokeDasharray="4 3" />
+    {/* Stand */}
+    <path d="M24 44v8M40 44v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path d="M20 52h24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    {/* Terminal lines inside */}
+    <path d="M14 20l6 5-6 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.35" />
+    <path d="M24 30h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity="0.35" />
+    {/* Zzz sleep indicators */}
+    <text x="36" y="22" fontSize="8" fontWeight="700" fill="currentColor" opacity="0.45">z</text>
+    <text x="41" y="16" fontSize="10" fontWeight="700" fill="currentColor" opacity="0.30">z</text>
+    <text x="47" y="10" fontSize="12" fontWeight="700" fill="currentColor" opacity="0.18">z</text>
   </svg>
 );
 
@@ -173,10 +189,16 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
         </div>
 
         {/* ── Background Tabs ── */}
-        {hasSavedTabs && (
-          <div className="sp-group">
-            <div className="sp-group-label">Background Tabs</div>
-            <div className="sp-group-body">
+        <div className="sp-group">
+          <div className="sp-group-label">
+            Background Tabs
+            {hasSavedTabs && (
+              <span className="sp-group-count">{savedTabs!.length}</span>
+            )}
+          </div>
+
+          {hasSavedTabs ? (
+            <div className="sp-card-grid">
               {savedTabs!.map((savedTab) => {
                 const panelSessions = savedTab.panels
                   .map((p) => sessions.find((s) => s.id === p.ptyId))
@@ -191,39 +213,53 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
                 return (
                   <div
                     key={savedTab.id}
-                    className="sp-row"
+                    className="sp-card"
                     role="button"
                     tabIndex={0}
                     onClick={() => onRestoreTab?.(savedTab.id)}
                     onKeyDown={(e) => e.key === "Enter" && onRestoreTab?.(savedTab.id)}
-                    title={`${savedTab.label}${count > 1 ? ` — ${count} panels` : ""}`}
                   >
-                    <span className="sp-row-icon sp-row-icon--tab">
-                      <IconSavedTab />
-                      {count > 1 && <span className="sp-panel-badge">{count}</span>}
-                    </span>
-                    <span className="sp-row-content">
-                      <span className="sp-row-title">{savedTab.label}</span>
-                      <span className="sp-row-subtitle sp-row-subtitle--mono">
-                        {firstCwd}{count > 1 ? ` +${count - 1} more` : ""}
+                    <div className="sp-card-header">
+                      <span className="sp-row-icon sp-row-icon--tab">
+                        <IconSavedTab />
+                        {count > 1 && <span className="sp-panel-badge">{count}</span>}
                       </span>
-                    </span>
-                    <span className="sp-row-meta">{formatAge(lastActive)}</span>
-                    <button
-                      className="sp-row-kill"
-                      onClick={(e) => handleKillSavedTab(e, savedTab.id)}
-                      disabled={killingSavedTabId === savedTab.id}
-                      title="Close Tab"
-                      aria-label="Close tab"
-                    >
-                      <IconClose />
-                    </button>
+                      <button
+                        className="sp-card-kill"
+                        onClick={(e) => handleKillSavedTab(e, savedTab.id)}
+                        disabled={killingSavedTabId === savedTab.id}
+                        title="Close Tab"
+                        aria-label="Close tab"
+                      >
+                        <IconClose />
+                      </button>
+                    </div>
+                    <div className="sp-card-body">
+                      <span className="sp-card-title">{savedTab.label}</span>
+                      <span className="sp-card-path">{firstCwd}{count > 1 ? ` +${count - 1}` : ""}</span>
+                    </div>
+                    <div className="sp-card-footer">
+                      <span className="sp-card-age">{formatAge(lastActive)}</span>
+                      {count > 1 && (
+                        <span className="sp-card-panels">{count} panels</span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="sp-empty">
+              <div className="sp-empty-icon">
+                <IconEmptyState />
+              </div>
+              <p className="sp-empty-title">No Background Tabs</p>
+              <p className="sp-empty-desc">
+                Tabs you send to the background will appear here for quick restore
+              </p>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>
