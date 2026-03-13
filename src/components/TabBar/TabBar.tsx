@@ -45,14 +45,15 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
           />
         ))}
       </div>
+      <div className="tabbar-sep" />
       <button
         className="tabbar-add"
         onClick={handleAddTab}
         title="New Tab"
         aria-label="New tab"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
       <button
@@ -61,11 +62,13 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
         title="SSH Connections"
         aria-label="SSH connections"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1" y="2" width="12" height="4" rx="1" stroke="currentColor" strokeWidth="1.2" />
-          <rect x="1" y="8" width="12" height="4" rx="1" stroke="currentColor" strokeWidth="1.2" />
-          <circle cx="10.5" cy="4" r="0.9" fill="currentColor" />
-          <circle cx="10.5" cy="10" r="0.9" fill="currentColor" />
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="2.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+          <rect x="1" y="9.5" width="14" height="4" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+          <circle cx="12.5" cy="4.5" r="1" fill="currentColor" />
+          <circle cx="12.5" cy="11.5" r="1" fill="currentColor" />
+          <circle cx="10" cy="4.5" r="0.7" fill="currentColor" opacity="0.5" />
+          <circle cx="10" cy="11.5" r="0.7" fill="currentColor" opacity="0.5" />
         </svg>
       </button>
     </div>

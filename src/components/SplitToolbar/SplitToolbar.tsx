@@ -141,9 +141,11 @@ export function SplitToolbar({
           aria-pressed={broadcastEnabled}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="2" fill="currentColor" />
-            <path d="M4 8a4 4 0 0 1 4-4M12 8a4 4 0 0 1-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M1.5 8a6.5 6.5 0 0 1 6.5-6.5M14.5 8A6.5 6.5 0 0 1 8 14.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+            <path d="M5.5 5.5A3.5 3.5 0 0 0 5.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M10.5 5.5A3.5 3.5 0 0 1 10.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M3.5 3.5A6.36 6.36 0 0 0 3.5 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path d="M12.5 3.5A6.36 6.36 0 0 1 12.5 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
         </button>
         <div className="split-toolbar-sep" />
