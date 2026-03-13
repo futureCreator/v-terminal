@@ -14,6 +14,10 @@ A fast, beautiful terminal emulator built with Tauri + React + xterm.js.
 
 ## Changelog
 
+### v0.1.14 - 2026-03-13
+
+- Improved new tab performance on Windows: WSL distro list (`wsl --list`) is now cached in `AppState` via `OnceLock` and prefetched on app startup, so subsequent new tabs return the result instantly instead of re-running the slow WSL query each time
+
 ### v0.1.13 - 2026-03-13
 
 - Fixed Windows uninstaller failing when app or daemon is running — added NSIS pre-uninstall hook to force-kill processes before file deletion
