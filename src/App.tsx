@@ -433,6 +433,7 @@ export function App() {
           broadcastEnabled={activeTab?.broadcastEnabled ?? false}
           onLayoutChange={handleLayoutChange}
           onToggleBroadcast={handleToggleBroadcast}
+          onOpenPalette={() => setPaletteOpen(true)}
         />
       </div>
       <div className="app-content">

@@ -89,6 +89,7 @@ interface SplitToolbarProps {
   broadcastEnabled: boolean;
   onLayoutChange: (layout: Layout) => void;
   onToggleBroadcast: () => void;
+  onOpenPalette: () => void;
 }
 
 export function SplitToolbar({
@@ -96,6 +97,7 @@ export function SplitToolbar({
   broadcastEnabled,
   onLayoutChange,
   onToggleBroadcast,
+  onOpenPalette,
 }: SplitToolbarProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const themeButtonRef = useRef<HTMLButtonElement>(null);
@@ -103,6 +105,19 @@ export function SplitToolbar({
   return (
     <>
       <div className="split-toolbar">
+        <button
+          className="palette-btn"
+          onClick={onOpenPalette}
+          title="Command Palette (Ctrl+K)"
+          aria-label="Open command palette"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+            <path d="M4 6.5l2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M8.5 10.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="split-toolbar-sep" />
         <div className="split-toolbar-group">
           {LAYOUTS.map(({ value, label, icon }) => (
             <button

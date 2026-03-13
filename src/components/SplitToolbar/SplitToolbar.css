@@ -43,6 +43,26 @@
   background: rgba(10,132,255,0.2);
 }
 
+.palette-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--label-tertiary);
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+}
+
+.palette-btn:hover {
+  color: var(--label-primary);
+  background: var(--bg-tertiary);
+}
+
 .split-toolbar-sep {
   width: 1px;
   height: 20px;
