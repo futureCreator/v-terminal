@@ -174,8 +174,14 @@ export function TerminalPane({
 
       // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
       term.attachCustomKeyEventHandler((e) => {
-        if (isComposing) return true;
+        // Non-keydown events (keyup, keypress) → always pass through
         if (e.type !== "keydown") return true;
+        // During IME composition, block keydown from reaching xterm's PTY path.
+        // e.isComposing is the native browser flag; isComposing is our manual
+        // fallback for browsers/IMEs that fire compositionstart asynchronously.
+        // xterm.js will still deliver the final composed text via onData through
+        // its own compositionend handler, so nothing is lost.
+        if (e.isComposing || isComposing) return false;
 
         if (e.ctrlKey && e.key === "c") {
           const selection = term.getSelection();
