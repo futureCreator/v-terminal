@@ -213,17 +213,15 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
                     onClick={() => onRestoreTab?.(savedTab.id)}
                     onKeyDown={(e) => e.key === "Enter" && onRestoreTab?.(savedTab.id)}
                   >
-                    <div className="sp-card-header">
-                      <button
-                        className="sp-card-kill"
-                        onClick={(e) => handleKillSavedTab(e, savedTab.id)}
-                        disabled={killingSavedTabId === savedTab.id}
-                        title="Close Tab"
-                        aria-label="Close tab"
-                      >
-                        <IconClose />
-                      </button>
-                    </div>
+                    <button
+                      className="sp-card-kill"
+                      onClick={(e) => handleKillSavedTab(e, savedTab.id)}
+                      disabled={killingSavedTabId === savedTab.id}
+                      title="Close Tab"
+                      aria-label="Close tab"
+                    >
+                      <IconClose />
+                    </button>
                     <div className="sp-card-body">
                       <span className="sp-card-title">{savedTab.label}</span>
                       <span className="sp-card-path">{firstCwd}{count > 1 ? ` +${count - 1}` : ""}</span>

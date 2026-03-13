@@ -289,15 +289,10 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
-/* Card Header */
-.sp-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
 .sp-card-kill {
-  flex-shrink: 0;
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -310,7 +305,6 @@
   border-radius: 5px;
   opacity: 0;
   transition: opacity 0.12s, background 0.12s, color 0.12s;
-  margin: -2px -2px 0 0;
 }
 
 .sp-card:hover .sp-card-kill {
