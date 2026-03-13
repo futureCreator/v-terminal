@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { homeDir } from "@tauri-apps/api/path";
 import { useTabStore } from "../../store/tabStore";
 import "./TabBar.css";
@@ -12,6 +12,48 @@ interface TabBarProps {
 
 export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
   const { tabs, activeTabId, addTab, removeTab, setActiveTab, renameTab } = useTabStore();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollWidth > el.clientWidth + 1;
+    setCanScrollLeft(el.scrollLeft > 1);
+    setCanScrollRight(hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    updateScrollButtons();
+    el.addEventListener("scroll", updateScrollButtons, { passive: true });
+    const ro = new ResizeObserver(updateScrollButtons);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", updateScrollButtons);
+      ro.disconnect();
+    };
+  }, [tabs.length, updateScrollButtons]);
+
+  // Auto-scroll active tab into view when switching tabs
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const activeEl = el.querySelector<HTMLElement>(".tab-item--active");
+    if (activeEl) {
+      activeEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  }, [activeTabId]);
+
+  const handleScrollLeft = () => {
+    scrollContainerRef.current?.scrollBy({ left: -180, behavior: "smooth" });
+  };
+
+  const handleScrollRight = () => {
+    scrollContainerRef.current?.scrollBy({ left: 180, behavior: "smooth" });
+  };
 
   const handleAddTab = async () => {
     let cwd: string;
@@ -25,7 +67,18 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
 
   return (
     <div className="tabbar">
-      <div className="tabbar-tabs">
+      {canScrollLeft && (
+        <button
+          className="tabbar-scroll tabbar-scroll--left"
+          onClick={handleScrollLeft}
+          aria-label="Scroll tabs left"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
+      <div className="tabbar-tabs" ref={scrollContainerRef}>
         {tabs.map((tab) => (
           <TabItem
             key={tab.id}
@@ -45,6 +98,17 @@ export function TabBar({ onOpenSshManager, onCloseTab, onKillTab, onActivateTab 
           />
         ))}
       </div>
+      {canScrollRight && (
+        <button
+          className="tabbar-scroll tabbar-scroll--right"
+          onClick={handleScrollRight}
+          aria-label="Scroll tabs right"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M4.5 2L8.5 6L4.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      )}
       <div className="tabbar-sep" />
       <button
         className="tabbar-add"
