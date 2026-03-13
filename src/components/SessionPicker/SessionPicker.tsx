@@ -61,12 +61,6 @@ const IconSsh = () => (
   </svg>
 );
 
-const IconSavedTab = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <rect x="1.5" y="4.5" width="13" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-    <path d="M1.5 7H6.5V4.5H3A1.5 1.5 0 0 0 1.5 6V7z" fill="currentColor" fillOpacity="0.3" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-  </svg>
-);
 
 const IconClose = () => (
   <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
@@ -220,10 +214,6 @@ export function SessionPicker({ onNewSession, savedTabs, onRestoreTab, onKillSav
                     onKeyDown={(e) => e.key === "Enter" && onRestoreTab?.(savedTab.id)}
                   >
                     <div className="sp-card-header">
-                      <span className="sp-row-icon sp-row-icon--tab">
-                        <IconSavedTab />
-                        {count > 1 && <span className="sp-panel-badge">{count}</span>}
-                      </span>
                       <button
                         className="sp-card-kill"
                         onClick={(e) => handleKillSavedTab(e, savedTab.id)}
