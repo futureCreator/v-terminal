@@ -506,7 +506,13 @@ export function App() {
       <DaemonStatusBanner />
       <CommandPalette
         isOpen={paletteOpen}
-        onClose={() => setPaletteOpen(false)}
+        onClose={() => {
+          setPaletteOpen(false);
+          requestAnimationFrame(() => {
+            const ptyId = activePanelPtyIdRef.current;
+            if (ptyId) terminalRegistry.get(ptyId)?.focus();
+          });
+        }}
         extraSections={[
           tabPaletteSection,
           layoutPaletteSection,

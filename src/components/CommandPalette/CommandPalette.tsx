@@ -9,7 +9,7 @@ export interface PaletteCommand {
   label: string;
   icon: React.ReactNode;
   isActive?: boolean;
-  action: () => void;
+  action: () => void | Promise<void>;
 }
 
 export interface PaletteSection {
@@ -24,7 +24,7 @@ interface Command {
   subSection: string | null;
   icon: React.ReactNode;
   isActive?: boolean;
-  action: () => void;
+  action: () => void | Promise<void>;
 }
 
 interface Props {
@@ -133,8 +133,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     highlighted?.scrollIntoView({ block: "nearest" });
   }, [activeIndex, q]);
 
-  const execute = (cmd: Command) => {
-    cmd.action();
+  const execute = async (cmd: Command) => {
+    await cmd.action();
     onClose();
   };
 
