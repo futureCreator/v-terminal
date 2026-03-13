@@ -492,8 +492,9 @@ export function App() {
     removeTab(tabId);
   };
 
-  const handleRestoreTab = (savedTabId: string) => {
+  const handleRestoreTab = (pickerTabId: string, savedTabId: string) => {
     restoreSavedTab(savedTabId);
+    removeTab(pickerTabId);
   };
 
   const handleKillSavedTab = async (savedTabId: string) => {
@@ -533,7 +534,7 @@ export function App() {
               <SessionPicker
                 onNewSession={(opts) => handleNewSession(tab.id, opts)}
                 savedTabs={savedTabs}
-                onRestoreTab={handleRestoreTab}
+                onRestoreTab={(savedTabId) => handleRestoreTab(tab.id, savedTabId)}
                 onKillSavedTab={handleKillSavedTab}
               />
             ) : (
