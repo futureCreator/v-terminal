@@ -1,25 +1,30 @@
 .split-toolbar {
   display: flex;
   align-items: center;
-  gap: 0;
-  padding: 0 8px;
+  padding: 0 6px;
   flex-shrink: 0;
   border-left: 1px solid var(--separator);
+  gap: 2px;
 }
 
+/* Segmented control – Apple HIG mutually exclusive group */
 .split-toolbar-group {
   display: flex;
   align-items: center;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 6px;
+  padding: 2px;
   gap: 1px;
+  margin: 0 2px;
 }
 
 .split-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 22px;
   border: none;
   background: transparent;
   color: var(--label-tertiary);
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,79 +34,24 @@
 }
 
 .split-btn:hover {
-  color: var(--label-primary);
-  background: var(--bg-tertiary);
+  color: var(--label-secondary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .split-btn--active {
-  color: var(--accent);
-  background: rgba(10,132,255,0.15);
+  background: var(--bg-tertiary);
+  color: var(--label-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
 }
 
 .split-btn--active:hover {
-  color: var(--accent-hover);
-  background: rgba(10,132,255,0.2);
-}
-
-.palette-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--label-tertiary);
-  cursor: pointer;
-  transition: color 0.1s, background 0.1s;
-}
-
-.palette-btn:hover {
-  color: var(--label-primary);
+  color: var(--accent);
   background: var(--bg-tertiary);
 }
 
-.split-toolbar-sep {
-  width: 1px;
-  height: 16px;
-  background: var(--separator);
-  margin: 0 6px;
-  flex-shrink: 0;
-}
-
-.broadcast-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--label-secondary);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.broadcast-btn:hover {
-  color: var(--label-primary);
-  background: var(--bg-tertiary);
-  border-color: var(--separator);
-}
-
-.broadcast-btn--active {
-  color: var(--broadcast);
-  background: var(--broadcast-dim);
-  border-color: rgba(255,159,10,0.3);
-}
-
-.broadcast-btn--active:hover {
-  background: rgba(255,159,10,0.2);
-}
-
+/* Unified standalone toolbar icon buttons */
+.palette-btn,
+.broadcast-btn,
 .theme-toggle-btn {
   display: flex;
   align-items: center;
@@ -117,12 +67,32 @@
   transition: color 0.1s, background 0.1s;
 }
 
+.palette-btn:hover,
+.broadcast-btn:hover,
 .theme-toggle-btn:hover {
   color: var(--label-primary);
   background: var(--bg-tertiary);
 }
 
+.broadcast-btn--active {
+  color: var(--broadcast);
+  background: var(--broadcast-dim);
+}
+
+.broadcast-btn--active:hover {
+  color: var(--broadcast);
+  background: rgba(255, 159, 10, 0.2);
+}
+
 .theme-toggle-btn--open {
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.split-toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--separator);
+  margin: 0 4px;
+  flex-shrink: 0;
 }
