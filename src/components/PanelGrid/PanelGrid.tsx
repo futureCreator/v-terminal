@@ -5,12 +5,18 @@ import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
 import "./PanelGrid.css";
 
+export interface PanelNavHandle {
+  nextPanel: () => void;
+  prevPanel: () => void;
+}
+
 interface PanelGridProps {
   tab: Tab;
   onActivePanelChanged?: (ptyId: string | null) => void;
+  navRef?: React.MutableRefObject<PanelNavHandle | null>;
 }
 
-export function PanelGrid({ tab, onActivePanelChanged }: PanelGridProps) {
+export function PanelGrid({ tab, onActivePanelChanged, navRef }: PanelGridProps) {
   const { setPtyId, clearPtyId } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
 
@@ -36,6 +42,12 @@ export function PanelGrid({ tab, onActivePanelChanged }: PanelGridProps) {
     const activePanel = tab.panels.find((p) => p.id === activePanelId);
     onActivePanelChanged(activePanel?.ptyId ?? null);
   }, [activePanelId, tab.panels, onActivePanelChanged]);
+
+  useEffect(() => {
+    if (!navRef) return;
+    navRef.current = { nextPanel: handleNextPanel, prevPanel: handlePrevPanel };
+    return () => { navRef.current = null; };
+  }, [navRef, handleNextPanel, handlePrevPanel]);
 
   const gridConfig = getGridConfig(tab.layout);
 
