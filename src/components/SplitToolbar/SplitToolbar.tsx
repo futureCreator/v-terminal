@@ -47,6 +47,18 @@ const LAYOUTS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = 
     ),
   },
   {
+    value: "4c",
+    label: "4 Columns",
+    icon: (
+      <svg width="22" height="14" viewBox="0 0 22 14" fill="none">
+        <rect x="1" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" />
+        <rect x="6.25" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" />
+        <rect x="11.5" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" />
+        <rect x="16.75" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" />
+      </svg>
+    ),
+  },
+  {
     value: 6,
     label: "6 Panels",
     icon: (
