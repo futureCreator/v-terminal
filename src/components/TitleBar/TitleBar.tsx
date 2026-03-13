@@ -53,7 +53,6 @@ export function TitleBar() {
   const indicator = (
     <div className="daemon-indicator" title={`Daemon ${statusLabel}`}>
       <span className={`daemon-dot ${dotClass}`} />
-      <span className="daemon-indicator-label">{statusLabel}</span>
     </div>
   );
 
@@ -134,8 +133,8 @@ export function TitleBar() {
           </svg>
         </button>
       </div>
-      <div className="titlebar-spacer" data-tauri-drag-region />
       {indicator}
+      <div className="titlebar-spacer" data-tauri-drag-region />
     </div>
   );
 }
