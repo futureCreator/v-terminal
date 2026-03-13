@@ -199,6 +199,11 @@ export function TerminalPane({
           return false;
         }
 
+        if (e.ctrlKey && e.key === "k") {
+          // Ctrl+K is reserved for the command palette — don't send to PTY.
+          return false;
+        }
+
         return true;
       });
 

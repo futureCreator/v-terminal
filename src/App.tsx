@@ -8,6 +8,7 @@ import { PanelGrid } from "./components/PanelGrid/PanelGrid";
 import { SessionPicker } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
+import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { ipc } from "./lib/tauriIpc";
@@ -24,11 +25,25 @@ export function App() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
   const [sshModalOpen, setSshModalOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const activePanelPtyIdRef = useRef<string | null>(null);
 
   // Prefetch WSL distros on startup to warm the Rust-side cache
   useEffect(() => {
     ipc.getWslDistros().catch(() => {});
+  }, []);
+
+  // Global Ctrl+K handler — intercept before xterm sees the event
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "k") {
+        e.preventDefault();
+        e.stopPropagation();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
   }, []);
 
   // Apply theme CSS variables to document and update all open terminals
@@ -206,6 +221,7 @@ export function App() {
         />
       )}
       <DaemonStatusBanner />
+      <CommandPalette isOpen={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }
