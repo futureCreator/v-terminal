@@ -234,7 +234,16 @@ export function TerminalPane({
           resizeTimeout = setTimeout(() => {
             if (disposed || !fitAddonRef.current || !termRef.current) return;
             try {
+              const buffer = term.buffer.active;
+              const savedViewportY = buffer.viewportY;
+              const isAtBottom = savedViewportY >= buffer.length - term.rows;
+
               fitAddon.fit();
+
+              if (!isAtBottom) {
+                term.scrollToLine(savedViewportY);
+              }
+
               const { cols: c, rows: r } = term;
               ipc.daemonResize(ptyId, c, r).catch(() => {});
             } catch {}

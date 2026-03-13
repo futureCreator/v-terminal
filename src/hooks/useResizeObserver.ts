@@ -21,7 +21,16 @@ export function useResizeObserver(
         const term = termRef.current;
         if (!fitAddon || !term || !ptyId) return;
         try {
+          const buffer = term.buffer.active;
+          const savedViewportY = buffer.viewportY;
+          const isAtBottom = savedViewportY >= buffer.length - term.rows;
+
           fitAddon.fit();
+
+          if (!isAtBottom) {
+            term.scrollToLine(savedViewportY);
+          }
+
           const { cols, rows } = term;
           ipc.daemonResize(ptyId, cols, rows).catch(() => {});
         } catch {
