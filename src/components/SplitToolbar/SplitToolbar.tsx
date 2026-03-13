@@ -174,7 +174,7 @@ export function SplitToolbar({
           <button
             ref={moreButtonRef}
             className={`more-btn${menuOpen ? " more-btn--open" : ""}`}
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => { setMenuOpen((v) => !v); setThemeOpen(false); }}
             title="More options"
             aria-label="More options"
             aria-expanded={menuOpen}
