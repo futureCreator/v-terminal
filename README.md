@@ -90,6 +90,23 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.1.17 - 2026-03-14
+
+- **feat**: Global note panel with command palette toggle
+- **feat**: 4-column layout added
+- **feat**: Tab bar overflow — proportional shrink and scroll arrows
+- **feat**: Command palette — restore background tabs and tab navigation
+- **feat**: SSH Connection modal UX and design improvements
+- **feat**: Session picker card grid and empty state improvements
+- **refactor**: Appearance theme picker switched to drill-down view
+- **refactor**: Tab bar + button inline and toolbar ⋯ overflow menu consolidation
+- **refactor**: Close tab button unified to single button; Ctrl+click sends to background
+- **refactor**: Design token consistency improvements across all components
+- **fix**: Korean IME key leak to PTY during composition
+- **fix**: Session picker auto-closes background tab when restoring
+- **fix**: Terminal scroll reset after resize
+- **fix**: More menu UX and layout improvements
+
 ### v0.1.16 - 2026-03-13
 
 - **fix**: Terminal I/O triple-duplication bug resolved
