@@ -13,6 +13,21 @@ export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [ctrlHeld, setCtrlHeld] = useState(false);
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => { if (e.key === "Control") setCtrlHeld(true); };
+    const up = (e: KeyboardEvent) => { if (e.key === "Control") setCtrlHeld(false); };
+    const blur = () => setCtrlHeld(false);
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", blur);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", blur);
+    };
+  }, []);
 
   const updateScrollButtons = useCallback(() => {
     const el = scrollContainerRef.current;
@@ -73,6 +88,7 @@ export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
             id={tab.id}
             label={tab.label}
             isActive={tab.id === activeTabId}
+            ctrlHeld={ctrlHeld}
             onActivate={() => {
               if (onActivateTab) {
                 onActivateTab(tab.id);
@@ -105,13 +121,14 @@ interface TabItemProps {
   id: string;
   label: string;
   isActive: boolean;
+  ctrlHeld: boolean;
   onActivate: () => void;
   onClose: () => void;
   onKill: () => void;
   onRename: (label: string) => void;
 }
 
-function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }: TabItemProps) {
+function TabItem({ id, label, isActive, ctrlHeld, onActivate, onClose, onKill, onRename }: TabItemProps) {
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -156,25 +173,25 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
       )}
       <div className="tab-item-actions">
         <button
-          className="tab-item-btn tab-item-btn--bg"
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          title="Send to Background"
-          aria-label="Send to background"
+          className={`tab-item-btn ${ctrlHeld ? "tab-item-btn--bg" : "tab-item-btn--kill"}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (e.ctrlKey) onClose();
+            else onKill();
+          }}
+          title={ctrlHeld ? "Send to Background" : "Close Tab · Ctrl+Click: Send to Background"}
+          aria-label={ctrlHeld ? "Send to background" : "Close tab"}
         >
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-            <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M1 8h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
-        </button>
-        <button
-          className="tab-item-btn tab-item-btn--kill"
-          onClick={(e) => { e.stopPropagation(); onKill(); }}
-          title="Kill Process"
-          aria-label="Kill process"
-        >
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-            <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          </svg>
+          {ctrlHeld ? (
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+              <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 8h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+              <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          )}
         </button>
       </div>
     </div>
