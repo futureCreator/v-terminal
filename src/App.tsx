@@ -26,6 +26,11 @@ export function App() {
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const activePanelPtyIdRef = useRef<string | null>(null);
 
+  // Prefetch WSL distros on startup to warm the Rust-side cache
+  useEffect(() => {
+    ipc.getWslDistros().catch(() => {});
+  }, []);
+
   // Apply theme CSS variables to document and update all open terminals
   useEffect(() => {
     const applyTheme = () => {

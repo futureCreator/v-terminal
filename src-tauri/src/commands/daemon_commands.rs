@@ -4,36 +4,40 @@ use crate::state::app_state::AppState;
 use crate::daemon::client::DaemonClient;
 
 #[tauri::command]
-pub fn get_wsl_distros() -> Result<Vec<String>, String> {
+pub fn get_wsl_distros(state: State<AppState>) -> Result<Vec<String>, String> {
     #[cfg(windows)]
     {
-        let output = std::process::Command::new("wsl")
-            .args(["--list", "--quiet"])
-            .output()
-            .map_err(|_| "WSL not found".to_string())?;
+        let cached = state.wsl_distros_cache.get_or_init(|| {
+            let Ok(output) = std::process::Command::new("wsl")
+                .args(["--list", "--quiet"])
+                .output()
+            else {
+                return vec![];
+            };
 
-        // wsl --list outputs UTF-16LE on Windows
-        let bytes = output.stdout;
-        let text = if bytes.len() >= 2 && bytes[1] == 0 {
-            let u16_chars: Vec<u16> = bytes
-                .chunks_exact(2)
-                .map(|c| u16::from_le_bytes([c[0], c[1]]))
-                .collect();
-            String::from_utf16_lossy(&u16_chars).to_string()
-        } else {
-            String::from_utf8_lossy(&bytes).to_string()
-        };
+            // wsl --list outputs UTF-16LE on Windows
+            let bytes = output.stdout;
+            let text = if bytes.len() >= 2 && bytes[1] == 0 {
+                let u16_chars: Vec<u16> = bytes
+                    .chunks_exact(2)
+                    .map(|c| u16::from_le_bytes([c[0], c[1]]))
+                    .collect();
+                String::from_utf16_lossy(&u16_chars).to_string()
+            } else {
+                String::from_utf8_lossy(&bytes).to_string()
+            };
 
-        let distros: Vec<String> = text
-            .lines()
-            .map(|l| l.trim().trim_start_matches('\u{feff}').to_string())
-            .filter(|l| !l.is_empty())
-            .collect();
+            text.lines()
+                .map(|l| l.trim().trim_start_matches('\u{feff}').to_string())
+                .filter(|l| !l.is_empty())
+                .collect()
+        });
 
-        Ok(distros)
+        Ok(cached.clone())
     }
     #[cfg(not(windows))]
     {
+        let _ = state;
         Ok(vec![])
     }
 }
