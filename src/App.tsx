@@ -128,6 +128,20 @@ export function App() {
     panelNavRef.current?.toggleZoom();
   }, []);
 
+  const handlePrevTab = useCallback(() => {
+    const idx = tabs.findIndex((t) => t.id === activeTabId);
+    if (idx === -1 || tabs.length < 2) return;
+    const prevIdx = (idx - 1 + tabs.length) % tabs.length;
+    setActiveTab(tabs[prevIdx].id);
+  }, [tabs, activeTabId, setActiveTab]);
+
+  const handleNextTab = useCallback(() => {
+    const idx = tabs.findIndex((t) => t.id === activeTabId);
+    if (idx === -1 || tabs.length < 2) return;
+    const nextIdx = (idx + 1) % tabs.length;
+    setActiveTab(tabs[nextIdx].id);
+  }, [tabs, activeTabId, setActiveTab]);
+
   const handleActivePanelChanged = useCallback((ptyId: string | null) => {
     activePanelPtyIdRef.current = ptyId;
   }, []);
@@ -182,6 +196,34 @@ export function App() {
         isActive: activeTab?.broadcastEnabled,
         action: handleToggleBroadcast,
       },
+      ...(tabs.length > 1 ? [
+        {
+          id: "tab:prev",
+          label: "Previous Tab",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M8 3L4 7l4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                <rect x="9" y="3" width="2" height="8" rx="0.8" fill="currentColor" opacity="0.35" />
+              </svg>
+            </span>
+          ),
+          action: handlePrevTab,
+        },
+        {
+          id: "tab:next",
+          label: "Next Tab",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M6 3l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                <rect x="3" y="3" width="2" height="8" rx="0.8" fill="currentColor" opacity="0.35" />
+              </svg>
+            </span>
+          ),
+          action: handleNextTab,
+        },
+      ] : []),
       ...(activeTab && activeTab.panels.length > 1 ? [
         {
           id: "panel:zoom",
@@ -225,7 +267,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, activeTab]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, activeTab, tabs]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -351,6 +393,42 @@ export function App() {
       })),
     };
   }, [activeTab, handleLayoutChange]);
+
+  const backgroundTabsPaletteSection = useMemo<PaletteSection | null>(() => {
+    if (savedTabs.length === 0) return null;
+
+    const formatRelativeTime = (timestamp: number): string => {
+      const diff = Date.now() - timestamp;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      if (seconds < 60) return "방금 전";
+      if (minutes < 60) return `${minutes}분 전`;
+      if (hours < 24) return `${hours}시간 전`;
+      return `${days}일 전`;
+    };
+
+    return {
+      category: "Background",
+      commands: savedTabs.map((saved) => ({
+        id: `background:${saved.id}`,
+        label: saved.label,
+        meta: `${saved.panels.length > 1 ? `${saved.panels.length}개 패널 · ` : ""}${formatRelativeTime(saved.savedAt)}`,
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="3" width="12" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M4.5 4.5V2.5M9.5 4.5V2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M4.5 9l1.5-1.5L7.5 9" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        ),
+        action: () => { restoreSavedTab(saved.id); },
+      })),
+    };
+  }, [savedTabs, restoreSavedTab]);
 
   const sshPaletteSection = useMemo<PaletteSection | null>(() => {
     if (sshProfiles.length === 0) return null;
@@ -483,6 +561,7 @@ export function App() {
         extraSections={[
           tabPaletteSection,
           tabListPaletteSection,
+          ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
           ...(sshPaletteSection ? [sshPaletteSection] : []),
         ]}

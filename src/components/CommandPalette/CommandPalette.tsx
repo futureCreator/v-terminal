@@ -7,6 +7,7 @@ import "./CommandPalette.css";
 export interface PaletteCommand {
   id: string;
   label: string;
+  meta?: string;
   icon: React.ReactNode;
   isActive?: boolean;
   action: () => void | Promise<void>;
@@ -20,6 +21,7 @@ export interface PaletteSection {
 interface Command {
   id: string;
   label: string;
+  meta?: string;
   category: string;
   subSection: string | null;
   icon: React.ReactNode;
@@ -49,6 +51,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
         list.push({
           id: cmd.id,
           label: cmd.label,
+          meta: cmd.meta,
           category: section.category,
           subSection: null,
           icon: cmd.icon,
@@ -167,6 +170,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
       >
         {cmd.icon}
         <span className="cp-item-label">{cmd.label}</span>
+        {cmd.meta && <span className="cp-item-meta">{cmd.meta}</span>}
         {cmd.isActive && (
           <svg className="cp-item-check" width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
