@@ -10,6 +10,7 @@ import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
+import { NotePanel } from "./components/NotePanel/NotePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
@@ -37,6 +38,7 @@ export function App() {
 
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(() => localStorage.getItem("v-terminal:note-open") === "true");
   const activePanelPtyIdRef = useRef<string | null>(null);
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
@@ -45,13 +47,30 @@ export function App() {
     ipc.getWslDistros().catch(() => {});
   }, []);
 
-  // Global Ctrl+K handler — intercept before xterm sees the event
+  const handleToggleNote = useCallback(() => {
+    setNoteOpen((prev) => {
+      const next = !prev;
+      localStorage.setItem("v-terminal:note-open", String(next));
+      return next;
+    });
+  }, []);
+
+  // Global keyboard shortcuts — intercept before xterm sees the event
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === "k") {
         e.preventDefault();
         e.stopPropagation();
         setPaletteOpen((open) => !open);
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === "N") {
+        e.preventDefault();
+        e.stopPropagation();
+        setNoteOpen((prev) => {
+          const next = !prev;
+          localStorage.setItem("v-terminal:note-open", String(next));
+          return next;
+        });
       }
     };
     window.addEventListener("keydown", onKeyDown, { capture: true });
@@ -531,14 +550,17 @@ export function App() {
         <SplitToolbar
           activeLayout={activeTab?.layout ?? 1}
           broadcastEnabled={activeTab?.broadcastEnabled ?? false}
+          noteOpen={noteOpen}
           onLayoutChange={handleLayoutChange}
           onToggleBroadcast={handleToggleBroadcast}
+          onToggleNote={handleToggleNote}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenSshManager={() => setSshModalOpen(true)}
           onAddTab={handleNewTab}
         />
       </div>
       <div className="app-content">
+        <div className="app-terminal-area">
         {tabs.map((tab) => (
           <div
             key={tab.id}
@@ -561,6 +583,8 @@ export function App() {
             )}
           </div>
         ))}
+        </div>
+        {noteOpen && <NotePanel onClose={handleToggleNote} />}
       </div>
       {sshModalOpen && (
         <SshManagerModal

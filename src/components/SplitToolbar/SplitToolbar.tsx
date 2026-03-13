@@ -101,8 +101,10 @@ const LAYOUTS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = 
 interface SplitToolbarProps {
   activeLayout: Layout;
   broadcastEnabled: boolean;
+  noteOpen: boolean;
   onLayoutChange: (layout: Layout) => void;
   onToggleBroadcast: () => void;
+  onToggleNote: () => void;
   onOpenPalette: () => void;
   onOpenSshManager: () => void;
   onAddTab: () => void;
@@ -111,8 +113,10 @@ interface SplitToolbarProps {
 export function SplitToolbar({
   activeLayout,
   broadcastEnabled,
+  noteOpen,
   onLayoutChange,
   onToggleBroadcast,
+  onToggleNote,
   onOpenPalette,
   onOpenSshManager,
   onAddTab,
@@ -266,6 +270,20 @@ export function SplitToolbar({
                       <circle cx="10" cy="11.5" r="0.7" fill="currentColor" opacity="0.5" />
                     </svg>
                     <span className="more-menu-item-label">SSH Connections</span>
+                  </button>
+                  <div className="more-menu-sep" />
+                  {/* Notes */}
+                  <button
+                    className={`more-menu-item${noteOpen ? " more-menu-item--active" : ""}`}
+                    onClick={() => { onToggleNote(); setMenuOpen(false); }}
+                    role="menuitem"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <rect x="2" y="1.5" width="12" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                      <path d="M5 5.5h6M5 8h6M5 10.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                    <span className="more-menu-item-label">Notes</span>
+                    <span className="more-menu-kbd">Ctrl+Shift+N</span>
                   </button>
                   <div className="more-menu-sep" />
                   {/* Appearance */}

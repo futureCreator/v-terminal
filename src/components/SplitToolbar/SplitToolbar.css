@@ -303,6 +303,14 @@
   color: var(--broadcast);
 }
 
+.more-menu-item--active {
+  color: var(--accent);
+}
+
+.more-menu-item--active:hover {
+  color: var(--accent);
+}
+
 .more-menu-item-label {
   flex: 1;
 }

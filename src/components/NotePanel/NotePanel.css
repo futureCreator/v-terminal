@@ -1,0 +1,82 @@
+.note-panel {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--separator);
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.note-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 14px;
+  height: 32px;
+  border-bottom: 1px solid var(--separator);
+  flex-shrink: 0;
+}
+
+.note-panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-family: "Pretendard", sans-serif;
+  user-select: none;
+}
+
+.note-panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  color: var(--label-tertiary);
+  padding: 0;
+  transition: color 0.12s, background 0.12s;
+}
+
+.note-panel-close:hover {
+  color: var(--label-primary);
+  background: var(--bg-tertiary);
+}
+
+.note-panel-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 12px 14px;
+  color: var(--label-primary);
+  font-family: "Pretendard", sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  caret-color: var(--accent);
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+.note-panel-textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.note-panel-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.note-panel-textarea::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+}
+
+.note-panel-textarea::placeholder {
+  color: var(--label-disabled);
+}
