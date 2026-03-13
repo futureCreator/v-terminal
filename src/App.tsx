@@ -75,20 +75,6 @@ export function App() {
     setActiveTab(tabId);
   }, [setActiveTab]);
 
-  const handlePrevTab = useCallback(() => {
-    if (tabs.length <= 1) return;
-    const idx = tabs.findIndex((t) => t.id === activeTabId);
-    const prevIdx = idx <= 0 ? tabs.length - 1 : idx - 1;
-    setActiveTab(tabs[prevIdx].id);
-  }, [tabs, activeTabId, setActiveTab]);
-
-  const handleNextTab = useCallback(() => {
-    if (tabs.length <= 1) return;
-    const idx = tabs.findIndex((t) => t.id === activeTabId);
-    const nextIdx = idx >= tabs.length - 1 ? 0 : idx + 1;
-    setActiveTab(tabs[nextIdx].id);
-  }, [tabs, activeTabId, setActiveTab]);
-
   const handleNewTab = useCallback(async () => {
     let cwd: string;
     try { cwd = await homeDir(); } catch { cwd = "~"; }
@@ -168,30 +154,6 @@ export function App() {
         action: handleNewTab,
       },
       {
-        id: "tab:prev",
-        label: "이전 탭",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M8.5 3.5L5 7l3.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        ),
-        action: handlePrevTab,
-      },
-      {
-        id: "tab:next",
-        label: "다음 탭",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M5.5 3.5L9 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        ),
-        action: handleNextTab,
-      },
-      {
         id: "tab:broadcast",
         label: activeTab?.broadcastEnabled ? "브로드캐스트 끄기" : "브로드캐스트 켜기",
         icon: (
@@ -252,7 +214,7 @@ export function App() {
         action: () => setActiveTab(tab.id),
       })),
     ],
-  }), [handlePrevTab, handleNextTab, handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleToggleFullscreen, activeTab, tabs, activeTabId, setActiveTab]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleToggleFullscreen, activeTab, tabs, activeTabId, setActiveTab]);
 
   const layoutPaletteSection = useMemo<PaletteSection>(() => {
     const LAYOUT_OPTIONS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = [
