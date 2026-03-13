@@ -15,11 +15,14 @@ import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useSshStore } from "./store/sshStore";
 import { ipc } from "./lib/tauriIpc";
+import { buildSshCommand } from "./lib/sshUtils";
 import { terminalRegistry } from "./components/TerminalPane/TerminalPane";
 import type { Layout, SshProfile } from "./types/terminal";
 import "./styles/theme.css";
 import "./styles/globals.css";
 import "./App.css";
+
+const encoder = new TextEncoder();
 
 export function App() {
   const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
@@ -27,7 +30,11 @@ export function App() {
   const { themeId } = useThemeStore();
   const { profiles: sshProfiles } = useSshStore();
 
-  const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
+  const activeTab = useMemo(
+    () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
+    [tabs, activeTabId]
+  );
+
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const activePanelPtyIdRef = useRef<string | null>(null);
@@ -90,19 +97,28 @@ export function App() {
     if (activeTab) toggleBroadcast(activeTab.id);
   }, [activeTab, toggleBroadcast]);
 
-  const buildSshCommand = useCallback((profile: SshProfile) => {
-    let cmd = `ssh ${profile.username}@${profile.host}`;
-    if (profile.port !== 22) cmd += ` -p ${profile.port}`;
-    if (profile.identityFile) cmd += ` -i "${profile.identityFile}"`;
-    return cmd;
-  }, []);
-
   const handleSshConnect = useCallback(async (profile: SshProfile) => {
     let cwd: string;
     try { cwd = await homeDir(); } catch { cwd = "~"; }
     addTab(cwd, profile.name, buildSshCommand(profile));
     setSshModalOpen(false);
-  }, [addTab, buildSshCommand]);
+  }, [addTab]);
+
+  const handleSshConnectInPanel = useCallback((profile: SshProfile) => {
+    const ptyId = activePanelPtyIdRef.current;
+    if (!ptyId) return;
+    ipc.daemonWrite(ptyId, encoder.encode(buildSshCommand(profile) + "\r")).catch(() => {});
+    setSshModalOpen(false);
+  }, []);
+
+  const handleSshConnectInAllPanels = useCallback((profile: SshProfile) => {
+    if (!activeTab) return;
+    const encoded = encoder.encode(buildSshCommand(profile) + "\r");
+    activeTab.panels
+      .filter((p) => p.ptyId !== null)
+      .forEach((p) => ipc.daemonWrite(p.ptyId!, encoded).catch(() => {}));
+    setSshModalOpen(false);
+  }, [activeTab]);
 
   const handleCloseCurrentTab = useCallback(() => {
     if (activeTab) saveAndRemoveTab(activeTab.id);
@@ -110,6 +126,18 @@ export function App() {
 
   const handleTogglePanelZoom = useCallback(() => {
     panelNavRef.current?.toggleZoom();
+  }, []);
+
+  const handleActivePanelChanged = useCallback((ptyId: string | null) => {
+    activePanelPtyIdRef.current = ptyId;
+  }, []);
+
+  const handlePaletteClose = useCallback(() => {
+    setPaletteOpen(false);
+    requestAnimationFrame(() => {
+      const ptyId = activePanelPtyIdRef.current;
+      if (ptyId) terminalRegistry.get(ptyId)?.focus();
+    });
   }, []);
 
   const tabPaletteSection = useMemo<PaletteSection>(() => ({
@@ -355,7 +383,7 @@ export function App() {
       })
       .then((fn) => {
         if (cancelled) {
-          fn(); // cleanup이 먼저 실행된 경우 즉시 해제
+          fn();
         } else {
           unlistenFn = fn;
         }
@@ -366,31 +394,11 @@ export function App() {
     };
   }, [saveAllOpenTabsToBackground]);
 
-  const handleSshConnectInPanel = (profile: SshProfile) => {
-    const ptyId = activePanelPtyIdRef.current;
-    if (!ptyId) return;
-    const cmd = buildSshCommand(profile);
-    const encoded = new TextEncoder().encode(cmd + "\r");
-    ipc.daemonWrite(ptyId, encoded).catch(() => {});
-    setSshModalOpen(false);
-  };
-
-  const handleSshConnectInAllPanels = (profile: SshProfile) => {
-    if (!activeTab) return;
-    const cmd = buildSshCommand(profile);
-    const encoded = new TextEncoder().encode(cmd + "\r");
-    activeTab.panels
-      .filter((p) => p.ptyId !== null)
-      .forEach((p) => ipc.daemonWrite(p.ptyId!, encoded).catch(() => {}));
-    setSshModalOpen(false);
-  };
-
   const handleNewSession = (tabId: string, opts?: { shellProgram?: string; shellArgs?: string[]; sshCommand?: string; label?: string }) => {
     resolveSessionPick(tabId, undefined, opts?.shellProgram, opts?.shellArgs, opts?.sshCommand, opts?.label);
   };
 
   const handleTabClose = (tabId: string) => {
-    // Save tab layout + sessions before removing so it can be restored from SessionPicker.
     saveAndRemoveTab(tabId);
   };
 
@@ -453,7 +461,7 @@ export function App() {
             ) : (
               <PanelGrid
                 tab={tab}
-                onActivePanelChanged={tab.id === activeTabId ? (ptyId) => { activePanelPtyIdRef.current = ptyId; } : undefined}
+                onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
                 navRef={tab.id === activeTabId ? panelNavRef : undefined}
               />
             )}
@@ -471,13 +479,7 @@ export function App() {
       <DaemonStatusBanner />
       <CommandPalette
         isOpen={paletteOpen}
-        onClose={() => {
-          setPaletteOpen(false);
-          requestAnimationFrame(() => {
-            const ptyId = activePanelPtyIdRef.current;
-            if (ptyId) terminalRegistry.get(ptyId)?.focus();
-          });
-        }}
+        onClose={handlePaletteClose}
         extraSections={[
           tabPaletteSection,
           tabListPaletteSection,

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { ipc } from "../../lib/tauriIpc";
+import { buildSshCommand } from "../../lib/sshUtils";
 import { useSshStore } from "../../store/sshStore";
 import type { DaemonSessionInfo, SavedTab } from "../../types/terminal";
 import "./SessionPicker.css";
@@ -26,12 +27,6 @@ function formatAge(secs: number): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function buildSshCommand(profile: { username: string; host: string; port: number; identityFile?: string }): string {
-  let cmd = `ssh ${profile.username}@${profile.host}`;
-  if (profile.port !== 22) cmd += ` -p ${profile.port}`;
-  if (profile.identityFile) cmd += ` -i "${profile.identityFile}"`;
-  return cmd;
-}
 
 const IconTerminal = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

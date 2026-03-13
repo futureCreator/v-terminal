@@ -11,8 +11,31 @@ export interface PtyExitPayload {
   ptyId: string;
 }
 
+// Centralized per-pty event dispatchers.
+// Instead of registering N Tauri listeners (one per panel), we maintain a single
+// global listener per event type and dispatch in-process to per-pty handlers.
+// This reduces event processing from O(N²) to O(N) for N concurrent panels.
+const ptyDataHandlers = new Map<string, (data: Uint8Array) => void>();
+const ptyExitHandlers = new Map<string, () => void>();
+let ptyDataUnlisten: UnlistenFn | null = null;
+let ptyExitUnlisten: UnlistenFn | null = null;
+
+async function ensurePtyDataListener(): Promise<void> {
+  if (ptyDataUnlisten) return;
+  ptyDataUnlisten = await listen<PtyDataPayload>("pty-data", (event) => {
+    const { ptyId, data } = event.payload;
+    ptyDataHandlers.get(ptyId)?.(new Uint8Array(data));
+  });
+}
+
+async function ensurePtyExitListener(): Promise<void> {
+  if (ptyExitUnlisten) return;
+  ptyExitUnlisten = await listen<PtyExitPayload>("pty-exit", (event) => {
+    ptyExitHandlers.get(event.payload.ptyId)?.();
+  });
+}
+
 export const ipc = {
-  // Daemon session management
   async daemonListSessions(): Promise<DaemonSessionInfo[]> {
     return invoke<DaemonSessionInfo[]>("daemon_list_sessions");
   },
@@ -52,12 +75,18 @@ export const ipc = {
     return invoke("daemon_kill_session", { sessionId });
   },
 
-  onPtyData(handler: (payload: PtyDataPayload) => void): Promise<UnlistenFn> {
-    return listen<PtyDataPayload>("pty-data", (event) => handler(event.payload));
+  /** Register a per-pty data handler. One global Tauri listener is shared across all panels. */
+  async onPtyData(ptyId: string, handler: (data: Uint8Array) => void): Promise<() => void> {
+    await ensurePtyDataListener();
+    ptyDataHandlers.set(ptyId, handler);
+    return () => { ptyDataHandlers.delete(ptyId); };
   },
 
-  onPtyExit(handler: (payload: PtyExitPayload) => void): Promise<UnlistenFn> {
-    return listen<PtyExitPayload>("pty-exit", (event) => handler(event.payload));
+  /** Register a per-pty exit handler. One global Tauri listener is shared across all panels. */
+  async onPtyExit(ptyId: string, handler: () => void): Promise<() => void> {
+    await ensurePtyExitListener();
+    ptyExitHandlers.set(ptyId, handler);
+    return () => { ptyExitHandlers.delete(ptyId); };
   },
 
   async getDaemonStatus(): Promise<"connected" | "reconnecting"> {

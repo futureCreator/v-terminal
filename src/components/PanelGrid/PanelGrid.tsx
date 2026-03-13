@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { Tab } from "../../types/terminal";
 import { TerminalPane } from "../TerminalPane/TerminalPane";
 import { getGridConfig } from "../../lib/layoutMath";
@@ -76,9 +76,10 @@ export function PanelGrid({ tab, onActivePanelChanged, navRef }: PanelGridProps)
     ? { gridTemplateColumns: "1fr", gridTemplateRows: "1fr" }
     : { gridTemplateColumns: gridConfig.gridTemplateColumns, gridTemplateRows: gridConfig.gridTemplateRows };
 
-  const siblingPtyIds = tab.panels
-    .filter((p) => p.ptyId !== null)
-    .map((p) => p.ptyId as string);
+  const siblingPtyIds = useMemo(
+    () => tab.panels.filter((p) => p.ptyId !== null).map((p) => p.ptyId as string),
+    [tab.panels]
+  );
 
   const handlePtyCreated = useCallback(
     (panelId: string, ptyId: string) => {

@@ -12,6 +12,8 @@ import "./TerminalPane.css";
 
 export const terminalRegistry = new Map<string, Terminal>();
 
+// Module-level singleton — avoids allocating a new TextEncoder on every keystroke
+const encoder = new TextEncoder();
 
 interface TerminalPaneProps {
   style?: React.CSSProperties;
@@ -54,13 +56,14 @@ export function TerminalPane({
   const termRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const ptyIdRef = useRef<string | null>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
   const [exited, setExited] = useState(false);
   const exitedRef = useRef(exited);
   exitedRef.current = exited;
   const [loading, setLoading] = useState(true);
   const [initKey, setInitKey] = useState(0);
 
-  // Store broadcast refs to avoid stale closures
+  // Store broadcast state in refs to avoid stale closures in the onData handler
   const broadcastRef = useRef(broadcastEnabled);
   const siblingsRef = useRef(siblingPtyIds);
   broadcastRef.current = broadcastEnabled;
@@ -72,7 +75,7 @@ export function TerminalPane({
     setInitKey((k) => k + 1);
   };
 
-  // When daemon dies, mark this pane as exited so the user can start a new session
+  // When the daemon dies, mark this pane as exited so the user can start a new session
   useEffect(() => {
     let unlisten: (() => void) | null = null;
     ipc.onDaemonStatus((status) => {
@@ -123,8 +126,6 @@ export function TerminalPane({
       termRef.current = term;
       fitAddonRef.current = fitAddon;
 
-
-
       const { cols, rows } = term;
 
       let ptyId: string;
@@ -165,8 +166,7 @@ export function TerminalPane({
 
       // Auto-execute SSH command if provided
       if (sshCommand) {
-        const encoded = new TextEncoder().encode(sshCommand + "\r");
-        ipc.daemonWrite(ptyId, encoded).catch(() => {});
+        ipc.daemonWrite(ptyId, encoder.encode(sshCommand + "\r")).catch(() => {});
       }
 
       // IME composition state — prevents custom key handler from interfering with Korean/CJK input
@@ -174,9 +174,7 @@ export function TerminalPane({
 
       // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
       term.attachCustomKeyEventHandler((e) => {
-        // During IME composition, hand control back to xterm's internal handler
         if (isComposing) return true;
-
         if (e.type !== "keydown") return true;
 
         if (e.ctrlKey && e.key === "c") {
@@ -188,29 +186,22 @@ export function TerminalPane({
           return true; // no selection → pass as SIGINT
         }
 
-        if (e.metaKey && e.key === "v") {
-          // macOS Cmd+V: block xterm's keydown processing to prevent double paste.
-          // The browser's native paste DOM event fires independently and xterm.js handles it once.
-          return false;
-        }
-
-        if (e.ctrlKey && e.key === "v") {
-          // Windows/Linux Ctrl+V: block xterm's keydown processing to prevent double paste.
-          // The browser's native paste DOM event fires independently and xterm.js handles it once.
+        if ((e.metaKey || e.ctrlKey) && e.key === "v") {
+          // Block xterm's keydown to prevent double paste; the browser's paste event handles it.
           return false;
         }
 
         if (e.ctrlKey && e.key === "k") {
-          // Ctrl+K is reserved for the command palette — don't send to PTY.
+          // Reserved for command palette
           return false;
         }
 
         return true;
       });
 
-      // Input
+      // Input: terminal → PTY (with optional broadcast)
       term.onData((data) => {
-        const encoded = new TextEncoder().encode(data);
+        const encoded = encoder.encode(data);
         ipc.daemonWrite(ptyId, encoded).catch(() => {});
         if (broadcastRef.current) {
           for (const sibId of siblingsRef.current) {
@@ -221,26 +212,24 @@ export function TerminalPane({
         }
       });
 
-      // Focus tracking
+      // Focus and IME tracking
       term.textarea?.addEventListener("focus", () => onFocus());
       term.textarea?.addEventListener("compositionstart", () => { isComposing = true; });
       term.textarea?.addEventListener("compositionend", () => { isComposing = false; });
 
-      // Output
-      unlistenData = await ipc.onPtyData((payload) => {
-        if (payload.ptyId === ptyId && !disposed) {
-          term.write(new Uint8Array(payload.data));
-        }
+      // Output: PTY → terminal (per-pty handler, no cross-panel filtering needed)
+      unlistenData = await ipc.onPtyData(ptyId, (data) => {
+        if (!disposed) term.write(data);
       });
 
-      unlistenExit = await ipc.onPtyExit((payload) => {
-        if (payload.ptyId === ptyId && !disposed) {
+      unlistenExit = await ipc.onPtyExit(ptyId, () => {
+        if (!disposed) {
           setExited(true);
           onPtyKilled();
         }
       });
 
-      // Resize observer
+      // Resize observer with debounce and scroll-position preservation
       if (containerRef.current) {
         let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
         const observer = new ResizeObserver(() => {
@@ -258,15 +247,12 @@ export function TerminalPane({
                 term.scrollToLine(savedViewportY);
               }
 
-              const { cols: c, rows: r } = term;
-              ipc.daemonResize(ptyId, c, r).catch(() => {});
+              ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
             } catch {}
           }, 50);
         });
         observer.observe(containerRef.current);
-
-        // Store for cleanup
-        (containerRef.current as HTMLElement & { __observer?: ResizeObserver }).__observer = observer;
+        observerRef.current = observer;
       }
     };
 
@@ -276,14 +262,14 @@ export function TerminalPane({
       disposed = true;
       unlistenData?.();
       unlistenExit?.();
+      observerRef.current?.disconnect();
+      observerRef.current = null;
       const ptyId = ptyIdRef.current;
       if (ptyId) {
         terminalRegistry.delete(ptyId);
-        ipc.daemonDetach(ptyId).catch(() => {}); // detach but don't kill - session persists
+        ipc.daemonDetach(ptyId).catch(() => {}); // detach but don't kill — session persists in daemon
         ptyIdRef.current = null;
       }
-      const container = containerRef.current as (HTMLElement & { __observer?: ResizeObserver }) | null;
-      container?.__observer?.disconnect();
       termRef.current?.dispose();
       termRef.current = null;
       fitAddonRef.current = null;
@@ -299,13 +285,21 @@ export function TerminalPane({
   }, [isActive]);
 
   return (
-    <div className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`} style={style} onClick={() => { onFocus(); termRef.current?.focus(); }}>
+    <div
+      className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`}
+      style={style}
+      onClick={() => { onFocus(); termRef.current?.focus(); }}
+    >
       {loading && !exited && (
         <div className="terminal-loading">
           <div className="terminal-spinner" />
         </div>
       )}
-      <div ref={containerRef} className="terminal-container" style={{ display: exited ? "none" : undefined }} />
+      <div
+        ref={containerRef}
+        className="terminal-container"
+        style={{ display: exited ? "none" : undefined }}
+      />
       {exited && (
         <div className="terminal-exit-panel" onClick={handleRestart}>
           <svg className="terminal-exit-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
