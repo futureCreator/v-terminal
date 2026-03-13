@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useThemeStore } from "../../store/themeStore";
 import { THEME_GROUPS } from "../../themes/definitions";
@@ -13,6 +13,17 @@ interface ThemePickerProps {
 export function ThemePicker({ anchorRef, isOpen, onClose }: ThemePickerProps) {
   const { themeId, setThemeId } = useThemeStore();
   const pickerRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (isOpen && anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [isOpen, anchorRef]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,7 +48,11 @@ export function ThemePicker({ anchorRef, isOpen, onClose }: ThemePickerProps) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div ref={pickerRef} className="theme-picker">
+    <div
+      ref={pickerRef}
+      className="theme-picker"
+      style={{ top: pos.top, right: pos.right }}
+    >
       <div className="theme-picker-header">Theme</div>
 
       {/* Auto */}

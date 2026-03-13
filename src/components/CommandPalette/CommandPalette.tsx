@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useThemeStore } from "../../store/themeStore";
-import { THEME_GROUPS } from "../../themes/definitions";
 import "./CommandPalette.css";
 
 export interface PaletteCommand {
@@ -36,7 +34,6 @@ interface Props {
 }
 
 export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
-  const { themeId, setThemeId } = useThemeStore();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,48 +58,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
       }
     }
 
-    // Theme commands
-    const activeThemeKey = themeId === "auto" ? "theme:auto" : `theme:${themeId}`;
-
-    list.push({
-      id: "theme:auto",
-      label: "Auto (System)",
-      category: "Theme",
-      subSection: null,
-      icon: (
-        <span className="cp-auto-icon">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="1" y="1.5" width="12" height="8.5" rx="1.5" stroke="currentColor" strokeWidth="1.1" />
-            <path d="M4.5 12h5M7 10v2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-          </svg>
-        </span>
-      ),
-      isActive: activeThemeKey === "theme:auto",
-      action: () => setThemeId("auto"),
-    });
-
-    for (const group of THEME_GROUPS) {
-      for (const theme of group.themes) {
-        list.push({
-          id: `theme:${theme.id}`,
-          label: theme.name,
-          category: "Theme",
-          subSection: group.label,
-          icon: (
-            <span className="cp-swatch" style={{ background: theme.swatch[0] }}>
-              {theme.swatch.slice(1).map((color: string, i: number) => (
-                <span key={i} className="cp-swatch-dot" style={{ background: color }} />
-              ))}
-            </span>
-          ),
-          isActive: activeThemeKey === `theme:${theme.id}`,
-          action: () => setThemeId(theme.id),
-        });
-      }
-    }
-
     return list;
-  }, [extraSections, themeId, setThemeId]);
+  }, [extraSections]);
 
   const q = query.trim().toLowerCase();
 

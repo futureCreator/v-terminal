@@ -535,6 +535,7 @@ export function App() {
           onToggleBroadcast={handleToggleBroadcast}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenSshManager={() => setSshModalOpen(true)}
+          onAddTab={handleNewTab}
         />
       </div>
       <div className="app-content">

@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect, useCallback, Fragment } from "react";
-import { homeDir } from "@tauri-apps/api/path";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useTabStore } from "../../store/tabStore";
 import "./TabBar.css";
 
@@ -10,7 +9,7 @@ interface TabBarProps {
 }
 
 export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
-  const { tabs, activeTabId, addTab, removeTab, setActiveTab, renameTab } = useTabStore();
+  const { tabs, activeTabId, removeTab, setActiveTab, renameTab } = useTabStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -54,16 +53,6 @@ export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
     scrollContainerRef.current?.scrollBy({ left: 180, behavior: "smooth" });
   };
 
-  const handleAddTab = async () => {
-    let cwd: string;
-    try {
-      cwd = await homeDir();
-    } catch {
-      cwd = "~";
-    }
-    addTab(cwd);
-  };
-
   return (
     <div className="tabbar">
       {canScrollLeft && (
@@ -79,35 +68,22 @@ export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
       )}
       <div className="tabbar-tabs" ref={scrollContainerRef}>
         {tabs.map((tab) => (
-          <Fragment key={tab.id}>
-            <TabItem
-              id={tab.id}
-              label={tab.label}
-              isActive={tab.id === activeTabId}
-              onActivate={() => {
-                if (onActivateTab) {
-                  onActivateTab(tab.id);
-                } else {
-                  setActiveTab(tab.id);
-                }
-              }}
-              onClose={() => (onCloseTab ? onCloseTab(tab.id) : removeTab(tab.id))}
-              onKill={() => (onKillTab ? onKillTab(tab.id) : removeTab(tab.id))}
-              onRename={(label) => renameTab(tab.id, label)}
-            />
-            {tab.id === activeTabId && (
-              <button
-                className="tabbar-add-inline"
-                onClick={handleAddTab}
-                title="New Tab"
-                aria-label="New tab"
-              >
-                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                  <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                </svg>
-              </button>
-            )}
-          </Fragment>
+          <TabItem
+            key={tab.id}
+            id={tab.id}
+            label={tab.label}
+            isActive={tab.id === activeTabId}
+            onActivate={() => {
+              if (onActivateTab) {
+                onActivateTab(tab.id);
+              } else {
+                setActiveTab(tab.id);
+              }
+            }}
+            onClose={() => (onCloseTab ? onCloseTab(tab.id) : removeTab(tab.id))}
+            onKill={() => (onKillTab ? onKillTab(tab.id) : removeTab(tab.id))}
+            onRename={(label) => renameTab(tab.id, label)}
+          />
         ))}
       </div>
       {canScrollRight && (

@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { Layout } from "../../types/terminal";
 import { ThemePicker } from "../ThemePicker/ThemePicker";
 import "./SplitToolbar.css";
@@ -103,6 +104,7 @@ interface SplitToolbarProps {
   onToggleBroadcast: () => void;
   onOpenPalette: () => void;
   onOpenSshManager: () => void;
+  onAddTab: () => void;
 }
 
 export function SplitToolbar({
@@ -112,11 +114,23 @@ export function SplitToolbar({
   onToggleBroadcast,
   onOpenPalette,
   onOpenSshManager,
+  onAddTab,
 }: SplitToolbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (menuOpen && moreButtonRef.current) {
+      const rect = moreButtonRef.current.getBoundingClientRect();
+      setMenuPos({
+        top: rect.bottom + 6,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -146,6 +160,16 @@ export function SplitToolbar({
   return (
     <>
       <div className="split-toolbar">
+        <button
+          className="toolbar-add-btn"
+          onClick={onAddTab}
+          title="New Tab"
+          aria-label="New tab"
+        >
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        </button>
         <div className="more-wrap">
           <button
             ref={moreButtonRef}
@@ -161,8 +185,13 @@ export function SplitToolbar({
               <circle cx="14" cy="2" r="1.5" fill="currentColor" />
             </svg>
           </button>
-          {menuOpen && (
-            <div ref={menuRef} className="more-menu" role="menu">
+          {menuOpen && createPortal(
+            <div
+              ref={menuRef}
+              className="more-menu"
+              role="menu"
+              style={{ top: menuPos.top, right: menuPos.right }}
+            >
               {/* Layout */}
               <div className="more-menu-section">
                 <span className="more-menu-section-label">Layout</span>
@@ -182,6 +211,21 @@ export function SplitToolbar({
                 </div>
               </div>
               <div className="more-menu-sep" />
+              {/* Command Palette */}
+              <button
+                className="more-menu-item"
+                onClick={() => { onOpenPalette(); setMenuOpen(false); }}
+                role="menuitem"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                  <path d="M4 6.5l2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M8.5 10.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <span className="more-menu-item-label">Command Palette</span>
+                <span className="more-menu-kbd">Ctrl+K</span>
+              </button>
+              <div className="more-menu-sep" />
               {/* Broadcast */}
               <button
                 className={`more-menu-item${broadcastEnabled ? " more-menu-item--broadcast" : ""}`}
@@ -196,7 +240,7 @@ export function SplitToolbar({
                   <path d="M12.5 3.5A6.36 6.36 0 0 1 12.5 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                 </svg>
                 <span className="more-menu-item-label">Broadcast Input</span>
-                {broadcastEnabled && <span className="more-menu-badge">켜짐</span>}
+                {broadcastEnabled && <span className="more-menu-badge">ON</span>}
               </button>
               <div className="more-menu-sep" />
               {/* SSH */}
@@ -228,22 +272,8 @@ export function SplitToolbar({
                 </svg>
                 <span className="more-menu-item-label">Appearance</span>
               </button>
-              <div className="more-menu-sep" />
-              {/* Command Palette */}
-              <button
-                className="more-menu-item"
-                onClick={() => { onOpenPalette(); setMenuOpen(false); }}
-                role="menuitem"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M4 6.5l2 2-2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M8.5 10.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span className="more-menu-item-label">Command Palette</span>
-                <span className="more-menu-kbd">Ctrl+K</span>
-              </button>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>
