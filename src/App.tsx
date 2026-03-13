@@ -243,6 +243,21 @@ export function App() {
           action: handleNextTab,
         },
       ] : []),
+      {
+        id: "view:notes",
+        label: noteOpen ? "Hide Notes Panel" : "Show Notes Panel",
+        meta: "Ctrl+Shift+N",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="2" y="1.5" width="10" height="11" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M4.5 4.5h5M4.5 7h5M4.5 9.5h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        isActive: noteOpen,
+        action: handleToggleNote,
+      },
       ...(activeTab && activeTab.panels.length > 1 ? [
         {
           id: "panel:zoom",
@@ -286,7 +301,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, activeTab, tabs]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleNote, activeTab, tabs, noteOpen]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
