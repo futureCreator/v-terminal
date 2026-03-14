@@ -585,7 +585,7 @@ export function App() {
           </div>
         ))}
         </div>
-        {noteOpen && <NotePanel onClose={handleToggleNote} />}
+        {noteOpen && <NotePanel tabId={activeTabId} onClose={handleToggleNote} />}
       </div>
       {sshModalOpen && (
         <SshManagerModal

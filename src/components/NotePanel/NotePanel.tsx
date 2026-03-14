@@ -1,45 +1,21 @@
-import { Crepe } from "@milkdown/crepe";
-import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
-import "@milkdown/crepe/theme/common/style.css";
+import { useEffect } from "react";
+import { NoteEditor } from "./NoteEditor";
+import { TodoSection } from "./TodoSection";
+import { useNoteStore } from "../../store/noteStore";
 import "./NotePanel.css";
 
-const STORAGE_KEY = "v-terminal:note-content";
-
 interface NotePanelProps {
+  tabId: string;
   onClose: () => void;
 }
 
-function NoteEditor() {
-  useEditor((root) => {
-    const crepe = new Crepe({
-      root,
-      defaultValue: localStorage.getItem(STORAGE_KEY) ?? "",
-      features: {
-        [Crepe.Feature.BlockEdit]: false,
-        [Crepe.Feature.ImageBlock]: false,
-        [Crepe.Feature.Latex]: false,
-      },
-      featureConfigs: {
-        [Crepe.Feature.Placeholder]: {
-          text: "메모를 입력하세요...",
-          mode: "block",
-        },
-      },
-    });
+export function NotePanel({ tabId, onClose }: NotePanelProps) {
+  // Migrate legacy global note on first mount
+  useEffect(() => {
+    useNoteStore.getState().migrateOldNote(tabId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    crepe.on((listener) => {
-      listener.markdownUpdated((_ctx, markdown) => {
-        localStorage.setItem(STORAGE_KEY, markdown);
-      });
-    });
-
-    return crepe;
-  });
-
-  return <Milkdown />;
-}
-
-export function NotePanel({ onClose }: NotePanelProps) {
   return (
     <div className="note-panel">
       <div className="note-panel-header">
@@ -60,10 +36,9 @@ export function NotePanel({ onClose }: NotePanelProps) {
           </svg>
         </button>
       </div>
-      <div className="note-editor">
-        <MilkdownProvider>
-          <NoteEditor />
-        </MilkdownProvider>
+      <div className="note-panel-body">
+        <NoteEditor tabId={tabId} />
+        <TodoSection tabId={tabId} />
       </div>
     </div>
   );
