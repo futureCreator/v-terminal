@@ -10,7 +10,8 @@ export function TodoSection({ tabId }: TodoSectionProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const todos = useNoteStore((s) => s.notes[tabId]?.todos ?? []);
-  const { addTodo, toggleTodo, removeTodo, updateTodoText } = useNoteStore();
+  const { addTodo, toggleTodo, removeTodo, updateTodoText, clearCompleted } =
+    useNoteStore();
 
   const completed = todos.filter((t) => t.completed).length;
   const total = todos.length;
@@ -65,6 +66,27 @@ export function TodoSection({ tabId }: TodoSectionProps) {
           <span className="todo-header-count">
             {completed}/{total}
           </span>
+        )}
+        {completed > 0 && (
+          <button
+            className="todo-clear-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              clearCompleted(tabId);
+            }}
+            aria-label="완료 항목 삭제"
+            title="완료 항목 삭제"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path
+                d="M2.5 3h7M4.5 3V2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1M5 5.5v3M7 5.5v3M3.5 3l.5 7a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1l.5-7"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         )}
       </button>
 

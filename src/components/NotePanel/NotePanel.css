@@ -122,6 +122,28 @@
   margin-left: auto;
 }
 
+.todo-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--label-tertiary);
+  border-radius: var(--radius-xs);
+  transition: color 0.12s, background 0.12s;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.todo-clear-btn:hover {
+  color: var(--destructive);
+  background: var(--bg-tertiary);
+}
+
 /* ── Todo body (scrollable) ─────────────────────────────────────── */
 .todo-body {
   display: flex;

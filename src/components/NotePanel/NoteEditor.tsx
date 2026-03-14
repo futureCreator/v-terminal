@@ -24,7 +24,10 @@ const mdHighlight = HighlightStyle.define([
   { tag: tags.strong, fontWeight: "600" },
   { tag: tags.emphasis, fontStyle: "italic" },
   { tag: tags.strikethrough, textDecoration: "line-through", opacity: "0.6" },
-  { tag: tags.monospace, fontFamily: "inherit" },
+  {
+    tag: tags.monospace,
+    fontFamily: '"JetBrains Mono", "JetBrainsMonoNerdFont", monospace',
+  },
   { tag: tags.url, textDecoration: "underline" },
   { tag: tags.link, textDecoration: "underline" },
   {
@@ -42,7 +45,7 @@ const cmTheme = EditorView.theme({
     display: "flex",
     flexDirection: "column",
     fontSize: "13px",
-    fontFamily: '"JetBrains Mono", "JetBrainsMonoNerdFont", monospace',
+    fontFamily: '"Pretendard", sans-serif',
     backgroundColor: "transparent",
   },
   ".cm-scroller": {
@@ -63,7 +66,7 @@ const cmTheme = EditorView.theme({
     caretColor: "var(--accent)",
     color: "var(--label-primary)",
     minHeight: "100%",
-    fontFamily: '"JetBrains Mono", "JetBrainsMonoNerdFont", monospace',
+    fontFamily: '"Pretendard", sans-serif',
   },
   ".cm-cursor, .cm-dropCursor": {
     borderLeftColor: "var(--accent)",

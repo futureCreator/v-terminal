@@ -27,6 +27,7 @@ interface NoteStore {
   toggleTodo: (tabId: string, todoId: string) => void;
   removeTodo: (tabId: string, todoId: string) => void;
   updateTodoText: (tabId: string, todoId: string, text: string) => void;
+  clearCompleted: (tabId: string) => void;
 
   // Cleanup
   removeTabNotes: (tabId: string) => void;
@@ -122,6 +123,20 @@ export const useNoteStore = create<NoteStore>((set) => ({
           todos: note.todos.map((t) =>
             t.id === todoId ? { ...t, text } : t
           ),
+        },
+      };
+      save(notes);
+      return { notes };
+    }),
+
+  clearCompleted: (tabId) =>
+    set((s) => {
+      const note = ensureTab(s.notes, tabId);
+      const notes = {
+        ...s.notes,
+        [tabId]: {
+          ...note,
+          todos: note.todos.filter((t) => !t.completed),
         },
       };
       save(notes);
