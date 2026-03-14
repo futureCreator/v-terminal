@@ -13,7 +13,7 @@ function formatMs(ms: number): string {
 
 function formatDuration(ms: number): string {
   const minutes = Math.round(ms / 60_000);
-  return minutes >= 60 ? `${minutes / 60}시간` : `${minutes}분`;
+  return minutes >= 60 ? `${minutes / 60}h` : `${minutes}m`;
 }
 
 const PRESETS = [5, 10, 15, 30, 60];
@@ -59,7 +59,7 @@ export function TimerSection() {
         <input
           className="timer-custom-input timer-custom-label"
           type="text"
-          placeholder="이름 (선택)"
+          placeholder="Label (optional)"
           value={customLabel}
           onChange={(e) => setCustomLabel(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleAddCustom(); }}
@@ -67,7 +67,7 @@ export function TimerSection() {
         <input
           className="timer-custom-input timer-custom-minutes"
           type="number"
-          placeholder="분"
+          placeholder="min"
           min="1"
           value={customMinutes}
           onChange={(e) => setCustomMinutes(e.target.value)}
@@ -76,7 +76,7 @@ export function TimerSection() {
         <button
           className="timer-add-btn"
           onClick={handleAddCustom}
-          title="추가"
+          title="Add"
           disabled={!customMinutes || parseInt(customMinutes) <= 0}
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -89,14 +89,14 @@ export function TimerSection() {
       {timers.length > 0 && (
         <>
           <div className="timer-list-header">
-            <span className="timer-list-title">활성 타이머</span>
+            <span className="timer-list-title">Active Timers</span>
             {finishedCount > 0 && (
               <button
                 className="timer-clear-btn"
                 onClick={clearFinishedTimers}
-                title="완료 항목 삭제"
+                title="Clear finished timers"
               >
-                완료 삭제
+                Clear Done
               </button>
             )}
           </div>
@@ -120,7 +120,7 @@ export function TimerSection() {
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          <span>프리셋을 선택하거나<br />커스텀 타이머를 추가하세요</span>
+          <span>Select a preset or<br />add a custom timer</span>
         </div>
       )}
     </div>
@@ -149,7 +149,7 @@ function TimerItem({
           <button
             className="timer-play-btn"
             onClick={() => (status === "running" ? onPause(id) : onResume(id))}
-            aria-label={status === "running" ? "일시정지" : "재개"}
+            aria-label={status === "running" ? "Pause" : "Resume"}
           >
             {status === "running" ? (
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -171,13 +171,13 @@ function TimerItem({
         )}
         <span className="timer-label">{label || formatDuration(durationMs)}</span>
         <span className={`timer-time${status === "finished" ? " timer-time--done" : ""}`}>
-          {status === "finished" ? "완료" : formatMs(remainingMs)}
+          {status === "finished" ? "Done" : formatMs(remainingMs)}
         </span>
         <button
           className="timer-remove-btn"
           onClick={() => onRemove(id)}
-          aria-label="삭제"
-          title="삭제"
+          aria-label="Remove"
+          title="Remove"
         >
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
             <path d="M1.5 1.5l6 6M7.5 1.5l-6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />

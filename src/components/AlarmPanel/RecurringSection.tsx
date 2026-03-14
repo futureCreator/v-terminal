@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAlarmStore } from "../../store/alarmStore";
 
-const WEEKDAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
+const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 export function RecurringSection() {
   const [newTime, setNewTime] = useState("09:00");
@@ -15,7 +15,7 @@ export function RecurringSection() {
   const handleAdd = () => {
     if (!newTime) return;
     if (!newWeekdays.some(Boolean)) return;
-    addAlarm(newLabel.trim() || `${newTime} 알림`, newTime, [...newWeekdays]);
+    addAlarm(newLabel.trim() || `${newTime} Alarm`, newTime, [...newWeekdays]);
     setNewLabel("");
     setShowForm(false);
   };
@@ -41,7 +41,7 @@ export function RecurringSection() {
                 <button
                   className={`recurring-toggle${alarm.enabled ? " recurring-toggle--on" : ""}`}
                   onClick={() => toggleAlarm(alarm.id)}
-                  aria-label={alarm.enabled ? "비활성화" : "활성화"}
+                  aria-label={alarm.enabled ? "Disable" : "Enable"}
                 >
                   <span className="recurring-toggle-thumb" />
                 </button>
@@ -60,8 +60,8 @@ export function RecurringSection() {
                 <button
                   className="recurring-delete"
                   onClick={() => removeAlarm(alarm.id)}
-                  aria-label="삭제"
-                  title="삭제"
+                  aria-label="Remove"
+                  title="Remove"
                 >
                   <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
                     <path d="M1.5 1.5l6 6M7.5 1.5l-6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
@@ -79,7 +79,7 @@ export function RecurringSection() {
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
-          <span>등록된 알림이 없습니다</span>
+          <span>No alarms set</span>
         </div>
       )}
 
@@ -87,9 +87,9 @@ export function RecurringSection() {
       {showForm ? (
         <div className="recurring-add-form">
           <div className="recurring-form-header">
-            <span className="recurring-form-title">새 알림</span>
+            <span className="recurring-form-title">New Alarm</span>
             <button className="recurring-form-cancel" onClick={() => setShowForm(false)}>
-              취소
+              Cancel
             </button>
           </div>
           <input
@@ -101,7 +101,7 @@ export function RecurringSection() {
           <input
             className="recurring-label-input"
             type="text"
-            placeholder="알림 이름 (선택)"
+            placeholder="Label (optional)"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
@@ -122,7 +122,7 @@ export function RecurringSection() {
             onClick={handleAdd}
             disabled={!newTime || !newWeekdays.some(Boolean)}
           >
-            저장
+            Save
           </button>
         </div>
       ) : (
@@ -130,7 +130,7 @@ export function RecurringSection() {
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
-          <span>알림 추가</span>
+          <span>Add Alarm</span>
         </button>
       )}
     </div>

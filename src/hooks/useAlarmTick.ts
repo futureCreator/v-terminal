@@ -40,7 +40,7 @@ export function useAlarmTick() {
         if (!alarm.enabled || !alarm.weekdays[weekday] || alarm.time !== hhmm) continue;
         if (alarm.lastTriggered && now - alarm.lastTriggered < 60_000) continue;
         state.markTriggered(alarm.id);
-        notify("알림", alarm.label || `${alarm.time} 알림`);
+        notify("Alarm", alarm.label || `${alarm.time} Alarm`);
       }
 
       // ── 2. Pomodoro tick ─────────────────────────────────────
@@ -49,11 +49,11 @@ export function useAlarmTick() {
         const newPhase = useAlarmStore.getState().pomodoroState.phase;
         if (prevPomodoroPhase !== newPhase) {
           if (newPhase === "focus") {
-            notify("포모도로", "휴식 끝! 집중 시간입니다.");
+            notify("Pomodoro", "Break over! Time to focus.");
           } else if (newPhase === "break") {
-            notify("포모도로", "집중 세션 완료! 짧은 휴식을 취하세요.");
+            notify("Pomodoro", "Focus session complete! Take a short break.");
           } else if (newPhase === "longBreak") {
-            notify("포모도로", "수고했어요! 긴 휴식을 취하세요.");
+            notify("Pomodoro", "Well done! Take a long break.");
           }
         }
         prevPomodoroPhase = newPhase;
@@ -69,7 +69,7 @@ export function useAlarmTick() {
         const newTimers = useAlarmStore.getState().timers;
         for (const t of newTimers) {
           if (prevStatuses.get(t.id) === "running" && t.status === "finished") {
-            notify("타이머", `${t.label || "타이머"} 완료!`);
+            notify("Timer", `${t.label || "Timer"} finished!`);
           }
         }
       }

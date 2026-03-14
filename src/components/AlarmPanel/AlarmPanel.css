@@ -187,7 +187,16 @@
 .pomodoro-session-dots {
   display: flex;
   gap: 6px;
+  align-items: center;
   justify-content: center;
+}
+
+.pomodoro-session-label {
+  font-size: 11px;
+  color: var(--label-tertiary);
+  font-family: "Pretendard", sans-serif;
+  margin-left: 4px;
+  user-select: none;
 }
 
 .pomodoro-dot {
@@ -246,28 +255,7 @@
   background: var(--bg-tertiary);
 }
 
-/* ── Settings toggle ────────────────────────────────────────────── */
-.pomodoro-settings-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: var(--label-tertiary);
-  font-size: 12px;
-  font-family: "Pretendard", sans-serif;
-  padding: 4px 8px;
-  border-radius: var(--radius-xs);
-  transition: color 0.12s, background 0.12s;
-}
-
-.pomodoro-settings-toggle:hover {
-  color: var(--label-primary);
-  background: var(--bg-tertiary);
-}
-
-/* ── Settings panel ─────────────────────────────────────────────── */
+/* ── Settings panel (always visible) ────────────────────────────── */
 .pomodoro-settings {
   display: flex;
   flex-direction: column;
@@ -276,6 +264,20 @@
   padding: 10px 12px;
   background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
+}
+
+.pomodoro-settings-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--label-tertiary);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: "Pretendard", sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  user-select: none;
 }
 
 .pomodoro-setting-row {
@@ -949,4 +951,37 @@
 .recurring-save-btn:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   QUICK STATUS BAR
+   ══════════════════════════════════════════════════════════════════ */
+
+.alarm-quick-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--separator);
+  background: var(--bg-tertiary);
+  flex-shrink: 0;
+}
+
+.alarm-quick-status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.alarm-quick-status-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.alarm-quick-status-text {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: "Pretendard", sans-serif;
+  color: var(--label-secondary);
+  white-space: nowrap;
 }
