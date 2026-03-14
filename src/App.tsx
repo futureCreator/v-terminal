@@ -17,6 +17,7 @@ import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
+import { useTerminalFontStore } from "./store/terminalFontStore";
 import { ipc } from "./lib/tauriIpc";
 import { terminalRegistry } from "./components/TerminalPane/TerminalPane";
 import type { Layout } from "./types/terminal";
@@ -28,6 +29,7 @@ export function App() {
   const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
     useTabStore();
   const { themeId } = useThemeStore();
+  const { fontSize: terminalFontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useTerminalFontStore();
 
   const activeTab = useMemo(
     () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
@@ -91,6 +93,22 @@ export function App() {
           return next;
         });
       }
+      // Terminal font size: Ctrl+= / Ctrl+- / Ctrl+0
+      if (e.ctrlKey && !e.shiftKey && (e.key === "=" || e.key === "+")) {
+        e.preventDefault();
+        e.stopPropagation();
+        fontIncrease();
+      }
+      if (e.ctrlKey && !e.shiftKey && e.key === "-") {
+        e.preventDefault();
+        e.stopPropagation();
+        fontDecrease();
+      }
+      if (e.ctrlKey && !e.shiftKey && e.key === "0") {
+        e.preventDefault();
+        e.stopPropagation();
+        fontReset();
+      }
     };
     window.addEventListener("keydown", onKeyDown, { capture: true });
     return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
@@ -115,6 +133,15 @@ export function App() {
       return () => mq.removeEventListener("change", applyTheme);
     }
   }, [themeId]);
+
+  // Apply terminal font size to all open terminals
+  useEffect(() => {
+    for (const term of terminalRegistry.values()) {
+      term.options.fontSize = terminalFontSize;
+    }
+    // Trigger resize so xterm recalculates cell dimensions
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  }, [terminalFontSize]);
 
   const activateTab = useCallback((tabId: string) => {
     setActiveTab(tabId);

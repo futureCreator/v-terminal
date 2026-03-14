@@ -91,7 +91,7 @@
 }
 
 .ssh-list-heading {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -151,7 +151,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
   letter-spacing: 0;
@@ -163,7 +163,7 @@
 }
 
 .ssh-profile-name {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--label-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -176,7 +176,7 @@
 }
 
 .ssh-profile-host {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-tertiary);
   white-space: nowrap;
   overflow: hidden;
@@ -202,13 +202,13 @@
 }
 
 .ssh-empty-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--label-secondary);
 }
 
 .ssh-empty-desc {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-tertiary);
   line-height: 1.5;
 }
@@ -238,7 +238,7 @@
 .ssh-field--port { width: 72px; }
 
 .ssh-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-secondary);
   font-weight: 500;
 }
@@ -253,7 +253,7 @@
   border: 1px solid var(--separator-strong);
   border-radius: var(--radius-sm);
   color: var(--label-primary);
-  font-size: 12px;
+  font-size: 13px;
   padding: 6px 8px;
   font-family: inherit;
   outline: none;
@@ -278,7 +278,7 @@
 }
 
 .ssh-preview-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-tertiary);
   font-weight: 500;
   text-transform: uppercase;
@@ -291,7 +291,7 @@
   border-radius: var(--radius-sm);
   padding: 7px 10px;
   font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -316,7 +316,7 @@
 .ssh-btn {
   padding: 6px 14px;
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -395,7 +395,7 @@
   background: transparent;
   border: none;
   color: var(--label-primary);
-  font-size: 12px;
+  font-size: 13px;
   font-family: inherit;
   text-align: left;
   cursor: pointer;

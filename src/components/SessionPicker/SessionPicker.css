@@ -43,7 +43,7 @@
 }
 
 .sp-hero-title {
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: -0.3px;
   color: var(--label-primary);
@@ -65,7 +65,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -74,7 +74,7 @@
 }
 
 .sp-group-count {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
@@ -129,7 +129,7 @@
 }
 
 .sp-layout-count {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1;
 }
@@ -148,7 +148,7 @@
   border: none;
   background: transparent;
   color: var(--label-secondary);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
@@ -255,7 +255,7 @@
 }
 
 .sp-row-subtitle {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -286,7 +286,7 @@
 }
 
 .sp-panel-cell-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--label-tertiary);
   text-transform: uppercase;
@@ -408,7 +408,7 @@
 }
 
 .sp-panel-dropdown-item-sub {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--label-tertiary);
   flex: 1;
   white-space: nowrap;
@@ -538,7 +538,7 @@
 
 .sp-card-path {
   font-family: "JetBrains Mono", monospace;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--label-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -554,12 +554,12 @@
 }
 
 .sp-card-age {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-tertiary);
 }
 
 .sp-card-panels {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--icon-tab);
   background: color-mix(in srgb, var(--icon-tab) 14%, transparent);
@@ -596,7 +596,7 @@
 }
 
 .sp-empty-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--label-tertiary);
   margin: 0;
   max-width: 240px;

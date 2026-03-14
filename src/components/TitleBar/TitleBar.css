@@ -105,7 +105,7 @@
 
 .titlebar-app-name {
   padding: 0 12px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--label-tertiary);
   flex-shrink: 0;

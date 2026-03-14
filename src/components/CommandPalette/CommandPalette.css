@@ -79,7 +79,7 @@
   display: inline-flex;
   align-items: center;
   font-family: "Pretendard", sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--label-tertiary);
   background: var(--bg-tertiary);
@@ -118,7 +118,7 @@
 }
 
 .cp-category-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -138,7 +138,7 @@
 }
 
 .cp-section-label {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -240,7 +240,7 @@
 }
 
 .cp-item-meta {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--label-tertiary);
   white-space: nowrap;
@@ -276,7 +276,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-tertiary);
   user-select: none;
 }
@@ -285,7 +285,7 @@
   display: inline-flex;
   align-items: center;
   font-family: "Pretendard", sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--label-tertiary);
   background: var(--bg-tertiary);

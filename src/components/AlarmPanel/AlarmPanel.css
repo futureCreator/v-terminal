@@ -21,7 +21,7 @@
 }
 
 .alarm-panel-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--label-tertiary);
   letter-spacing: 0.07em;
@@ -117,7 +117,7 @@
 }
 
 .alarm-section-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--label-tertiary);
   letter-spacing: 0.07em;
@@ -126,7 +126,7 @@
 }
 
 .alarm-section-count {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--label-secondary);
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
@@ -134,7 +134,7 @@
 }
 
 .alarm-section-meta {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--accent);
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
@@ -212,7 +212,7 @@
 }
 
 .pomodoro-time {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   color: var(--label-primary);
@@ -220,7 +220,7 @@
 }
 
 .pomodoro-phase {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -240,7 +240,7 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--label-primary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   font-family: "Pretendard", sans-serif;
   cursor: pointer;
@@ -272,7 +272,7 @@
 }
 
 .pomodoro-info {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--label-secondary);
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
 }
@@ -286,7 +286,7 @@
   background: none;
   cursor: pointer;
   color: var(--label-tertiary);
-  font-size: 10px;
+  font-size: 11px;
   font-family: "Pretendard", sans-serif;
   padding: 2px 4px;
   border-radius: var(--radius-xs);
@@ -314,7 +314,7 @@
 }
 
 .pomodoro-setting-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--label-secondary);
   font-family: "Pretendard", sans-serif;
   min-width: 52px;
@@ -327,7 +327,7 @@
   border-radius: var(--radius-xs);
   background: transparent;
   color: var(--label-primary);
-  font-size: 11px;
+  font-size: 12px;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   padding: 0 4px;
   outline: none;
@@ -346,7 +346,7 @@
 }
 
 .pomodoro-setting-unit {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--label-tertiary);
   font-family: "Pretendard", sans-serif;
 }
@@ -415,7 +415,7 @@
 
 .timer-label {
   flex: 1;
-  font-size: 12px;
+  font-size: 13px;
   font-family: "Pretendard", sans-serif;
   color: var(--label-primary);
   min-width: 0;
@@ -425,7 +425,7 @@
 }
 
 .timer-time {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   color: var(--label-secondary);
@@ -472,7 +472,7 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--label-secondary);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   cursor: pointer;
@@ -499,7 +499,7 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--label-primary);
-  font-size: 12px;
+  font-size: 13px;
   font-family: "Pretendard", sans-serif;
   padding: 0 8px;
   outline: none;
@@ -595,7 +595,7 @@
 }
 
 .recurring-time {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   color: var(--label-primary);
@@ -604,7 +604,7 @@
 
 .recurring-label-text {
   flex: 1;
-  font-size: 11px;
+  font-size: 12px;
   font-family: "Pretendard", sans-serif;
   color: var(--label-secondary);
   min-width: 0;
@@ -680,7 +680,7 @@
 }
 
 .recurring-weekday-dot {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   font-family: "Pretendard", sans-serif;
   color: var(--label-disabled);
@@ -718,7 +718,7 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--label-primary);
-  font-size: 12px;
+  font-size: 13px;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   padding: 0 6px;
   outline: none;
@@ -743,7 +743,7 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--label-primary);
-  font-size: 12px;
+  font-size: 13px;
   font-family: "Pretendard", sans-serif;
   padding: 0 8px;
   outline: none;
@@ -779,7 +779,7 @@
   border-radius: 50%;
   background: transparent;
   color: var(--label-tertiary);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   font-family: "Pretendard", sans-serif;
   cursor: pointer;

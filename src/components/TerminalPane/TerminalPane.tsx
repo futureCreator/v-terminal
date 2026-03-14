@@ -7,6 +7,7 @@ import { ipc } from "../../lib/tauriIpc";
 import { ensureFontLoaded } from "../../lib/fontLoader";
 import { useTabStore } from "../../store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "../../store/themeStore";
+import { useTerminalFontStore } from "../../store/terminalFontStore";
 import "@xterm/xterm/css/xterm.css";
 import "./TerminalPane.css";
 
@@ -51,6 +52,10 @@ export function TerminalPane({
   const { themeId } = useThemeStore();
   const themeRef = useRef(themeId);
   themeRef.current = themeId;
+
+  const { fontSize } = useTerminalFontStore();
+  const fontSizeRef = useRef(fontSize);
+  fontSizeRef.current = fontSize;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -101,7 +106,7 @@ export function TerminalPane({
       const xtermTheme = resolveThemeDefinition(themeRef.current).xterm;
       const term = new Terminal({
         fontFamily: '"JetBrainsMonoNerdFont", "JetBrains Mono", "Nanum Gothic Coding", monospace',
-        fontSize: 14,
+        fontSize: fontSizeRef.current,
         lineHeight: 1.2,
         theme: xtermTheme,
         allowTransparency: false,
@@ -199,6 +204,11 @@ export function TerminalPane({
 
         if (e.ctrlKey && e.key === "k") {
           // Reserved for command palette
+          return false;
+        }
+
+        // Reserved for terminal font size adjustment
+        if (e.ctrlKey && !e.shiftKey && (e.key === "=" || e.key === "+" || e.key === "-" || e.key === "0")) {
           return false;
         }
 

@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { Layout } from "../../types/terminal";
 import { useThemeStore } from "../../store/themeStore";
+import { useTerminalFontStore, MIN_SIZE, MAX_SIZE, DEFAULT_SIZE } from "../../store/terminalFontStore";
 import { THEME_GROUPS } from "../../themes/definitions";
 import "./SplitToolbar.css";
 
@@ -126,6 +127,7 @@ export function SplitToolbar({
   onAddTab,
 }: SplitToolbarProps) {
   const { themeId, setThemeId } = useThemeStore();
+  const { fontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useTerminalFontStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState<"main" | "appearance">("main");
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
@@ -328,6 +330,42 @@ export function SplitToolbar({
                     </svg>
                     Back
                   </button>
+                  <div className="more-menu-sep" />
+                  {/* Terminal Font Size */}
+                  <div className="more-menu-font-section">
+                    <span className="more-menu-section-label">Terminal Font</span>
+                    <div className="more-menu-font-control">
+                      <button
+                        className="more-menu-font-btn"
+                        onClick={fontDecrease}
+                        disabled={fontSize <= MIN_SIZE}
+                        title="Decrease font size (Ctrl+-)"
+                        aria-label="Decrease font size"
+                      >
+                        <svg width="10" height="2" viewBox="0 0 10 2" fill="none">
+                          <path d="M1 1h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      <button
+                        className="more-menu-font-value"
+                        onClick={fontReset}
+                        title={`Reset to ${DEFAULT_SIZE}px (Ctrl+0)`}
+                      >
+                        {fontSize}px
+                      </button>
+                      <button
+                        className="more-menu-font-btn"
+                        onClick={fontIncrease}
+                        disabled={fontSize >= MAX_SIZE}
+                        title="Increase font size (Ctrl+=)"
+                        aria-label="Increase font size"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                   <div className="more-menu-sep" />
                   {/* Auto */}
                   <button

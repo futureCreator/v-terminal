@@ -20,7 +20,7 @@
 }
 
 .note-panel-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--label-tertiary);
   letter-spacing: 0.07em;
@@ -114,7 +114,7 @@
 }
 
 .todo-header-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--label-tertiary);
   letter-spacing: 0.07em;
@@ -123,7 +123,7 @@
 }
 
 .todo-header-count {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--label-secondary);
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
@@ -214,7 +214,7 @@
 
 .todo-text {
   flex: 1;
-  font-size: 12px;
+  font-size: 13px;
   font-family: "Pretendard", sans-serif;
   line-height: 1.5;
   color: var(--label-primary);
@@ -270,7 +270,7 @@
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--label-primary);
-  font-size: 12px;
+  font-size: 13px;
   font-family: "Pretendard", sans-serif;
   padding: 0 8px;
   outline: none;
