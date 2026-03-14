@@ -248,6 +248,23 @@ export function App() {
         isActive: noteOpen,
         action: handleToggleNote,
       },
+      {
+        id: "ssh:profiles",
+        label: "SSH Profiles",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M1 5.5h12" stroke="currentColor" strokeWidth="1.3" />
+              <circle cx="3" cy="4.25" r="0.6" fill="currentColor" />
+              <circle cx="5" cy="4.25" r="0.6" fill="currentColor" />
+              <path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        action: () => setSshModalOpen(true),
+      },
       ...(activeTab && activeTab.panels.length > 1 ? [
         {
           id: "panel:zoom",

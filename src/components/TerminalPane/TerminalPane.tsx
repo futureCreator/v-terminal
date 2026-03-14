@@ -221,7 +221,14 @@ export function TerminalPane({
       // Focus and IME tracking
       term.textarea?.addEventListener("focus", () => onFocus());
       term.textarea?.addEventListener("compositionstart", () => { isComposing = true; });
-      term.textarea?.addEventListener("compositionend", () => { isComposing = false; });
+      term.textarea?.addEventListener("compositionend", () => {
+        // Delay clearing the flag so that the keydown event fired in the same
+        // tick right after compositionend is still blocked by the custom key
+        // handler.  Without this, the final keystroke (e.g. Enter/Space that
+        // commits the composed text) can leak through and send a duplicate
+        // character — especially on Windows IME.
+        requestAnimationFrame(() => { isComposing = false; });
+      });
 
       // Output: PTY → terminal (per-pty handler, no cross-panel filtering needed)
       unlistenData = await ipc.onPtyData(ptyId, (data) => {

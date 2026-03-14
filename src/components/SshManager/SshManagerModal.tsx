@@ -86,12 +86,11 @@ export function SshManagerModal({ onClose }: Props) {
     const data = buildProfileData();
     if (!data.host || !data.username) return;
     if (isNew) {
-      const newP = addProfile(data);
-      setSelectedId(newP.id);
-      setIsNew(false);
+      addProfile(data);
     } else if (selectedId) {
       updateProfile(selectedId, data);
     }
+    onClose();
   };
 
   const handleDelete = () => {
