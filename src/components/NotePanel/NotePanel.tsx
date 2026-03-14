@@ -1,9 +1,6 @@
-import { useEditor, EditorContent } from "@tiptap/react";
-import { StarterKit } from "@tiptap/starter-kit";
-import { TaskList } from "@tiptap/extension-task-list";
-import { TaskItem } from "@tiptap/extension-task-item";
-import { Placeholder } from "@tiptap/extension-placeholder";
-import { Markdown } from "tiptap-markdown";
+import { Crepe } from "@milkdown/crepe";
+import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
+import "@milkdown/crepe/theme/common/style.css";
 import "./NotePanel.css";
 
 const STORAGE_KEY = "v-terminal:note-content";
@@ -12,28 +9,37 @@ interface NotePanelProps {
   onClose: () => void;
 }
 
-export function NotePanel({ onClose }: NotePanelProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Placeholder.configure({
-        placeholder: "메모를 입력하세요...\n\n# 제목\n**굵게**, *기울임*\n- [ ] 할 일 목록",
-      }),
-      Markdown.configure({
-        html: false,
-        transformPastedText: true,
-      }),
-    ],
-    content: localStorage.getItem(STORAGE_KEY) ?? "",
-    onUpdate: ({ editor }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const markdown = (editor.storage as any).markdown.getMarkdown();
-      localStorage.setItem(STORAGE_KEY, markdown);
-    },
+function NoteEditor() {
+  useEditor((root) => {
+    const crepe = new Crepe({
+      root,
+      defaultValue: localStorage.getItem(STORAGE_KEY) ?? "",
+      features: {
+        [Crepe.Feature.BlockEdit]: false,
+        [Crepe.Feature.ImageBlock]: false,
+        [Crepe.Feature.Latex]: false,
+      },
+      featureConfigs: {
+        [Crepe.Feature.Placeholder]: {
+          text: "메모를 입력하세요...",
+          mode: "block",
+        },
+      },
+    });
+
+    crepe.on((listener) => {
+      listener.markdownUpdated((_ctx, markdown) => {
+        localStorage.setItem(STORAGE_KEY, markdown);
+      });
+    });
+
+    return crepe;
   });
 
+  return <Milkdown />;
+}
+
+export function NotePanel({ onClose }: NotePanelProps) {
   return (
     <div className="note-panel">
       <div className="note-panel-header">
@@ -54,7 +60,11 @@ export function NotePanel({ onClose }: NotePanelProps) {
           </svg>
         </button>
       </div>
-      <EditorContent editor={editor} className="note-editor" />
+      <div className="note-editor">
+        <MilkdownProvider>
+          <NoteEditor />
+        </MilkdownProvider>
+      </div>
     </div>
   );
 }
