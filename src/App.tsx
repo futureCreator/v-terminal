@@ -6,6 +6,7 @@ import { TabBar } from "./components/TabBar/TabBar";
 import { SplitToolbar } from "./components/SplitToolbar/SplitToolbar";
 import { PanelGrid } from "./components/PanelGrid/PanelGrid";
 import { SessionPicker } from "./components/SessionPicker/SessionPicker";
+import type { SessionPickResult } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
@@ -533,8 +534,8 @@ export function App() {
     };
   }, [saveAllOpenTabsToBackground]);
 
-  const handleNewSession = (tabId: string, opts?: { shellProgram?: string; shellArgs?: string[]; sshCommand?: string; label?: string }) => {
-    resolveSessionPick(tabId, undefined, opts?.shellProgram, opts?.shellArgs, opts?.sshCommand, opts?.label);
+  const handleNewSession = (tabId: string, result: SessionPickResult) => {
+    resolveSessionPick(tabId, result.layout, result.panelConnections);
   };
 
   const handleTabClose = (tabId: string) => {
@@ -597,7 +598,7 @@ export function App() {
           >
             {tab.pendingSessionPick ? (
               <SessionPicker
-                onNewSession={(opts) => handleNewSession(tab.id, opts)}
+                onNewSession={(result) => handleNewSession(tab.id, result)}
                 savedTabs={savedTabs}
                 onRestoreTab={(savedTabId) => handleRestoreTab(tab.id, savedTabId)}
                 onKillSavedTab={handleKillSavedTab}

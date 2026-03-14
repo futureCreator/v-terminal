@@ -4,6 +4,7 @@ export interface Panel {
   id: string;
   ptyId: string | null; // null until attached to a daemon session
   existingSessionId?: string; // pre-selected from session picker (attach mode)
+  connection?: PanelConnection; // per-panel connection config
 }
 
 export interface Tab {
@@ -26,6 +27,14 @@ export interface SshProfile {
   port: number;
   username: string;
   identityFile?: string;
+}
+
+export interface PanelConnection {
+  type: 'local' | 'ssh' | 'wsl';
+  sshCommand?: string;
+  shellProgram?: string;
+  shellArgs?: string[];
+  label?: string;
 }
 
 export interface DaemonSessionInfo {

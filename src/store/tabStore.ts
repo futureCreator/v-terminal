@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import type { Tab, Panel, Layout, SavedTab } from "../types/terminal";
+import type { Tab, Panel, Layout, SavedTab, PanelConnection } from "../types/terminal";
 import { panelCount } from "../lib/layoutMath";
 
 // We import uuid lazily since we bundle it
@@ -59,11 +59,8 @@ interface TabStore {
   // Session picker
   resolveSessionPick: (
     tabId: string,
-    existingSessionId?: string,
-    shellProgram?: string,
-    shellArgs?: string[],
-    sshCommand?: string,
-    label?: string,
+    layout: Layout,
+    panelConnections: PanelConnection[],
   ) => void;
 
   // App lifecycle
@@ -299,23 +296,24 @@ export const useTabStore = create<TabStore>((set, get) => {
         ),
       })),
 
-    resolveSessionPick: (tabId, existingSessionId?, shellProgram?, shellArgs?, sshCommand?, label?) => {
+    resolveSessionPick: (tabId, layout, panelConnections) => {
+      const count = panelCount(layout);
+      const panels: Panel[] = Array.from({ length: count }, (_, i) => ({
+        id: genId(),
+        ptyId: null,
+        connection: panelConnections[i],
+      }));
+
       set((s) => ({
         tabs: s.tabs.map((t) => {
           if (t.id !== tabId) return t;
-          const panels = existingSessionId
-            ? t.panels.map((p, i) =>
-                i === 0 ? { ...p, existingSessionId } : p
-              )
-            : t.panels;
+          const label = panelConnections.find((c) => c?.label)?.label ?? t.label;
           return {
             ...t,
             pendingSessionPick: false,
+            layout,
             panels,
-            shellProgram,
-            shellArgs,
-            sshCommand: sshCommand ?? t.sshCommand,
-            label: label ?? t.label,
+            label,
           };
         }),
       }));

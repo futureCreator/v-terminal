@@ -116,9 +116,9 @@ export function PanelGrid({ tab, onActivePanelChanged, navRef }: PanelGridProps)
           isActive={panel.id === activePanelId}
           broadcastEnabled={tab.broadcastEnabled}
           siblingPtyIds={siblingPtyIds}
-          sshCommand={index === 0 ? tab.sshCommand : undefined}
-          shellProgram={tab.shellProgram}
-          shellArgs={tab.shellArgs}
+          sshCommand={panel.connection?.sshCommand ?? (index === 0 ? tab.sshCommand : undefined)}
+          shellProgram={panel.connection?.shellProgram ?? tab.shellProgram}
+          shellArgs={panel.connection?.shellArgs ?? tab.shellArgs}
           existingSessionId={panel.existingSessionId}
           onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
           onPtyKilled={() => handlePtyKilled(panel.id)}
