@@ -15,22 +15,17 @@ import { NotePanel } from "./components/NotePanel/NotePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
-import { useSshStore } from "./store/sshStore";
 import { ipc } from "./lib/tauriIpc";
-import { buildSshCommand } from "./lib/sshUtils";
 import { terminalRegistry } from "./components/TerminalPane/TerminalPane";
-import type { Layout, SshProfile } from "./types/terminal";
+import type { Layout } from "./types/terminal";
 import "./styles/theme.css";
 import "./styles/globals.css";
 import "./App.css";
-
-const encoder = new TextEncoder();
 
 export function App() {
   const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
     useTabStore();
   const { themeId } = useThemeStore();
-  const { profiles: sshProfiles } = useSshStore();
 
   const activeTab = useMemo(
     () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
@@ -110,35 +105,16 @@ export function App() {
 
   const handleLayoutChange = useCallback((layout: Layout) => {
     if (!activeTab) return;
-    setLayout(activeTab.id, layout);
+    const { removed } = setLayout(activeTab.id, layout);
+    // Kill sessions for removed panels
+    removed
+      .filter((p) => p.ptyId !== null)
+      .forEach((p) => ipc.daemonKillSession(p.ptyId!).catch(() => {}));
   }, [activeTab, setLayout]);
 
   const handleToggleBroadcast = useCallback(() => {
     if (activeTab) toggleBroadcast(activeTab.id);
   }, [activeTab, toggleBroadcast]);
-
-  const handleSshConnect = useCallback(async (profile: SshProfile) => {
-    let cwd: string;
-    try { cwd = await homeDir(); } catch { cwd = "~"; }
-    addTab(cwd, profile.name, buildSshCommand(profile));
-    setSshModalOpen(false);
-  }, [addTab]);
-
-  const handleSshConnectInPanel = useCallback((profile: SshProfile) => {
-    const ptyId = activePanelPtyIdRef.current;
-    if (!ptyId) return;
-    ipc.daemonWrite(ptyId, encoder.encode(buildSshCommand(profile) + "\r")).catch(() => {});
-    setSshModalOpen(false);
-  }, []);
-
-  const handleSshConnectInAllPanels = useCallback((profile: SshProfile) => {
-    if (!activeTab) return;
-    const encoded = encoder.encode(buildSshCommand(profile) + "\r");
-    activeTab.panels
-      .filter((p) => p.ptyId !== null)
-      .forEach((p) => ipc.daemonWrite(p.ptyId!, encoded).catch(() => {}));
-    setSshModalOpen(false);
-  }, [activeTab]);
 
   const handleCloseCurrentTab = useCallback(() => {
     if (activeTab) saveAndRemoveTab(activeTab.id);
@@ -492,27 +468,6 @@ export function App() {
     };
   }, [savedTabs, restoreSavedTab]);
 
-  const sshPaletteSection = useMemo<PaletteSection | null>(() => {
-    if (sshProfiles.length === 0) return null;
-    return {
-      category: "SSH",
-      commands: sshProfiles.map((profile) => ({
-        id: `ssh:${profile.id}`,
-        label: profile.name,
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="4" width="12" height="7" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M4 4V3a3 3 0 0 1 6 0v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              <circle cx="7" cy="7.5" r="1" fill="currentColor" />
-            </svg>
-          </span>
-        ),
-        action: () => handleSshConnect(profile),
-      })),
-    };
-  }, [sshProfiles, handleSshConnect]);
-
   // 앱 종료 시 열려있는 탭을 모두 백그라운드로 저장
   useEffect(() => {
     let cancelled = false;
@@ -618,9 +573,6 @@ export function App() {
       {sshModalOpen && (
         <SshManagerModal
           onClose={() => setSshModalOpen(false)}
-          onConnect={handleSshConnect}
-          onConnectInPanel={handleSshConnectInPanel}
-          onConnectInAllPanels={activeTab && activeTab.panels.length > 1 ? handleSshConnectInAllPanels : undefined}
         />
       )}
       <DaemonStatusBanner />
@@ -632,7 +584,6 @@ export function App() {
           tabListPaletteSection,
           ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
-          ...(sshPaletteSection ? [sshPaletteSection] : []),
         ]}
       />
     </div>

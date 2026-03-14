@@ -1,13 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSshStore } from "../../store/sshStore";
 import type { SshProfile } from "../../types/terminal";
 import "./SshManagerModal.css";
 
 interface Props {
   onClose: () => void;
-  onConnect: (profile: SshProfile) => void;
-  onConnectInPanel?: (profile: SshProfile) => void;
-  onConnectInAllPanels?: (profile: SshProfile) => void;
 }
 
 type FormState = {
@@ -42,7 +39,7 @@ function getAvatarColor(str: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnectInAllPanels }: Props) {
+export function SshManagerModal({ onClose }: Props) {
   const { profiles, addProfile, removeProfile, updateProfile } = useSshStore();
 
   const [selectedId, setSelectedId] = useState<string | null>(profiles[0]?.id ?? null);
@@ -50,22 +47,6 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
   const [form, setForm] = useState<FormState>(() =>
     profiles[0] ? profileToForm(profiles[0]) : emptyForm
   );
-  const [showConnectMenu, setShowConnectMenu] = useState(false);
-  const connectMenuRef = useRef<HTMLDivElement>(null);
-
-  const hasExtraConnectOptions = !!(onConnectInPanel || onConnectInAllPanels);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!showConnectMenu) return;
-    const handler = (e: MouseEvent) => {
-      if (connectMenuRef.current && !connectMenuRef.current.contains(e.target as Node)) {
-        setShowConnectMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showConnectMenu]);
 
   // ESC to close
   useEffect(() => {
@@ -101,18 +82,6 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
     };
   };
 
-  const resolveProfile = (): SshProfile | null => {
-    const data = buildProfileData();
-    if (!data.host || !data.username) return null;
-    if (isNew) {
-      return addProfile(data);
-    } else if (selectedId) {
-      updateProfile(selectedId, data);
-      return { id: selectedId, ...data };
-    }
-    return null;
-  };
-
   const handleSave = () => {
     const data = buildProfileData();
     if (!data.host || !data.username) return;
@@ -136,30 +105,13 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
     }
   };
 
-  const handleConnect = () => {
-    const profile = resolveProfile();
-    if (profile) onConnect(profile);
-  };
-
-  const handleConnectInPanel = () => {
-    if (!onConnectInPanel) return;
-    const profile = resolveProfile();
-    if (profile) onConnectInPanel(profile);
-  };
-
-  const handleConnectInAllPanels = () => {
-    if (!onConnectInAllPanels) return;
-    const profile = resolveProfile();
-    if (profile) onConnectInAllPanels(profile);
-  };
-
   const setField = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((s) => ({ ...s, [key]: e.target.value }));
 
-  const canConnect = form.host.trim() !== "" && form.username.trim() !== "";
+  const canSave = form.host.trim() !== "" && form.username.trim() !== "";
 
   // SSH command preview
-  const sshPreview = canConnect
+  const sshPreview = canSave
     ? (() => {
         let cmd = `ssh ${form.username.trim()}@${form.host.trim()}`;
         const port = parseInt(form.port) || 22;
@@ -186,7 +138,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
               <path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
-            <span className="ssh-modal-title">SSH Connection</span>
+            <span className="ssh-modal-title">SSH Profiles</span>
           </div>
           <button className="ssh-modal-close" onClick={onClose} aria-label="Close">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -244,11 +196,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
                       key={p.id}
                       className={`ssh-profile-item ${isActive ? "ssh-profile-item--active" : ""}`}
                       onClick={() => selectProfile(p.id)}
-                      onDoubleClick={() => {
-                        const prof = profiles.find((x) => x.id === p.id);
-                        if (prof) onConnect(prof);
-                      }}
-                      title={`${p.username}@${p.host}:${p.port} — Double-click to connect`}
+                      title={`${p.username}@${p.host}:${p.port}`}
                     >
                       <div
                         className="ssh-profile-avatar"
@@ -337,7 +285,7 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
         {/* Footer */}
         <div className="ssh-modal-footer">
           <button className="ssh-btn ssh-btn--secondary" onClick={onClose}>
-            Cancel
+            Close
           </button>
           {!isNew && (
             <button className="ssh-btn ssh-btn--danger" onClick={handleDelete}>
@@ -346,82 +294,12 @@ export function SshManagerModal({ onClose, onConnect, onConnectInPanel, onConnec
           )}
           <div className="ssh-footer-gap" />
           <button
-            className="ssh-btn ssh-btn--secondary"
+            className="ssh-btn ssh-btn--primary"
             onClick={handleSave}
-            disabled={!canConnect}
+            disabled={!canSave}
           >
             Save
           </button>
-          {hasExtraConnectOptions ? (
-            <div className="ssh-connect-split" ref={connectMenuRef}>
-              <button
-                className="ssh-btn ssh-btn--primary ssh-connect-main"
-                onClick={handleConnect}
-                disabled={!canConnect}
-              >
-                Connect
-              </button>
-              <button
-                className="ssh-btn ssh-btn--primary ssh-connect-chevron"
-                onClick={() => setShowConnectMenu((v) => !v)}
-                disabled={!canConnect}
-                aria-label="More connection options"
-              >
-                <svg width="8" height="5" viewBox="0 0 8 5" fill="none">
-                  <path
-                    d="M1 1l3 3 3-3"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-              {showConnectMenu && (
-                <div className="ssh-connect-menu">
-                  <button
-                    className="ssh-connect-menu-item"
-                    onClick={() => {
-                      handleConnect();
-                      setShowConnectMenu(false);
-                    }}
-                  >
-                    Connect in New Tab
-                  </button>
-                  {onConnectInPanel && (
-                    <button
-                      className="ssh-connect-menu-item"
-                      onClick={() => {
-                        handleConnectInPanel();
-                        setShowConnectMenu(false);
-                      }}
-                    >
-                      Open in Current Panel
-                    </button>
-                  )}
-                  {onConnectInAllPanels && (
-                    <button
-                      className="ssh-connect-menu-item"
-                      onClick={() => {
-                        handleConnectInAllPanels();
-                        setShowConnectMenu(false);
-                      }}
-                    >
-                      Open in All Panels
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              className="ssh-btn ssh-btn--primary"
-              onClick={handleConnect}
-              disabled={!canConnect}
-            >
-              Connect
-            </button>
-          )}
         </div>
       </div>
     </div>

@@ -35,7 +35,7 @@ interface TabStore {
   savedTabs: SavedTab[];
 
   // Tab actions
-  addTab: (cwd: string, label?: string, sshCommand?: string) => string;
+  addTab: (cwd: string, label?: string) => string;
   removeTab: (id: string) => void;
   saveAndRemoveTab: (id: string) => void;
   setActiveTab: (id: string) => void;
@@ -96,7 +96,7 @@ export const useTabStore = create<TabStore>((set, get) => {
     activeTabId: defaultTab.id,
     savedTabs: loadSavedTabs(),
 
-    addTab: (cwd, label?, sshCommand?) => {
+    addTab: (cwd, label?) => {
       const id = genId();
       const layout: Layout = 1;
       const tab: Tab = {
@@ -106,8 +106,7 @@ export const useTabStore = create<TabStore>((set, get) => {
         layout,
         panels: makePanels(panelCount(layout)),
         broadcastEnabled: false,
-        sshCommand,
-        pendingSessionPick: !sshCommand, // show picker if no auto-SSH
+        pendingSessionPick: true,
       };
       set((s) => ({ tabs: [...s.tabs, tab], activeTabId: id }));
       return id;
@@ -240,7 +239,16 @@ export const useTabStore = create<TabStore>((set, get) => {
 
       let newPanels: Panel[];
       if (newCount > oldPanels.length) {
-        const extra = makePanels(newCount - oldPanels.length);
+        // Inherit connection from the first panel so new panels match (e.g. SSH)
+        const baseConnection = oldPanels[0]?.connection;
+        const extra: Panel[] = Array.from(
+          { length: newCount - oldPanels.length },
+          () => ({
+            id: genId(),
+            ptyId: null,
+            ...(baseConnection ? { connection: { ...baseConnection } } : {}),
+          }),
+        );
         added = extra;
         newPanels = [...oldPanels, ...extra];
       } else if (newCount < oldPanels.length) {

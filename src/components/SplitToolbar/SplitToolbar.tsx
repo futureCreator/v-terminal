@@ -269,7 +269,7 @@ export function SplitToolbar({
                       <circle cx="10" cy="4.5" r="0.7" fill="currentColor" opacity="0.5" />
                       <circle cx="10" cy="11.5" r="0.7" fill="currentColor" opacity="0.5" />
                     </svg>
-                    <span className="more-menu-item-label">SSH Connections</span>
+                    <span className="more-menu-item-label">SSH Profiles</span>
                   </button>
                   <div className="more-menu-sep" />
                   {/* Notes */}

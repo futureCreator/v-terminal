@@ -14,9 +14,6 @@ export interface Tab {
   layout: Layout;
   panels: Panel[];
   broadcastEnabled: boolean;
-  sshCommand?: string;
-  shellProgram?: string; // e.g. "wsl.exe"
-  shellArgs?: string[];  // e.g. ["-d", "Ubuntu"]
   pendingSessionPick?: boolean; // show session picker instead of terminals
 }
 

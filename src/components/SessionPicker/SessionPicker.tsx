@@ -460,7 +460,7 @@ export function SessionPicker({
           <div className="sp-hero-icon">
             <IconTerminalHero />
           </div>
-          <span className="sp-hero-title">New Session</span>
+          <span className="sp-hero-title">New Tab</span>
           <span className="sp-hero-subtitle">
             Choose layout and connection
           </span>
