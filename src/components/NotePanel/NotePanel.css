@@ -216,7 +216,7 @@
 }
 
 /* ── Toolbar (floating) ──────────────────────────────────────────── */
-.note-editor .milkdown .crepe-toolbar {
+.note-editor .milkdown .milkdown-toolbar {
   background: var(--bg-tertiary) !important;
   border: 1px solid var(--separator) !important;
   border-radius: var(--radius-sm) !important;
