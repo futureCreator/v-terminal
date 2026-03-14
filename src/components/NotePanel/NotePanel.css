@@ -29,43 +29,6 @@
   user-select: none;
 }
 
-.note-panel-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-}
-
-.note-panel-header-sep {
-  width: 1px;
-  height: 11px;
-  background: var(--separator-strong);
-  margin: 0 3px;
-}
-
-.note-panel-mode-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 20px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: var(--radius-xs);
-  color: var(--label-tertiary);
-  padding: 0;
-  transition: color 0.12s, background 0.12s;
-}
-
-.note-panel-mode-btn:hover {
-  color: var(--label-primary);
-  background: var(--bg-tertiary);
-}
-
-.note-panel-mode-btn.active {
-  color: var(--accent);
-}
-
 .note-panel-close {
   display: flex;
   align-items: center;
@@ -86,14 +49,19 @@
   background: var(--bg-tertiary);
 }
 
-/* ── Edit: Textarea ──────────────────────────────────────────────── */
-.note-panel-textarea {
+/* ── Editor Container ────────────────────────────────────────────── */
+.note-editor {
   flex: 1;
-  background: transparent;
-  border: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-editor .tiptap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px 20px;
   outline: none;
-  resize: none;
-  padding: 12px 14px;
   color: var(--label-primary);
   font-family: "Pretendard", sans-serif;
   font-size: 13px;
@@ -101,130 +69,117 @@
   caret-color: var(--accent);
   scrollbar-width: thin;
   scrollbar-color: var(--bg-tertiary) transparent;
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
-.note-panel-textarea::-webkit-scrollbar {
+.note-editor .tiptap::-webkit-scrollbar {
   width: 4px;
 }
 
-.note-panel-textarea::-webkit-scrollbar-track {
+.note-editor .tiptap::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.note-panel-textarea::-webkit-scrollbar-thumb {
+.note-editor .tiptap::-webkit-scrollbar-thumb {
   background: var(--bg-tertiary);
   border-radius: 2px;
 }
 
-.note-panel-textarea::placeholder {
+/* ── Placeholder ─────────────────────────────────────────────────── */
+.note-editor .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
   color: var(--label-disabled);
+  pointer-events: none;
+  float: left;
+  height: 0;
 }
 
-/* ── Preview ─────────────────────────────────────────────────────── */
-.note-panel-preview {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 14px 20px;
-  color: var(--label-primary);
-  font-family: "Pretendard", sans-serif;
-  font-size: 13px;
-  line-height: 1.65;
-  scrollbar-width: thin;
-  scrollbar-color: var(--bg-tertiary) transparent;
-  user-select: text;
+/* ── Typography ──────────────────────────────────────────────────── */
+.note-editor .tiptap p {
+  margin: 0 0 4px;
 }
 
-.note-panel-preview::-webkit-scrollbar {
-  width: 4px;
-}
-
-.note-panel-preview::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.note-panel-preview::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
-  border-radius: 2px;
-}
-
-.note-preview-empty {
-  color: var(--label-disabled);
-  font-size: 12px;
-}
-
-/* ── Markdown Styles ─────────────────────────────────────────────── */
-.note-panel-preview h1,
-.note-panel-preview h2,
-.note-panel-preview h3,
-.note-panel-preview h4,
-.note-panel-preview h5,
-.note-panel-preview h6 {
+.note-editor .tiptap h1,
+.note-editor .tiptap h2,
+.note-editor .tiptap h3,
+.note-editor .tiptap h4,
+.note-editor .tiptap h5,
+.note-editor .tiptap h6 {
   color: var(--label-primary);
   font-family: "Pretendard", sans-serif;
   font-weight: 600;
   line-height: 1.3;
-  margin-top: 14px;
-  margin-bottom: 4px;
+  margin: 14px 0 4px;
 }
 
-.note-panel-preview h1 { font-size: 16px; }
-.note-panel-preview h2 { font-size: 14px; }
-.note-panel-preview h3 { font-size: 13px; }
-.note-panel-preview h4,
-.note-panel-preview h5,
-.note-panel-preview h6 {
+.note-editor .tiptap h1 { font-size: 16px; }
+.note-editor .tiptap h2 { font-size: 14px; }
+.note-editor .tiptap h3 { font-size: 13px; }
+.note-editor .tiptap h4,
+.note-editor .tiptap h5,
+.note-editor .tiptap h6 {
   font-size: 12px;
   color: var(--label-secondary);
 }
 
-.note-panel-preview p {
-  margin-bottom: 6px;
-}
+.note-editor .tiptap strong { font-weight: 600; }
 
-.note-panel-preview strong {
-  font-weight: 600;
-  color: var(--label-primary);
-}
-
-.note-panel-preview em {
+.note-editor .tiptap em {
   font-style: italic;
   color: var(--label-secondary);
 }
 
-.note-panel-preview del {
+.note-editor .tiptap s {
   color: var(--label-tertiary);
   text-decoration: line-through;
 }
 
-.note-panel-preview a {
+.note-editor .tiptap a {
   color: var(--accent);
   text-decoration: none;
 }
 
-.note-panel-preview a:hover {
+.note-editor .tiptap a:hover {
   text-decoration: underline;
 }
 
 /* ── Lists ───────────────────────────────────────────────────────── */
-.note-panel-preview ul,
-.note-panel-preview ol {
+.note-editor .tiptap ul,
+.note-editor .tiptap ol {
   padding-left: 18px;
-  margin-bottom: 6px;
+  margin: 0 0 4px;
 }
 
-.note-panel-preview li {
+.note-editor .tiptap li {
   margin-bottom: 2px;
   line-height: 1.6;
 }
 
-/* Task list: remove bullet for checkbox items */
-.note-panel-preview ul li:has(.note-checkbox) {
+/* ── Task List ───────────────────────────────────────────────────── */
+.note-editor .tiptap ul[data-type="taskList"] {
   list-style: none;
-  margin-left: -4px;
+  padding-left: 2px;
+  margin: 0 0 4px;
 }
 
-/* ── Checkbox ────────────────────────────────────────────────────── */
-.note-checkbox {
+.note-editor .tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 3px;
+}
+
+.note-editor .tiptap ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin-top: 0;
+  cursor: pointer;
+  padding-top: 2px;
+}
+
+.note-editor .tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
   width: 13px;
@@ -233,23 +188,21 @@
   border-radius: 3px;
   background: transparent;
   cursor: pointer;
-  vertical-align: -2px;
-  margin-right: 6px;
-  flex-shrink: 0;
   position: relative;
   transition: border-color 0.12s, background 0.12s;
+  flex-shrink: 0;
 }
 
-.note-checkbox:hover {
+.note-editor .tiptap ul[data-type="taskList"] li > label input[type="checkbox"]:hover {
   border-color: var(--accent);
 }
 
-.note-checkbox:checked {
+.note-editor .tiptap ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
   background: var(--accent);
   border-color: var(--accent);
 }
 
-.note-checkbox:checked::after {
+.note-editor .tiptap ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
   left: 2px;
@@ -262,8 +215,18 @@
   transform: rotate(45deg);
 }
 
+.note-editor .tiptap ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* 완료된 항목 텍스트 */
+.note-editor .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  color: var(--label-tertiary);
+  text-decoration: line-through;
+}
+
 /* ── Code ────────────────────────────────────────────────────────── */
-.note-panel-preview code {
+.note-editor .tiptap code {
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   font-size: 11.5px;
   background: var(--bg-tertiary);
@@ -272,7 +235,7 @@
   border-radius: var(--radius-xs);
 }
 
-.note-panel-preview pre {
+.note-editor .tiptap pre {
   background: var(--bg-primary);
   border: 1px solid var(--separator);
   border-radius: var(--radius-sm);
@@ -283,7 +246,7 @@
   scrollbar-color: var(--bg-tertiary) transparent;
 }
 
-.note-panel-preview pre code {
+.note-editor .tiptap pre code {
   background: none;
   padding: 0;
   color: var(--label-primary);
@@ -291,7 +254,7 @@
 }
 
 /* ── Blockquote ──────────────────────────────────────────────────── */
-.note-panel-preview blockquote {
+.note-editor .tiptap blockquote {
   border-left: 3px solid var(--accent);
   padding-left: 10px;
   margin: 6px 0;
@@ -299,35 +262,8 @@
 }
 
 /* ── Horizontal Rule ─────────────────────────────────────────────── */
-.note-panel-preview hr {
+.note-editor .tiptap hr {
   border: none;
   border-top: 1px solid var(--separator);
   margin: 10px 0;
-}
-
-/* ── Table ───────────────────────────────────────────────────────── */
-.note-panel-preview table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  margin: 6px 0;
-}
-
-.note-panel-preview th {
-  background: var(--bg-tertiary);
-  color: var(--label-secondary);
-  font-weight: 600;
-  text-align: left;
-  padding: 5px 8px;
-  border-bottom: 1px solid var(--separator-strong);
-}
-
-.note-panel-preview td {
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--separator);
-  color: var(--label-primary);
-}
-
-.note-panel-preview tr:last-child td {
-  border-bottom: none;
 }
