@@ -102,9 +102,11 @@ interface SplitToolbarProps {
   activeLayout: Layout;
   broadcastEnabled: boolean;
   noteOpen: boolean;
+  alarmOpen: boolean;
   onLayoutChange: (layout: Layout) => void;
   onToggleBroadcast: () => void;
   onToggleNote: () => void;
+  onToggleAlarm: () => void;
   onOpenPalette: () => void;
   onOpenSshManager: () => void;
   onAddTab: () => void;
@@ -114,9 +116,11 @@ export function SplitToolbar({
   activeLayout,
   broadcastEnabled,
   noteOpen,
+  alarmOpen,
   onLayoutChange,
   onToggleBroadcast,
   onToggleNote,
+  onToggleAlarm,
   onOpenPalette,
   onOpenSshManager,
   onAddTab,
@@ -284,6 +288,19 @@ export function SplitToolbar({
                     </svg>
                     <span className="more-menu-item-label">Notes</span>
                     <span className="more-menu-kbd">Ctrl+Shift+N</span>
+                  </button>
+                  {/* Alarms */}
+                  <button
+                    className={`more-menu-item${alarmOpen ? " more-menu-item--active" : ""}`}
+                    onClick={() => { onToggleAlarm(); setMenuOpen(false); }}
+                    role="menuitem"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 2a4.5 4.5 0 0 0-4.5 4.5V9.5L2 12h12l-1.5-2.5V6.5A4.5 4.5 0 0 0 8 2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                      <path d="M6 12a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                    </svg>
+                    <span className="more-menu-item-label">Alarms</span>
+                    <span className="more-menu-kbd">Ctrl+Shift+A</span>
                   </button>
                   <div className="more-menu-sep" />
                   {/* Appearance */}

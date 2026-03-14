@@ -12,7 +12,9 @@ import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatus
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
 import { NotePanel } from "./components/NotePanel/NotePanel";
+import { AlarmPanel } from "./components/AlarmPanel/AlarmPanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
+import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { ipc } from "./lib/tauriIpc";
@@ -35,6 +37,7 @@ export function App() {
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(() => localStorage.getItem("v-terminal:note-open") === "true");
+  const [alarmOpen, setAlarmOpen] = useState(() => localStorage.getItem("v-terminal:alarm-open") === "true");
   const activePanelPtyIdRef = useRef<string | null>(null);
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
@@ -43,10 +46,21 @@ export function App() {
     ipc.getWslDistros().catch(() => {});
   }, []);
 
+  // Alarm tick engine
+  useAlarmTick();
+
   const handleToggleNote = useCallback(() => {
     setNoteOpen((prev) => {
       const next = !prev;
       localStorage.setItem("v-terminal:note-open", String(next));
+      return next;
+    });
+  }, []);
+
+  const handleToggleAlarm = useCallback(() => {
+    setAlarmOpen((prev) => {
+      const next = !prev;
+      localStorage.setItem("v-terminal:alarm-open", String(next));
       return next;
     });
   }, []);
@@ -65,6 +79,15 @@ export function App() {
         setNoteOpen((prev) => {
           const next = !prev;
           localStorage.setItem("v-terminal:note-open", String(next));
+          return next;
+        });
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === "A") {
+        e.preventDefault();
+        e.stopPropagation();
+        setAlarmOpen((prev) => {
+          const next = !prev;
+          localStorage.setItem("v-terminal:alarm-open", String(next));
           return next;
         });
       }
@@ -249,6 +272,21 @@ export function App() {
         action: handleToggleNote,
       },
       {
+        id: "view:alarms",
+        label: alarmOpen ? "Hide Alarm Panel" : "Show Alarm Panel",
+        meta: "Ctrl+Shift+A",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1.5a4 4 0 0 0-4 4v2.5l-1 1.5h10l-1-1.5V5.5a4 4 0 0 0-4-4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+              <path d="M5.5 10.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        isActive: alarmOpen,
+        action: handleToggleAlarm,
+      },
+      {
         id: "ssh:profiles",
         label: "SSH Profiles",
         icon: (
@@ -308,7 +346,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleNote, activeTab, tabs, noteOpen]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleNote, handleToggleAlarm, activeTab, tabs, noteOpen, alarmOpen]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -552,9 +590,11 @@ export function App() {
           activeLayout={activeTab?.layout ?? 1}
           broadcastEnabled={activeTab?.broadcastEnabled ?? false}
           noteOpen={noteOpen}
+          alarmOpen={alarmOpen}
           onLayoutChange={handleLayoutChange}
           onToggleBroadcast={handleToggleBroadcast}
           onToggleNote={handleToggleNote}
+          onToggleAlarm={handleToggleAlarm}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenSshManager={() => setSshModalOpen(true)}
           onAddTab={handleNewTab}
@@ -586,6 +626,7 @@ export function App() {
         ))}
         </div>
         {noteOpen && <NotePanel tabId={activeTabId} onClose={handleToggleNote} />}
+        {alarmOpen && <AlarmPanel onClose={handleToggleAlarm} />}
       </div>
       {sshModalOpen && (
         <SshManagerModal
