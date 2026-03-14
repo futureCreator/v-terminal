@@ -220,6 +220,7 @@ export function TerminalPane({
 
       // Focus and IME tracking
       term.textarea?.addEventListener("focus", () => onFocus());
+      term.textarea?.addEventListener("blur", () => { isComposing = false; });
       term.textarea?.addEventListener("compositionstart", () => { isComposing = true; });
       term.textarea?.addEventListener("compositionend", () => {
         // Delay clearing the flag so that the keydown event fired in the same
