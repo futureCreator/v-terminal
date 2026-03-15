@@ -27,14 +27,16 @@
 /* ── Tab buttons — icon-only toolbar style ─────────────────────── */
 .side-panel-tabs {
   display: flex;
+  flex: 1;
   gap: 1px;
+  min-width: 0;
 }
 
 .side-panel-tab {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  flex: 1;
   height: 26px;
   padding: 0;
   border: none;
