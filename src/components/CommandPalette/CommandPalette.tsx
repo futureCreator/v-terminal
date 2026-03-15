@@ -478,7 +478,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
           <span className="cp-hint"><kbd>↑↓</kbd> Navigate</span>
           <span className="cp-hint"><kbd>↵</kbd> Execute</span>
           <span className="cp-hint"><kbd>Tab</kbd> Jump</span>
-          <span className="cp-hint"><kbd>Ctrl K</kbd> Close</span>
+          <span className="cp-hint"><kbd>&gt;</kbd> Tabs</span>
+          <span className="cp-hint"><kbd>@</kbd> SSH</span>
         </div>
       </div>
     </div>,
