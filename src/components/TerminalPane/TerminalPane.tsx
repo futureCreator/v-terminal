@@ -188,6 +188,7 @@ export function TerminalPane({
           clearTimeout(compositionTimeout);
           compositionTimeout = null;
         }
+        if (writeBuffer.length > 0) flushWriteBuffer();
 
         // Scroll restoration: when returning to normal buffer, restore saved viewport position
         if (newBuffer.type === "normal") {
@@ -222,6 +223,17 @@ export function TerminalPane({
       if (sshCommand) {
         ipc.daemonWrite(ptyId, encoder.encode(sshCommand + "\r")).catch(() => {});
       }
+
+      // Write buffer: during IME composition, terminal output is buffered to prevent
+      // xterm.js textarea re-renders from interrupting the composition. Flushed when
+      // composition ends or isComposing is reset.
+      const writeBuffer: (Uint8Array | string)[] = [];
+      const flushWriteBuffer = () => {
+        const buffered = writeBuffer.splice(0);
+        for (const data of buffered) {
+          term.write(data);
+        }
+      };
 
       // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
       term.attachCustomKeyEventHandler((e) => {
@@ -294,6 +306,7 @@ export function TerminalPane({
           clearTimeout(compositionTimeout);
           compositionTimeout = null;
         }
+        if (writeBuffer.length > 0) flushWriteBuffer();
       });
       term.textarea?.addEventListener("compositionstart", () => {
         isComposing = true;
@@ -303,6 +316,7 @@ export function TerminalPane({
         compositionTimeout = setTimeout(() => {
           compositionTimeout = null;
           isComposing = false;
+          if (writeBuffer.length > 0) flushWriteBuffer();
         }, 10_000);
       });
       term.textarea?.addEventListener("compositionend", () => {
@@ -315,12 +329,23 @@ export function TerminalPane({
         // handler.  Without this, the final keystroke (e.g. Enter/Space that
         // commits the composed text) can leak through and send a duplicate
         // character — especially on Windows IME.
-        requestAnimationFrame(() => { isComposing = false; });
+        requestAnimationFrame(() => {
+          isComposing = false;
+          if (writeBuffer.length > 0) flushWriteBuffer();
+        });
       });
 
       // Output: PTY → terminal (per-pty handler, no cross-panel filtering needed)
+      // During IME composition, writes are buffered to prevent textarea re-renders
+      // from interrupting the composition (which causes Korean character drops).
       unlistenData = await ipc.onPtyData(ptyId, (data) => {
-        if (!disposed) term.write(data);
+        if (disposed) return;
+        if (isComposing) {
+          writeBuffer.push(data);
+        } else {
+          if (writeBuffer.length > 0) flushWriteBuffer();
+          term.write(data);
+        }
       });
 
       unlistenExit = await ipc.onPtyExit(ptyId, () => {
