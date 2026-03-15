@@ -90,6 +90,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.2.0 - 2026-03-16
+
+- Minor version bump — consolidates all v0.1.x features into a stable baseline
+
 ### v0.1.18 - 2026-03-16
 
 - **feat**: Settings modal with Appearance and Terminal configuration tabs
