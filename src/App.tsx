@@ -11,8 +11,8 @@ import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
-import { NotePanel } from "./components/NotePanel/NotePanel";
-import { AlarmPanel } from "./components/AlarmPanel/AlarmPanel";
+import { SidePanel } from "./components/SidePanel/SidePanel";
+import type { SidebarTab } from "./components/SidePanel/SidePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useTabStore } from "./store/tabStore";
@@ -38,8 +38,16 @@ export function App() {
 
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [noteOpen, setNoteOpen] = useState(() => localStorage.getItem("v-terminal:note-open") === "true");
-  const [alarmOpen, setAlarmOpen] = useState(() => localStorage.getItem("v-terminal:alarm-open") === "true");
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    const stored = localStorage.getItem("v-terminal:sidebar-open");
+    if (stored !== null) return stored === "true";
+    return localStorage.getItem("v-terminal:note-open") === "true" || localStorage.getItem("v-terminal:alarm-open") === "true";
+  });
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
+    const stored = localStorage.getItem("v-terminal:sidebar-tab");
+    if (stored === "notes" || stored === "alerts") return stored;
+    return localStorage.getItem("v-terminal:alarm-open") === "true" ? "alerts" : "notes";
+  });
   const activePanelPtyIdRef = useRef<string | null>(null);
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
@@ -51,20 +59,31 @@ export function App() {
   // Alarm tick engine
   useAlarmTick();
 
-  const handleToggleNote = useCallback(() => {
-    setNoteOpen((prev) => {
-      const next = !prev;
-      localStorage.setItem("v-terminal:note-open", String(next));
-      return next;
-    });
+  const sidebarOpenRef = useRef(sidebarOpen);
+  const sidebarTabRef = useRef(sidebarTab);
+  useEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
+  useEffect(() => { sidebarTabRef.current = sidebarTab; }, [sidebarTab]);
+
+  const handleToggleSidebar = useCallback((tab: SidebarTab) => {
+    if (sidebarOpen && sidebarTab === tab) {
+      setSidebarOpen(false);
+      localStorage.setItem("v-terminal:sidebar-open", "false");
+    } else {
+      setSidebarOpen(true);
+      setSidebarTab(tab);
+      localStorage.setItem("v-terminal:sidebar-open", "true");
+      localStorage.setItem("v-terminal:sidebar-tab", tab);
+    }
+  }, [sidebarOpen, sidebarTab]);
+
+  const handleCloseSidebar = useCallback(() => {
+    setSidebarOpen(false);
+    localStorage.setItem("v-terminal:sidebar-open", "false");
   }, []);
 
-  const handleToggleAlarm = useCallback(() => {
-    setAlarmOpen((prev) => {
-      const next = !prev;
-      localStorage.setItem("v-terminal:alarm-open", String(next));
-      return next;
-    });
+  const handleSidebarTabChange = useCallback((tab: SidebarTab) => {
+    setSidebarTab(tab);
+    localStorage.setItem("v-terminal:sidebar-tab", tab);
   }, []);
 
   // Global keyboard shortcuts — intercept before xterm sees the event
@@ -78,20 +97,32 @@ export function App() {
       if (e.ctrlKey && e.shiftKey && e.key === "N") {
         e.preventDefault();
         e.stopPropagation();
-        setNoteOpen((prev) => {
-          const next = !prev;
-          localStorage.setItem("v-terminal:note-open", String(next));
-          return next;
-        });
+        const isOpen = sidebarOpenRef.current;
+        const curTab = sidebarTabRef.current;
+        if (isOpen && curTab === "notes") {
+          setSidebarOpen(false);
+          localStorage.setItem("v-terminal:sidebar-open", "false");
+        } else {
+          setSidebarOpen(true);
+          setSidebarTab("notes");
+          localStorage.setItem("v-terminal:sidebar-open", "true");
+          localStorage.setItem("v-terminal:sidebar-tab", "notes");
+        }
       }
       if (e.ctrlKey && e.shiftKey && e.key === "A") {
         e.preventDefault();
         e.stopPropagation();
-        setAlarmOpen((prev) => {
-          const next = !prev;
-          localStorage.setItem("v-terminal:alarm-open", String(next));
-          return next;
-        });
+        const isOpen = sidebarOpenRef.current;
+        const curTab = sidebarTabRef.current;
+        if (isOpen && curTab === "alerts") {
+          setSidebarOpen(false);
+          localStorage.setItem("v-terminal:sidebar-open", "false");
+        } else {
+          setSidebarOpen(true);
+          setSidebarTab("alerts");
+          localStorage.setItem("v-terminal:sidebar-open", "true");
+          localStorage.setItem("v-terminal:sidebar-tab", "alerts");
+        }
       }
       // Terminal font size: Ctrl+= / Ctrl+- / Ctrl+0
       if (e.ctrlKey && !e.shiftKey && (e.key === "=" || e.key === "+")) {
@@ -285,7 +316,7 @@ export function App() {
       ] : []),
       {
         id: "view:notes",
-        label: noteOpen ? "Hide Notes Panel" : "Show Notes Panel",
+        label: sidebarOpen && sidebarTab === "notes" ? "Hide Notes Panel" : "Show Notes Panel",
         meta: "Ctrl+Shift+N",
         icon: (
           <span className="cp-cmd-icon">
@@ -295,12 +326,12 @@ export function App() {
             </svg>
           </span>
         ),
-        isActive: noteOpen,
-        action: handleToggleNote,
+        isActive: sidebarOpen && sidebarTab === "notes",
+        action: () => handleToggleSidebar("notes"),
       },
       {
         id: "view:alarms",
-        label: alarmOpen ? "Hide Alarm Panel" : "Show Alarm Panel",
+        label: sidebarOpen && sidebarTab === "alerts" ? "Hide Alerts Panel" : "Show Alerts Panel",
         meta: "Ctrl+Shift+A",
         icon: (
           <span className="cp-cmd-icon">
@@ -310,8 +341,8 @@ export function App() {
             </svg>
           </span>
         ),
-        isActive: alarmOpen,
-        action: handleToggleAlarm,
+        isActive: sidebarOpen && sidebarTab === "alerts",
+        action: () => handleToggleSidebar("alerts"),
       },
       {
         id: "ssh:profiles",
@@ -373,7 +404,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleNote, handleToggleAlarm, activeTab, tabs, noteOpen, alarmOpen]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleSidebar, activeTab, tabs, sidebarOpen, sidebarTab]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -616,12 +647,11 @@ export function App() {
         <SplitToolbar
           activeLayout={activeTab?.layout ?? 1}
           broadcastEnabled={activeTab?.broadcastEnabled ?? false}
-          noteOpen={noteOpen}
-          alarmOpen={alarmOpen}
+          sidebarOpen={sidebarOpen}
+          sidebarTab={sidebarTab}
           onLayoutChange={handleLayoutChange}
           onToggleBroadcast={handleToggleBroadcast}
-          onToggleNote={handleToggleNote}
-          onToggleAlarm={handleToggleAlarm}
+          onToggleSidebar={handleToggleSidebar}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenSshManager={() => setSshModalOpen(true)}
           onAddTab={handleNewTab}
@@ -652,8 +682,14 @@ export function App() {
           </div>
         ))}
         </div>
-        {noteOpen && <NotePanel tabId={activeTabId} onClose={handleToggleNote} />}
-        {alarmOpen && <AlarmPanel onClose={handleToggleAlarm} />}
+        {sidebarOpen && (
+          <SidePanel
+            tabId={activeTabId}
+            activeTab={sidebarTab}
+            onTabChange={handleSidebarTabChange}
+            onClose={handleCloseSidebar}
+          />
+        )}
       </div>
       {sshModalOpen && (
         <SshManagerModal

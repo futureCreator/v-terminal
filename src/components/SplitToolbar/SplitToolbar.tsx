@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { Layout } from "../../types/terminal";
+import type { SidebarTab } from "../SidePanel/SidePanel";
 import { useThemeStore } from "../../store/themeStore";
 import { useTerminalFontStore, MIN_SIZE, MAX_SIZE, DEFAULT_SIZE } from "../../store/terminalFontStore";
 import { THEME_GROUPS } from "../../themes/definitions";
@@ -102,12 +103,11 @@ const LAYOUTS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = 
 interface SplitToolbarProps {
   activeLayout: Layout;
   broadcastEnabled: boolean;
-  noteOpen: boolean;
-  alarmOpen: boolean;
+  sidebarOpen: boolean;
+  sidebarTab: SidebarTab;
   onLayoutChange: (layout: Layout) => void;
   onToggleBroadcast: () => void;
-  onToggleNote: () => void;
-  onToggleAlarm: () => void;
+  onToggleSidebar: (tab: SidebarTab) => void;
   onOpenPalette: () => void;
   onOpenSshManager: () => void;
   onAddTab: () => void;
@@ -116,12 +116,11 @@ interface SplitToolbarProps {
 export function SplitToolbar({
   activeLayout,
   broadcastEnabled,
-  noteOpen,
-  alarmOpen,
+  sidebarOpen,
+  sidebarTab,
   onLayoutChange,
   onToggleBroadcast,
-  onToggleNote,
-  onToggleAlarm,
+  onToggleSidebar,
   onOpenPalette,
   onOpenSshManager,
   onAddTab,
@@ -280,8 +279,8 @@ export function SplitToolbar({
                   <div className="more-menu-sep" />
                   {/* Notes */}
                   <button
-                    className={`more-menu-item${noteOpen ? " more-menu-item--active" : ""}`}
-                    onClick={() => { onToggleNote(); setMenuOpen(false); }}
+                    className={`more-menu-item${sidebarOpen && sidebarTab === "notes" ? " more-menu-item--active" : ""}`}
+                    onClick={() => { onToggleSidebar("notes"); setMenuOpen(false); }}
                     role="menuitem"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -293,8 +292,8 @@ export function SplitToolbar({
                   </button>
                   {/* Alarms */}
                   <button
-                    className={`more-menu-item${alarmOpen ? " more-menu-item--active" : ""}`}
-                    onClick={() => { onToggleAlarm(); setMenuOpen(false); }}
+                    className={`more-menu-item${sidebarOpen && sidebarTab === "alerts" ? " more-menu-item--active" : ""}`}
+                    onClick={() => { onToggleSidebar("alerts"); setMenuOpen(false); }}
                     role="menuitem"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
