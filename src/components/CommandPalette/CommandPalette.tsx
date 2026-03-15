@@ -207,7 +207,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
       setPhase("in");
       setQuery("");
       setActiveIndex(0);
-      requestAnimationFrame(() => inputRef.current?.focus());
     } else if (visible) {
       setPhase("out");
       const timer = setTimeout(() => {
@@ -217,6 +216,34 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  // Focus input after DOM is rendered (separate effect so inputRef is available)
+  useEffect(() => {
+    if (visible && isOpen) {
+      // Double-rAF to ensure React has committed the DOM
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+        });
+      });
+    }
+  }, [visible, isOpen]);
+
+  // Block all keyboard events from reaching xterm while palette is open
+  const backdropRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = backdropRef.current;
+    if (!el || !isOpen) return;
+    const stop = (e: Event) => { e.stopPropagation(); };
+    el.addEventListener("keydown", stop, { capture: true });
+    el.addEventListener("keyup", stop, { capture: true });
+    el.addEventListener("keypress", stop, { capture: true });
+    return () => {
+      el.removeEventListener("keydown", stop, { capture: true });
+      el.removeEventListener("keyup", stop, { capture: true });
+      el.removeEventListener("keypress", stop, { capture: true });
+    };
+  }, [isOpen, visible]);
 
   // Clamp activeIndex
   const totalCount = recentCommands.length + filtered.length;
@@ -457,6 +484,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
 
   return createPortal(
     <div
+      ref={backdropRef}
       className={`cp-backdrop${phase === "out" ? " cp-backdrop--out" : ""}`}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
