@@ -32,7 +32,8 @@ A new **Settings modal** with 2-column layout, matching the SSH Profiles modal p
 - 3-column grid of theme cards
 - Each card: background color + 3 colored lines (simulating code) + theme name label
 - Active card: blue border highlight
-- All 16 existing themes displayed
+- **Auto** option: special card at the top of the grid, before themed cards (follows system light/dark)
+- All 15 existing themes displayed below Auto
 
 ### Terminal Section
 
@@ -50,15 +51,31 @@ A new **Settings modal** with 2-column layout, matching the SSH Profiles modal p
 - **Keep:** Layout buttons, Broadcast toggle, SSH Manager, Help/About
 
 ### State Persistence
-- Font family: new Zustand store → localStorage (`v-terminal:terminal-font-family`)
-- Cursor style, cursor blink, line height, scrollback: new Zustand store → localStorage (`v-terminal:terminal-config`)
-- Theme and font size: existing stores unchanged
+- Consolidate into a single `terminalConfigStore.ts` replacing the existing `terminalFontStore.ts`
+- Single localStorage key: `v-terminal:terminal-config`
+- Fields: `fontSize`, `fontFamily`, `cursorStyle`, `cursorBlink`, `lineHeight`, `scrollback`
+- Migration: on first load, read legacy `v-terminal:terminal-font-size` key and merge into new config
+- Theme: existing `themeStore.ts` unchanged
+
+### Config Propagation to Open Terminals
+When config values change, TerminalPane applies them with the existing scroll-preservation + fitAddon.fit() + PTY resize pattern (same as current fontSize useEffect):
+- **fontFamily** — apply immediately; ensure font is loaded via `document.fonts.load()` before applying to `term.options.fontFamily`, then fit + resize
+- **fontSize** — apply immediately (existing behavior)
+- **cursorStyle, cursorBlink** — apply immediately via `term.options.*` (no fit/resize needed)
+- **lineHeight** — apply immediately, triggers reflow → fit + resize
+- **scrollback** — apply to `term.options.scrollback`; xterm.js applies on next write, no fit needed
+
+### Font Bundling
+- Location: `src/assets/fonts/` directory, one subfolder per font family
+- Weights: Regular and Bold per font (2 files each = 18 woff2 files total)
+- `@font-face` declarations: new `src/styles/fonts.css` imported in `main.tsx`
+- Preload: all fonts declared in CSS; active font loaded on-demand via `document.fonts.load()` when selected in Settings
 
 ### Technical Notes
 - Modal component: `src/components/SettingsModal/SettingsModal.tsx` + `.css`
+- Modal dimensions: width 640px, max-width 90vw, min-height 420px, max-height 520px
 - Open/close state managed in `App.tsx` (same pattern as SSH modal)
-- Font files bundled in `src/assets/fonts/` or loaded via `@font-face` from a CDN-free local path
-- TerminalPane reads new config values from store and applies on change
+- Command palette: add "Settings" entry in the command palette (same section as SSH Profiles) for keyboard access
 
 ---
 
@@ -124,7 +141,7 @@ Hide settings by default; disable editing during active sessions.
 ### Changes
 
 **Gear toggle button:**
-- Add a gear icon button (proper cog SVG) next to Pause/Reset controls
+- Add a gear icon button (proper cog SVG) as the rightmost button in the controls row (after Pause/Reset)
 - Clicking toggles the settings panel visibility
 - Button highlights (accent color) when settings are open
 
@@ -173,6 +190,7 @@ Replace presets + custom input with a spacious preset grid. Polish timer cards.
 - Buttons: 8px vertical padding, border-radius 8px, JetBrains Mono font
 - Hover: background lighten, border-color lighten
 - Active: accent-tinted background
+- Timer label: pass the preset button text (e.g., "1.5h") as the timer label so card labels match preset names. Update `formatDuration()` to format 90min as "1.5h" and 120min as "2h" for consistency.
 
 ### Timer Card Changes
 
