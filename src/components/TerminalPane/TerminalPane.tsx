@@ -170,6 +170,12 @@ export function TerminalPane({
         return;
       }
 
+      // IME composition state — prevents custom key handler from interfering with Korean/CJK input
+      let isComposing = false;
+
+      // Normal buffer scroll position — tracked independently so it survives alternate buffer sessions
+      let savedNormalViewportY = term.buffer.normal.viewportY;
+
       // Buffer change listener — handles scroll restoration and IME reset on alternate ↔ normal transitions
       disposeBufferChange = term.buffer.onBufferChange((newBuffer) => {
         if (disposed) return;
@@ -214,12 +220,6 @@ export function TerminalPane({
       if (sshCommand) {
         ipc.daemonWrite(ptyId, encoder.encode(sshCommand + "\r")).catch(() => {});
       }
-
-      // IME composition state — prevents custom key handler from interfering with Korean/CJK input
-      let isComposing = false;
-
-      // Normal buffer scroll position — tracked independently so it survives alternate buffer sessions
-      let savedNormalViewportY = term.buffer.normal.viewportY;
 
       // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
       term.attachCustomKeyEventHandler((e) => {
