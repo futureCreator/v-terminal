@@ -304,13 +304,19 @@ export function TerminalPane({
         let savedIsAtBottom = true;
         const observer = new ResizeObserver(() => {
           if (disposed || !fitAddonRef.current || !termRef.current) return;
-          // Capture viewport position at the first event in each debounce window,
+
+          const isAlternate = term.buffer.active.type === "alternate";
+
+          // In normal buffer: capture viewport position at the first event in each debounce window,
           // before xterm has a chance to internally reset it during reflow
-          if (!resizeTimeout) {
+          if (!resizeTimeout && !isAlternate) {
             const buffer = term.buffer.active;
             savedViewportY = buffer.viewportY;
             savedIsAtBottom = savedViewportY >= buffer.length - term.rows;
+            // Also update the persistent normal buffer tracker
+            savedNormalViewportY = buffer.viewportY;
           }
+
           if (resizeTimeout) clearTimeout(resizeTimeout);
           resizeTimeout = setTimeout(() => {
             resizeTimeout = null;
@@ -318,16 +324,19 @@ export function TerminalPane({
             try {
               fitAddon.fit();
 
-              const restore = () => {
-                if (savedIsAtBottom) {
-                  term.scrollToBottom();
-                } else {
-                  term.scrollToLine(savedViewportY);
-                }
-              };
-              restore();
-              // Follow-up restoration after the browser has computed the new layout
-              requestAnimationFrame(restore);
+              // Only restore scroll position in normal buffer mode.
+              // In alternate buffer, TUI apps handle their own redraw via SIGWINCH.
+              if (!isAlternate) {
+                const restore = () => {
+                  if (savedIsAtBottom) {
+                    term.scrollToBottom();
+                  } else {
+                    term.scrollToLine(savedViewportY);
+                  }
+                };
+                restore();
+                requestAnimationFrame(restore);
+              }
 
               ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
             } catch {}
