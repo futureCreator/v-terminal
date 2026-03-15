@@ -98,9 +98,12 @@ function load(): PersistedData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { alarms: [], pomodoroConfig: DEFAULT_POMODORO_CONFIG };
     const data = JSON.parse(raw) as PersistedData;
+    const config = { ...DEFAULT_POMODORO_CONFIG, ...data.pomodoroConfig };
+    config.focusMinutes = Math.max(5, Math.round(config.focusMinutes / 5) * 5);
+    config.longBreakMinutes = Math.max(5, Math.round(config.longBreakMinutes / 5) * 5);
     return {
       alarms: data.alarms ?? [],
-      pomodoroConfig: { ...DEFAULT_POMODORO_CONFIG, ...data.pomodoroConfig },
+      pomodoroConfig: config,
     };
   } catch {
     return { alarms: [], pomodoroConfig: DEFAULT_POMODORO_CONFIG };
