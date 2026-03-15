@@ -45,8 +45,10 @@ export function App() {
   });
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
     const stored = localStorage.getItem("v-terminal:sidebar-tab");
-    if (stored === "notes" || stored === "alerts") return stored;
-    return localStorage.getItem("v-terminal:alarm-open") === "true" ? "alerts" : "notes";
+    if (stored === "notes" || stored === "pomodoro" || stored === "timer" || stored === "recurring") return stored;
+    // Migrate legacy "alerts" value
+    if (stored === "alerts") return "pomodoro";
+    return localStorage.getItem("v-terminal:alarm-open") === "true" ? "pomodoro" : "notes";
   });
   const activePanelPtyIdRef = useRef<string | null>(null);
   const panelNavRef = useRef<PanelNavHandle | null>(null);
