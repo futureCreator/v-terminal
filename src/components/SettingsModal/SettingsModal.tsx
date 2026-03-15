@@ -18,6 +18,7 @@ const FONT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "Inconsolata", label: "Inconsolata" },
   { value: "Monaspace Neon", label: "Monaspace Neon" },
   { value: "Sarasa Mono K", label: "Sarasa Mono K" },
+  { value: "Tab0 Mono K", label: "Tab0 Mono K" },
 ];
 
 const CURSOR_OPTIONS: Array<{ value: CursorStyle; label: string }> = [

@@ -3,7 +3,7 @@
 /* Fira Code */
 @font-face {
   font-family: "Fira Code";
-  src: url("../assets/fonts/FiraCode/FiraCode-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/fira-code/FiraCode-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -11,7 +11,7 @@
 
 @font-face {
   font-family: "Fira Code";
-  src: url("../assets/fonts/FiraCode/FiraCode-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/fira-code/FiraCode-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -20,7 +20,7 @@
 /* Cascadia Code */
 @font-face {
   font-family: "Cascadia Code";
-  src: url("../assets/fonts/CascadiaCode/CascadiaCode-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/cascadia-code/CascadiaCode-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -28,7 +28,7 @@
 
 @font-face {
   font-family: "Cascadia Code";
-  src: url("../assets/fonts/CascadiaCode/CascadiaCode-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/cascadia-code/CascadiaCode-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -37,7 +37,7 @@
 /* Source Code Pro */
 @font-face {
   font-family: "Source Code Pro";
-  src: url("../assets/fonts/SourceCodePro/SourceCodePro-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/source-code-pro/SourceCodePro-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -45,7 +45,7 @@
 
 @font-face {
   font-family: "Source Code Pro";
-  src: url("../assets/fonts/SourceCodePro/SourceCodePro-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/source-code-pro/SourceCodePro-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -54,7 +54,7 @@
 /* IBM Plex Mono */
 @font-face {
   font-family: "IBM Plex Mono";
-  src: url("../assets/fonts/IBMPlexMono/IBMPlexMono-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/ibm-plex-mono/IBMPlexMono-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -62,7 +62,7 @@
 
 @font-face {
   font-family: "IBM Plex Mono";
-  src: url("../assets/fonts/IBMPlexMono/IBMPlexMono-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/ibm-plex-mono/IBMPlexMono-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -71,7 +71,7 @@
 /* Hack */
 @font-face {
   font-family: "Hack";
-  src: url("../assets/fonts/Hack/Hack-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/hack/Hack-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -79,7 +79,7 @@
 
 @font-face {
   font-family: "Hack";
-  src: url("../assets/fonts/Hack/Hack-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/hack/Hack-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -88,7 +88,7 @@
 /* Inconsolata */
 @font-face {
   font-family: "Inconsolata";
-  src: url("../assets/fonts/Inconsolata/Inconsolata-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/inconsolata/Inconsolata-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -96,7 +96,7 @@
 
 @font-face {
   font-family: "Inconsolata";
-  src: url("../assets/fonts/Inconsolata/Inconsolata-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/inconsolata/Inconsolata-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -105,7 +105,7 @@
 /* Monaspace Neon */
 @font-face {
   font-family: "Monaspace Neon";
-  src: url("../assets/fonts/MonaspaceNeon/MonaspaceNeon-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/monaspace/MonaspaceNeon-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -113,7 +113,7 @@
 
 @font-face {
   font-family: "Monaspace Neon";
-  src: url("../assets/fonts/MonaspaceNeon/MonaspaceNeon-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/monaspace/MonaspaceNeon-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -122,7 +122,7 @@
 /* Sarasa Mono K */
 @font-face {
   font-family: "Sarasa Mono K";
-  src: url("../assets/fonts/SarasaMonoK/SarasaMonoK-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/sarasa-mono-k/SarasaMonoK-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -130,7 +130,24 @@
 
 @font-face {
   font-family: "Sarasa Mono K";
-  src: url("../assets/fonts/SarasaMonoK/SarasaMonoK-Bold.woff2") format("woff2");
+  src: url("../assets/fonts/sarasa-mono-k/SarasaMonoK-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tab0 Mono K */
+@font-face {
+  font-family: "Tab0 Mono K";
+  src: url("../assets/fonts/tab0-mono-k/Tab0MonoK-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Tab0 Mono K";
+  src: url("../assets/fonts/tab0-mono-k/Tab0MonoK-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
