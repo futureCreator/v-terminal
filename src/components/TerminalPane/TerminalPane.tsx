@@ -7,7 +7,7 @@ import { ipc } from "../../lib/tauriIpc";
 import { ensureFontLoaded } from "../../lib/fontLoader";
 import { useTabStore } from "../../store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "../../store/themeStore";
-import { useTerminalFontStore } from "../../store/terminalFontStore";
+import { useTerminalConfigStore } from "../../store/terminalConfigStore";
 import "@xterm/xterm/css/xterm.css";
 import "./TerminalPane.css";
 
@@ -53,9 +53,19 @@ export function TerminalPane({
   const themeRef = useRef(themeId);
   themeRef.current = themeId;
 
-  const { fontSize } = useTerminalFontStore();
+  const { fontSize, fontFamily, cursorStyle, cursorBlink, lineHeight, scrollback } = useTerminalConfigStore();
   const fontSizeRef = useRef(fontSize);
   fontSizeRef.current = fontSize;
+  const fontFamilyRef = useRef(fontFamily);
+  fontFamilyRef.current = fontFamily;
+  const cursorStyleRef = useRef(cursorStyle);
+  cursorStyleRef.current = cursorStyle;
+  const cursorBlinkRef = useRef(cursorBlink);
+  cursorBlinkRef.current = cursorBlink;
+  const lineHeightRef = useRef(lineHeight);
+  lineHeightRef.current = lineHeight;
+  const scrollbackRef = useRef(scrollback);
+  scrollbackRef.current = scrollback;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -105,15 +115,15 @@ export function TerminalPane({
 
       const xtermTheme = resolveThemeDefinition(themeRef.current).xterm;
       const term = new Terminal({
-        fontFamily: '"JetBrainsMonoNerdFont", "JetBrains Mono", "Nanum Gothic Coding", monospace',
+        fontFamily: `"${fontFamilyRef.current}", "JetBrains Mono", "Nanum Gothic Coding", monospace`,
         fontSize: fontSizeRef.current,
-        lineHeight: 1.2,
+        lineHeight: lineHeightRef.current,
         theme: xtermTheme,
         allowTransparency: false,
         fastScrollModifier: "alt",
-        scrollback: 5000,
-        cursorBlink: true,
-        cursorStyle: "block",
+        scrollback: scrollbackRef.current,
+        cursorBlink: cursorBlinkRef.current,
+        cursorStyle: cursorStyleRef.current,
         convertEol: false,
       });
 
@@ -352,6 +362,89 @@ export function TerminalPane({
       }
     } catch {}
   }, [fontSize]);
+
+  // Apply font family changes with scroll-position preservation
+  useEffect(() => {
+    const term = termRef.current;
+    const fitAddon = fitAddonRef.current;
+    if (!term || !fitAddon) return;
+
+    term.options.fontFamily = `"${fontFamily}", "JetBrains Mono", "Nanum Gothic Coding", monospace`;
+    try {
+      const buffer = term.buffer.active;
+      const savedViewportY = buffer.viewportY;
+      const isAtBottom = savedViewportY >= buffer.length - term.rows;
+
+      fitAddon.fit();
+
+      const restore = () => {
+        if (isAtBottom) {
+          term.scrollToBottom();
+        } else {
+          term.scrollToLine(savedViewportY);
+        }
+      };
+      restore();
+      requestAnimationFrame(restore);
+
+      const ptyId = ptyIdRef.current;
+      if (ptyId) {
+        ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
+      }
+    } catch {}
+  }, [fontFamily]);
+
+  // Apply line height changes with scroll-position preservation
+  useEffect(() => {
+    const term = termRef.current;
+    const fitAddon = fitAddonRef.current;
+    if (!term || !fitAddon) return;
+
+    term.options.lineHeight = lineHeight;
+    try {
+      const buffer = term.buffer.active;
+      const savedViewportY = buffer.viewportY;
+      const isAtBottom = savedViewportY >= buffer.length - term.rows;
+
+      fitAddon.fit();
+
+      const restore = () => {
+        if (isAtBottom) {
+          term.scrollToBottom();
+        } else {
+          term.scrollToLine(savedViewportY);
+        }
+      };
+      restore();
+      requestAnimationFrame(restore);
+
+      const ptyId = ptyIdRef.current;
+      if (ptyId) {
+        ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
+      }
+    } catch {}
+  }, [lineHeight]);
+
+  // Apply cursor style changes
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term) return;
+    term.options.cursorStyle = cursorStyle;
+  }, [cursorStyle]);
+
+  // Apply cursor blink changes
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term) return;
+    term.options.cursorBlink = cursorBlink;
+  }, [cursorBlink]);
+
+  // Apply scrollback changes
+  useEffect(() => {
+    const term = termRef.current;
+    if (!term) return;
+    term.options.scrollback = scrollback;
+  }, [scrollback]);
 
   return (
     <div

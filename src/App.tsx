@@ -8,6 +8,7 @@ import { PanelGrid } from "./components/PanelGrid/PanelGrid";
 import { SessionPicker } from "./components/SessionPicker/SessionPicker";
 import type { SessionPickResult } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
+import { SettingsModal } from "./components/SettingsModal/SettingsModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
@@ -17,7 +18,7 @@ import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
-import { useTerminalFontStore } from "./store/terminalFontStore";
+import { useTerminalConfigStore } from "./store/terminalConfigStore";
 import { useSshStore } from "./store/sshStore";
 import { buildSshCommand } from "./lib/sshUtils";
 import { ipc } from "./lib/tauriIpc";
@@ -31,7 +32,7 @@ export function App() {
   const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
     useTabStore();
   const { themeId } = useThemeStore();
-  const { increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useTerminalFontStore();
+  const { increaseFontSize: fontIncrease, decreaseFontSize: fontDecrease, resetFontSize: fontReset } = useTerminalConfigStore();
   const { profiles: sshProfiles } = useSshStore();
 
   const activeTab = useMemo(
@@ -40,6 +41,7 @@ export function App() {
   );
 
   const [sshModalOpen, setSshModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const stored = localStorage.getItem("v-terminal:sidebar-open");
@@ -333,6 +335,20 @@ export function App() {
           </span>
         ),
         action: () => setSshModalOpen(true),
+      },
+      {
+        id: "settings",
+        label: "Settings",
+        description: "Configure appearance, terminal, and font settings",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M3.05 3.05l1.06 1.06M9.89 9.89l1.06 1.06M10.95 3.05l-1.06 1.06M4.11 9.89l-1.06 1.06" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        action: () => setSettingsModalOpen(true),
       },
       ...(activeTab && activeTab.panels.length > 1 ? [
         {
@@ -664,6 +680,7 @@ export function App() {
           onToggleToolkit={handleToggleToolkit}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenSshManager={() => setSshModalOpen(true)}
+          onOpenSettings={() => setSettingsModalOpen(true)}
           onAddTab={handleNewTab}
         />
       </div>
@@ -704,6 +721,12 @@ export function App() {
       {sshModalOpen && (
         <SshManagerModal
           onClose={() => setSshModalOpen(false)}
+        />
+      )}
+      {settingsModalOpen && (
+        <SettingsModal
+          isOpen={settingsModalOpen}
+          onClose={() => setSettingsModalOpen(false)}
         />
       )}
       <DaemonStatusBanner />
