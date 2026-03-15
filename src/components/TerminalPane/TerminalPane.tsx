@@ -384,6 +384,12 @@ export function TerminalPane({
       disposed = true;
       unlistenData?.();
       unlistenExit?.();
+      disposeBufferChange?.dispose();
+      disposeBufferChange = null;
+      if (compositionTimeout) {
+        clearTimeout(compositionTimeout);
+        compositionTimeout = null;
+      }
       observerRef.current?.disconnect();
       observerRef.current = null;
       const ptyId = ptyIdRef.current;
