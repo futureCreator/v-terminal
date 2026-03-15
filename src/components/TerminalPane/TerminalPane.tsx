@@ -109,10 +109,6 @@ export function TerminalPane({
     let disposed = false;
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
-    let disposeBufferChange: { dispose(): void } | null = null;
-    let scrollDisposable: { dispose(): void } | null = null;
-    let writeDisposable: { dispose(): void } | null = null;
-    let compositionTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const init = async () => {
       await ensureFontLoaded();
@@ -124,7 +120,6 @@ export function TerminalPane({
         lineHeight: lineHeightRef.current,
         theme: xtermTheme,
         allowTransparency: false,
-        fastScrollModifier: "alt",
         scrollback: scrollbackRef.current,
         cursorBlink: cursorBlinkRef.current,
         cursorStyle: cursorStyleRef.current,
@@ -172,42 +167,6 @@ export function TerminalPane({
         return;
       }
 
-      // IME composition state — prevents custom key handler from interfering with Korean/CJK input
-      let isComposing = false;
-
-      // Normal buffer scroll position — tracked independently so it survives alternate buffer sessions
-      let savedNormalViewportY = term.buffer.normal.viewportY;
-
-      // Buffer change listener — handles scroll restoration and IME reset on alternate ↔ normal transitions
-      disposeBufferChange = term.buffer.onBufferChange((newBuffer) => {
-        if (disposed) return;
-
-        // IME reset: any in-progress composition is invalid after a buffer switch
-        isComposing = false;
-        if (compositionTimeout) {
-          clearTimeout(compositionTimeout);
-          compositionTimeout = null;
-        }
-        if (writeBuffer.length > 0) flushWriteBuffer();
-
-        // Scroll restoration: when returning to normal buffer, restore saved viewport position
-        if (newBuffer.type === "normal") {
-          const maxScroll = Math.max(0, term.buffer.normal.length - term.rows);
-          const clamped = Math.min(savedNormalViewportY, maxScroll);
-          term.scrollToLine(clamped);
-          requestAnimationFrame(() => {
-            if (!disposed) {
-              const maxScroll = Math.max(0, term.buffer.normal.length - term.rows);
-              const clamped = Math.min(savedNormalViewportY, maxScroll);
-              term.scrollToLine(clamped);
-            }
-          });
-        } else {
-          // Switching TO alternate buffer — snapshot normal buffer position before it's hidden
-          savedNormalViewportY = term.buffer.normal.viewportY;
-        }
-      });
-
       if (disposed) {
         await ipc.daemonDetach(ptyId).catch(() => {});
         term.dispose();
@@ -224,39 +183,9 @@ export function TerminalPane({
         ipc.daemonWrite(ptyId, encoder.encode(sshCommand + "\r")).catch(() => {});
       }
 
-      // Write buffer: during IME composition, terminal output is buffered to prevent
-      // xterm.js textarea re-renders from interrupting the composition. Flushed when
-      // composition ends or isComposing is reset.
-      const writeBuffer: (Uint8Array | string)[] = [];
-      const flushWriteBuffer = () => {
-        const buffered = writeBuffer.splice(0);
-        for (const data of buffered) {
-          term.write(data);
-        }
-      };
-
-      // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
+      // Clipboard and reserved key handling
       term.attachCustomKeyEventHandler((e) => {
-        // Non-keydown events (keyup, keypress) → always pass through
         if (e.type !== "keydown") return true;
-
-        // Stuck state recovery: if our local flag says composing but the browser
-        // says otherwise, trust the browser and reset. This self-heals corruption
-        // caused by missed compositionend events during rapid terminal output.
-        if (isComposing && !e.isComposing) {
-          isComposing = false;
-          if (compositionTimeout) {
-            clearTimeout(compositionTimeout);
-            compositionTimeout = null;
-          }
-        }
-
-        // During IME composition, block keydown from reaching xterm's PTY path.
-        // e.isComposing is the native browser flag; isComposing is our manual
-        // fallback for browsers/IMEs that fire compositionstart asynchronously.
-        // xterm.js will still deliver the final composed text via onData through
-        // its own compositionend handler, so nothing is lost.
-        if (e.isComposing || isComposing) return false;
 
         if (e.ctrlKey && e.key === "c") {
           const selection = term.getSelection();
@@ -268,12 +197,10 @@ export function TerminalPane({
         }
 
         if ((e.metaKey || e.ctrlKey) && e.key === "v") {
-          // Block xterm's keydown to prevent double paste; the browser's paste event handles it.
           return false;
         }
 
         if (e.ctrlKey && e.key === "k") {
-          // Reserved for command palette
           return false;
         }
 
@@ -298,54 +225,13 @@ export function TerminalPane({
         }
       });
 
-      // Focus and IME tracking
+      // Focus tracking
       term.textarea?.addEventListener("focus", () => onFocus());
-      term.textarea?.addEventListener("blur", () => {
-        isComposing = false;
-        if (compositionTimeout) {
-          clearTimeout(compositionTimeout);
-          compositionTimeout = null;
-        }
-        if (writeBuffer.length > 0) flushWriteBuffer();
-      });
-      term.textarea?.addEventListener("compositionstart", () => {
-        isComposing = true;
-        // Safety net: if compositionend never fires (e.g. interrupted by rapid terminal output),
-        // force-clear after 10 seconds. Normal Korean input completes within seconds.
-        if (compositionTimeout) clearTimeout(compositionTimeout);
-        compositionTimeout = setTimeout(() => {
-          compositionTimeout = null;
-          isComposing = false;
-          if (writeBuffer.length > 0) flushWriteBuffer();
-        }, 10_000);
-      });
-      term.textarea?.addEventListener("compositionend", () => {
-        if (compositionTimeout) {
-          clearTimeout(compositionTimeout);
-          compositionTimeout = null;
-        }
-        // Delay clearing the flag so that the keydown event fired in the same
-        // tick right after compositionend is still blocked by the custom key
-        // handler.  Without this, the final keystroke (e.g. Enter/Space that
-        // commits the composed text) can leak through and send a duplicate
-        // character — especially on Windows IME.
-        requestAnimationFrame(() => {
-          isComposing = false;
-          if (writeBuffer.length > 0) flushWriteBuffer();
-        });
-      });
 
-      // Output: PTY → terminal (per-pty handler, no cross-panel filtering needed)
-      // During IME composition, writes are buffered to prevent textarea re-renders
-      // from interrupting the composition (which causes Korean character drops).
+      // Output: PTY → terminal
       unlistenData = await ipc.onPtyData(ptyId, (data) => {
         if (disposed) return;
-        if (isComposing) {
-          writeBuffer.push(data);
-        } else {
-          if (writeBuffer.length > 0) flushWriteBuffer();
-          term.write(data);
-        }
+        term.write(data);
       });
 
       unlistenExit = await ipc.onPtyExit(ptyId, () => {
@@ -355,33 +241,7 @@ export function TerminalPane({
         }
       });
 
-      // Continuously track normal buffer scroll position via onScroll event.
-      // This is critical because when the container resizes (e.g. toolkit panel opens),
-      // the browser reflows the DOM and resets xterm's internal viewport scroll position
-      // BEFORE the ResizeObserver fires. By tracking continuously, we always have the
-      // correct pre-resize position.
-      let lastNormalViewportY = term.buffer.normal.viewportY;
-      let lastNormalIsAtBottom = true;
-      scrollDisposable = term.onScroll(() => {
-        if (term.buffer.active.type === "normal") {
-          const buffer = term.buffer.active;
-          lastNormalViewportY = buffer.viewportY;
-          lastNormalIsAtBottom = lastNormalViewportY >= buffer.length - term.rows;
-          savedNormalViewportY = lastNormalViewportY;
-        }
-      });
-
-      // Also track on every write (output can change isAtBottom without a scroll event)
-      writeDisposable = term.onWriteParsed(() => {
-        if (term.buffer.active.type === "normal") {
-          const buffer = term.buffer.active;
-          lastNormalIsAtBottom = buffer.viewportY >= buffer.length - term.rows;
-          lastNormalViewportY = buffer.viewportY;
-          savedNormalViewportY = lastNormalViewportY;
-        }
-      });
-
-      // Resize observer with debounce and scroll-position preservation
+      // Resize observer with debounce
       if (containerRef.current) {
         let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
         const observer = new ResizeObserver(() => {
@@ -392,24 +252,7 @@ export function TerminalPane({
             resizeTimeout = null;
             if (disposed || !fitAddonRef.current || !termRef.current) return;
             try {
-              const isAlternate = term.buffer.active.type === "alternate";
-
               fitAddon.fit();
-
-              // Only restore scroll position in normal buffer mode.
-              // In alternate buffer, TUI apps handle their own redraw via SIGWINCH.
-              if (!isAlternate) {
-                const restore = () => {
-                  if (lastNormalIsAtBottom) {
-                    term.scrollToBottom();
-                  } else {
-                    term.scrollToLine(lastNormalViewportY);
-                  }
-                };
-                restore();
-                requestAnimationFrame(restore);
-              }
-
               ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
             } catch {}
           }, 50);
@@ -425,14 +268,6 @@ export function TerminalPane({
       disposed = true;
       unlistenData?.();
       unlistenExit?.();
-      disposeBufferChange?.dispose();
-      disposeBufferChange = null;
-      scrollDisposable?.dispose();
-      writeDisposable?.dispose();
-      if (compositionTimeout) {
-        clearTimeout(compositionTimeout);
-        compositionTimeout = null;
-      }
       observerRef.current?.disconnect();
       observerRef.current = null;
       const ptyId = ptyIdRef.current;
@@ -455,116 +290,23 @@ export function TerminalPane({
     }
   }, [isActive]);
 
-  // Apply font size changes with scroll-position preservation
+  // Apply font/layout changes — re-fit terminal and notify PTY of new dimensions
   useEffect(() => {
     const term = termRef.current;
     const fitAddon = fitAddonRef.current;
     if (!term || !fitAddon) return;
 
     term.options.fontSize = fontSize;
-    try {
-      const isAlternate = term.buffer.active.type === "alternate";
-
-      if (!isAlternate) {
-        const buffer = term.buffer.active;
-        const savedViewportY = buffer.viewportY;
-        const isAtBottom = savedViewportY >= buffer.length - term.rows;
-
-        fitAddon.fit();
-
-        const restore = () => {
-          if (isAtBottom) {
-            term.scrollToBottom();
-          } else {
-            term.scrollToLine(savedViewportY);
-          }
-        };
-        restore();
-        requestAnimationFrame(restore);
-      } else {
-        fitAddon.fit();
-      }
-
-      const ptyId = ptyIdRef.current;
-      if (ptyId) {
-        ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
-      }
-    } catch {}
-  }, [fontSize]);
-
-  // Apply font family changes with scroll-position preservation
-  useEffect(() => {
-    const term = termRef.current;
-    const fitAddon = fitAddonRef.current;
-    if (!term || !fitAddon) return;
-
     term.options.fontFamily = `"${fontFamily}", "JetBrains Mono", "Nanum Gothic Coding", monospace`;
-    try {
-      const isAlternate = term.buffer.active.type === "alternate";
-
-      if (!isAlternate) {
-        const buffer = term.buffer.active;
-        const savedViewportY = buffer.viewportY;
-        const isAtBottom = savedViewportY >= buffer.length - term.rows;
-
-        fitAddon.fit();
-
-        const restore = () => {
-          if (isAtBottom) {
-            term.scrollToBottom();
-          } else {
-            term.scrollToLine(savedViewportY);
-          }
-        };
-        restore();
-        requestAnimationFrame(restore);
-      } else {
-        fitAddon.fit();
-      }
-
-      const ptyId = ptyIdRef.current;
-      if (ptyId) {
-        ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
-      }
-    } catch {}
-  }, [fontFamily]);
-
-  // Apply line height changes with scroll-position preservation
-  useEffect(() => {
-    const term = termRef.current;
-    const fitAddon = fitAddonRef.current;
-    if (!term || !fitAddon) return;
-
     term.options.lineHeight = lineHeight;
     try {
-      const isAlternate = term.buffer.active.type === "alternate";
-
-      if (!isAlternate) {
-        const buffer = term.buffer.active;
-        const savedViewportY = buffer.viewportY;
-        const isAtBottom = savedViewportY >= buffer.length - term.rows;
-
-        fitAddon.fit();
-
-        const restore = () => {
-          if (isAtBottom) {
-            term.scrollToBottom();
-          } else {
-            term.scrollToLine(savedViewportY);
-          }
-        };
-        restore();
-        requestAnimationFrame(restore);
-      } else {
-        fitAddon.fit();
-      }
-
+      fitAddon.fit();
       const ptyId = ptyIdRef.current;
       if (ptyId) {
         ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
       }
     } catch {}
-  }, [lineHeight]);
+  }, [fontSize, fontFamily, lineHeight]);
 
   // Apply cursor style changes
   useEffect(() => {
