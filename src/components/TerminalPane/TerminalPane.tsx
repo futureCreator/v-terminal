@@ -225,6 +225,18 @@ export function TerminalPane({
       term.attachCustomKeyEventHandler((e) => {
         // Non-keydown events (keyup, keypress) → always pass through
         if (e.type !== "keydown") return true;
+
+        // Stuck state recovery: if our local flag says composing but the browser
+        // says otherwise, trust the browser and reset. This self-heals corruption
+        // caused by missed compositionend events during rapid terminal output.
+        if (isComposing && !e.isComposing) {
+          isComposing = false;
+          if (compositionTimeout) {
+            clearTimeout(compositionTimeout);
+            compositionTimeout = null;
+          }
+        }
+
         // During IME composition, block keydown from reaching xterm's PTY path.
         // e.isComposing is the native browser flag; isComposing is our manual
         // fallback for browsers/IMEs that fire compositionstart asynchronously.
@@ -274,9 +286,28 @@ export function TerminalPane({
 
       // Focus and IME tracking
       term.textarea?.addEventListener("focus", () => onFocus());
-      term.textarea?.addEventListener("blur", () => { isComposing = false; });
-      term.textarea?.addEventListener("compositionstart", () => { isComposing = true; });
+      term.textarea?.addEventListener("blur", () => {
+        isComposing = false;
+        if (compositionTimeout) {
+          clearTimeout(compositionTimeout);
+          compositionTimeout = null;
+        }
+      });
+      term.textarea?.addEventListener("compositionstart", () => {
+        isComposing = true;
+        // Safety net: if compositionend never fires (e.g. interrupted by rapid terminal output),
+        // force-clear after 10 seconds. Normal Korean input completes within seconds.
+        if (compositionTimeout) clearTimeout(compositionTimeout);
+        compositionTimeout = setTimeout(() => {
+          compositionTimeout = null;
+          isComposing = false;
+        }, 10_000);
+      });
       term.textarea?.addEventListener("compositionend", () => {
+        if (compositionTimeout) {
+          clearTimeout(compositionTimeout);
+          compositionTimeout = null;
+        }
         // Delay clearing the flag so that the keydown event fired in the same
         // tick right after compositionend is still blocked by the custom key
         // handler.  Without this, the final keystroke (e.g. Enter/Space that
