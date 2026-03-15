@@ -110,6 +110,8 @@ export function TerminalPane({
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
     let disposeBufferChange: { dispose(): void } | null = null;
+    let scrollDisposable: { dispose(): void } | null = null;
+    let writeDisposable: { dispose(): void } | null = null;
     let compositionTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const init = async () => {
@@ -328,41 +330,55 @@ export function TerminalPane({
         }
       });
 
+      // Continuously track normal buffer scroll position via onScroll event.
+      // This is critical because when the container resizes (e.g. toolkit panel opens),
+      // the browser reflows the DOM and resets xterm's internal viewport scroll position
+      // BEFORE the ResizeObserver fires. By tracking continuously, we always have the
+      // correct pre-resize position.
+      let lastNormalViewportY = term.buffer.normal.viewportY;
+      let lastNormalIsAtBottom = true;
+      scrollDisposable = term.onScroll(() => {
+        if (term.buffer.active.type === "normal") {
+          const buffer = term.buffer.active;
+          lastNormalViewportY = buffer.viewportY;
+          lastNormalIsAtBottom = lastNormalViewportY >= buffer.length - term.rows;
+          savedNormalViewportY = lastNormalViewportY;
+        }
+      });
+
+      // Also track on every write (output can change isAtBottom without a scroll event)
+      writeDisposable = term.onWriteParsed(() => {
+        if (term.buffer.active.type === "normal") {
+          const buffer = term.buffer.active;
+          lastNormalIsAtBottom = buffer.viewportY >= buffer.length - term.rows;
+          lastNormalViewportY = buffer.viewportY;
+          savedNormalViewportY = lastNormalViewportY;
+        }
+      });
+
       // Resize observer with debounce and scroll-position preservation
       if (containerRef.current) {
         let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-        let savedViewportY = 0;
-        let savedIsAtBottom = true;
         const observer = new ResizeObserver(() => {
           if (disposed || !fitAddonRef.current || !termRef.current) return;
-
-          const isAlternate = term.buffer.active.type === "alternate";
-
-          // In normal buffer: capture viewport position at the first event in each debounce window,
-          // before xterm has a chance to internally reset it during reflow
-          if (!resizeTimeout && !isAlternate) {
-            const buffer = term.buffer.active;
-            savedViewportY = buffer.viewportY;
-            savedIsAtBottom = savedViewportY >= buffer.length - term.rows;
-            // Also update the persistent normal buffer tracker
-            savedNormalViewportY = buffer.viewportY;
-          }
 
           if (resizeTimeout) clearTimeout(resizeTimeout);
           resizeTimeout = setTimeout(() => {
             resizeTimeout = null;
             if (disposed || !fitAddonRef.current || !termRef.current) return;
             try {
+              const isAlternate = term.buffer.active.type === "alternate";
+
               fitAddon.fit();
 
               // Only restore scroll position in normal buffer mode.
               // In alternate buffer, TUI apps handle their own redraw via SIGWINCH.
               if (!isAlternate) {
                 const restore = () => {
-                  if (savedIsAtBottom) {
+                  if (lastNormalIsAtBottom) {
                     term.scrollToBottom();
                   } else {
-                    term.scrollToLine(savedViewportY);
+                    term.scrollToLine(lastNormalViewportY);
                   }
                 };
                 restore();
@@ -386,6 +402,8 @@ export function TerminalPane({
       unlistenExit?.();
       disposeBufferChange?.dispose();
       disposeBufferChange = null;
+      scrollDisposable?.dispose();
+      writeDisposable?.dispose();
       if (compositionTimeout) {
         clearTimeout(compositionTimeout);
         compositionTimeout = null;
