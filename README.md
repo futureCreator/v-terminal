@@ -90,6 +90,28 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.1.18 - 2026-03-16
+
+- **feat**: Settings modal with Appearance and Terminal configuration tabs
+- **feat**: Bundled terminal font selector (Cascadia Code, Fira Code, Hack, IBM Plex Mono, Inconsolata, Monaspace Neon, Sarasa Mono K, Source Code Pro, Tab0 Mono K)
+- **feat**: Terminal font size adjustment support
+- **feat**: Alarm system — Pomodoro timer, countdown timer, and recurring alarms with notifications
+- **feat**: Toolkit side panel — Notes and Timers merged into unified tabbed panel
+- **feat**: Markdown note editor with CodeMirror 6 and per-tab todo lists
+- **feat**: Session picker — per-panel layout selection and connection settings
+- **feat**: Command palette `@` prefix for direct SSH profile connection
+- **feat**: Pomodoro redesign with 4x3 preset grid and stepper controls
+- **refactor**: xterm.js upgraded to 6.0.0 with scroll/IME workaround cleanup
+- **refactor**: Sidebar consolidated into single Toolkit panel (Ctrl+Shift+N)
+- **refactor**: SSH manager refactored to profile-only management with integrated connection workflow
+- **refactor**: Command palette UX overhaul with prefix hints and keyboard navigation fixes
+- **fix**: Font fallback changed to JetBrainsMonoNerdFont
+- **fix**: IME composition output buffering to prevent character drops
+- **fix**: IME stuck-state recovery and composition timeout safety net
+- **fix**: Alternate buffer scroll restoration skipped correctly during resize and font changes
+- **fix**: Terminal scroll jump to top issue resolved
+- **fix**: Focus loss causing IME composing flag to stick, blocking Korean input
+
 ### v0.1.17 - 2026-03-14
 
 - **feat**: Global note panel with command palette toggle
