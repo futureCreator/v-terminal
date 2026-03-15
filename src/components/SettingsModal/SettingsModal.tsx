@@ -202,7 +202,7 @@ function AppearanceTab({
 
         {/* Font Preview */}
         <div className="settings-font-preview">
-          <code style={{ fontFamily: `"${fontFamily}", "JetBrains Mono", monospace` }}>
+          <code style={{ fontFamily: `"${fontFamily}", "JetBrainsMonoNerdFont", monospace` }}>
             <span className="settings-preview-keyword">const </span>
             <span className="settings-preview-fn">greet</span>
             <span className="settings-preview-text"> = (</span>
