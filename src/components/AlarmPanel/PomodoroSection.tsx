@@ -127,9 +127,6 @@ export function PomodoroSection() {
       {/* Settings (stepper) */}
       {showSettings && (
           <div className={`pomodoro-settings${phase !== "idle" ? " pomodoro-settings--disabled" : ""}`}>
-              {phase !== "idle" && (
-                  <span className="pomodoro-settings-hint">Reset to edit</span>
-              )}
               <div className="pomodoro-stepper-row">
                   <span className="pomodoro-stepper-label">Focus</span>
                   <div className="pomodoro-stepper">
