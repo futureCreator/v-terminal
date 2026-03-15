@@ -95,25 +95,6 @@ function highlightText(text: string, indices: number[]): React.ReactNode {
   return <>{parts}</>;
 }
 
-/* ── Recent commands ────────────────────────────────────────────── */
-
-const RECENT_KEY = "v-terminal:cp-recent";
-const MAX_RECENT = 8;
-
-function getRecent(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function pushRecent(id: string) {
-  const list = getRecent().filter((x) => x !== id);
-  list.unshift(id);
-  localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT)));
-}
-
 /* ── Prefix mode ────────────────────────────────────────────────── */
 
 type PrefixMode = "all" | "tabs" | "ssh";
@@ -195,16 +176,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     return map;
   }, [filtered, q]);
 
-  /* ── Recent commands ────────────────────────────────────── */
-  const recentIds = useMemo(() => getRecent(), [visible]); // refresh when palette opens
-
-  const recentCommands = useMemo(() => {
-    if (q || mode !== "all") return [];
-    return recentIds
-      .map((id) => commands.find((c) => c.id === id))
-      .filter((c): c is Command => c !== undefined);
-  }, [recentIds, commands, q, mode]);
-
   /* ── Open / close animation ─────────────────────────────── */
   useEffect(() => {
     if (isOpen) {
@@ -235,7 +206,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
   }, [visible, isOpen]);
 
   // Clamp activeIndex
-  const totalCount = recentCommands.length + filtered.length;
+  const totalCount = filtered.length;
   useEffect(() => {
     setActiveIndex((i) => Math.min(i, Math.max(totalCount - 1, 0)));
   }, [totalCount]);
@@ -248,7 +219,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
 
   /* ── Execute ────────────────────────────────────────────── */
   const execute = useCallback(async (cmd: Command) => {
-    pushRecent(cmd.id);
     await cmd.action();
     onClose();
   }, [onClose]);
@@ -314,12 +284,12 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     // Find boundaries of each category
     const catStarts: number[] = [];
     let lastCat = "";
-    allItems.forEach((item, i) => {
-      if (item.category !== lastCat) {
+    for (let i = 0; i < allItems.length; i++) {
+      if (allItems[i].category !== lastCat) {
         catStarts.push(i);
-        lastCat = item.category;
+        lastCat = allItems[i].category;
       }
-    });
+    }
 
     const currentCatIdx = catStarts.findIndex((start, i) => {
       const nextStart = catStarts[i + 1] ?? allItems.length;
@@ -333,16 +303,12 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
   };
 
   /* ── Helpers to resolve flat index ──────────────────────── */
-  const buildFlatList = (): (Command & { _source: "recent" | "main" })[] => {
-    const list: (Command & { _source: "recent" | "main" })[] = [];
-    for (const cmd of recentCommands) list.push({ ...cmd, _source: "recent" });
-    for (const cmd of filtered) list.push({ ...cmd, _source: "main" });
-    return list;
+  const buildFlatList = (): Command[] => {
+    return [...filtered];
   };
 
   const resolveCommandAtIndex = (idx: number): Command | undefined => {
-    if (idx < recentCommands.length) return recentCommands[idx];
-    return filtered[idx - recentCommands.length];
+    return filtered[idx];
   };
 
   /* ── Render ─────────────────────────────────────────────── */
@@ -378,7 +344,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
 
   // Grouped view: no search query
   const renderGrouped = () => {
-    let globalIndex = recentCommands.length; // offset past recent items
+    let globalIndex = 0;
 
     const categoryOrder: string[] = [];
     const categoryMap = new Map<string, { sectionOrder: (string | null)[]; sectionMap: Map<string | null, Command[]> }>();
@@ -404,7 +370,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     return categoryOrder.map((catLabel, catIdx) => {
       const { sectionOrder, sectionMap } = categoryMap.get(catLabel)!;
       return (
-        <div key={catLabel} className={`cp-category${catIdx > 0 || recentCommands.length > 0 ? " cp-category--divided" : ""}`}>
+        <div key={catLabel} className={`cp-category${catIdx > 0 ? " cp-category--divided" : ""}`}>
           <div className="cp-category-label">{catLabel}</div>
           {sectionOrder.map((secLabel) => {
             const cmds = sectionMap.get(secLabel)!;
@@ -422,19 +388,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
         </div>
       );
     });
-  };
-
-  // Recent section
-  const renderRecent = () => {
-    if (recentCommands.length === 0) return null;
-    return (
-      <div className="cp-category">
-        <div className="cp-category-label">Recent</div>
-        <div className="cp-section">
-          {recentCommands.map((cmd, i) => renderItem(cmd, i))}
-        </div>
-      </div>
-    );
   };
 
   // Flat filtered view
@@ -509,10 +462,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
           ) : q ? (
             renderFiltered()
           ) : (
-            <>
-              {renderRecent()}
-              {renderGrouped()}
-            </>
+            renderGrouped()
           )}
         </div>
 
