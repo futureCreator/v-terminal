@@ -64,6 +64,7 @@ export function App() {
   const sidebarOpenRef = useRef(sidebarOpen);
   useEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
 
+
   const handleToggleToolkit = useCallback(() => {
     const next = !sidebarOpen;
     setSidebarOpen(next);
@@ -87,6 +88,11 @@ export function App() {
         e.preventDefault();
         e.stopPropagation();
         setPaletteOpen((open) => !open);
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === "T") {
+        e.preventDefault();
+        e.stopPropagation();
+        handleNewTabRef.current();
       }
       if (e.ctrlKey && e.shiftKey && e.key === "N") {
         e.preventDefault();
@@ -154,6 +160,9 @@ export function App() {
     try { cwd = await homeDir(); } catch { cwd = "~"; }
     addTab(cwd);
   }, [addTab]);
+
+  const handleNewTabRef = useRef(handleNewTab);
+  useEffect(() => { handleNewTabRef.current = handleNewTab; }, [handleNewTab]);
 
   const handleLayoutChange = useCallback((layout: Layout) => {
     if (!activeTab) return;
@@ -236,7 +245,7 @@ export function App() {
         id: "tab:new",
         label: "New Tab",
         description: "Open a new terminal tab",
-        meta: "Ctrl+T",
+        meta: "Ctrl+Shift+T",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
