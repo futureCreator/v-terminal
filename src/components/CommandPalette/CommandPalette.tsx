@@ -116,12 +116,15 @@ function pushRecent(id: string) {
 
 /* ── Prefix mode ────────────────────────────────────────────────── */
 
-type PrefixMode = "all" | "tabs";
+type PrefixMode = "all" | "tabs" | "ssh";
 
 function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
   const trimmed = raw.trimStart();
   if (trimmed.startsWith(">")) {
     return { mode: "tabs", query: trimmed.slice(1).trimStart() };
+  }
+  if (trimmed.startsWith("@")) {
+    return { mode: "ssh", query: trimmed.slice(1).trimStart() };
   }
   return { mode: "all", query: trimmed };
 }
@@ -166,6 +169,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     // Prefix mode filter
     if (mode === "tabs") {
       pool = pool.filter((c) => c.category === "Tab List");
+    } else if (mode === "ssh") {
+      pool = pool.filter((c) => c.category === "SSH Profiles");
     }
 
     if (!q) return pool;
@@ -464,7 +469,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
   };
 
   // Mode indicator for prefix
-  const modeLabel = mode === "tabs" ? "Tabs" : null;
+  const modeLabel = mode === "tabs" ? "Tabs" : mode === "ssh" ? "SSH" : null;
 
   return createPortal(
     <div
@@ -487,7 +492,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder={mode === "tabs" ? "Switch to tab..." : "Search commands..."}
+            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "ssh" ? "Connect to server..." : "Search commands..."}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
             onKeyDown={handleKeyDown}

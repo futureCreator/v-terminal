@@ -18,6 +18,8 @@ import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useTerminalFontStore } from "./store/terminalFontStore";
+import { useSshStore } from "./store/sshStore";
+import { buildSshCommand } from "./lib/sshUtils";
 import { ipc } from "./lib/tauriIpc";
 import { terminalRegistry } from "./components/TerminalPane/TerminalPane";
 import type { Layout } from "./types/terminal";
@@ -30,6 +32,7 @@ export function App() {
     useTabStore();
   const { themeId } = useThemeStore();
   const { fontSize: terminalFontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useTerminalFontStore();
+  const { profiles: sshProfiles } = useSshStore();
 
   const activeTab = useMemo(
     () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
@@ -562,6 +565,39 @@ export function App() {
     };
   }, [savedTabs, restoreSavedTab]);
 
+  const sshProfilesPaletteSection = useMemo<PaletteSection | null>(() => {
+    if (sshProfiles.length === 0) return null;
+
+    return {
+      category: "SSH Profiles",
+      commands: sshProfiles.map((profile) => ({
+        id: `ssh:connect:${profile.id}`,
+        label: profile.name,
+        description: `Connect to ${profile.username}@${profile.host}${profile.port !== 22 ? `:${profile.port}` : ""}`,
+        meta: `${profile.username}@${profile.host}`,
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M1 5.5h12" stroke="currentColor" strokeWidth="1.3" />
+              <circle cx="3" cy="4.25" r="0.6" fill="currentColor" />
+              <circle cx="5" cy="4.25" r="0.6" fill="currentColor" />
+              <path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        action: async () => {
+          let cwd: string;
+          try { cwd = await homeDir(); } catch { cwd = "~"; }
+          const tabId = addTab(cwd, profile.name);
+          const sshCmd = buildSshCommand(profile);
+          resolveSessionPick(tabId, 1, [{ type: "ssh", sshCommand: sshCmd }]);
+        },
+      })),
+    };
+  }, [sshProfiles, addTab, resolveSessionPick]);
+
   // 앱 종료 시 열려있는 탭을 모두 백그라운드로 저장
   useEffect(() => {
     let cancelled = false;
@@ -683,6 +719,7 @@ export function App() {
         extraSections={[
           tabPaletteSection,
           tabListPaletteSection,
+          ...(sshProfilesPaletteSection ? [sshProfilesPaletteSection] : []),
           ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
         ]}
