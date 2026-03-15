@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { Layout } from "../../types/terminal";
-import type { SidebarTab } from "../SidePanel/SidePanel";
 import { useThemeStore } from "../../store/themeStore";
 import { useTerminalFontStore, MIN_SIZE, MAX_SIZE, DEFAULT_SIZE } from "../../store/terminalFontStore";
 import { THEME_GROUPS } from "../../themes/definitions";
@@ -104,10 +103,9 @@ interface SplitToolbarProps {
   activeLayout: Layout;
   broadcastEnabled: boolean;
   sidebarOpen: boolean;
-  sidebarTab: SidebarTab;
   onLayoutChange: (layout: Layout) => void;
   onToggleBroadcast: () => void;
-  onToggleSidebar: (tab: SidebarTab) => void;
+  onToggleToolkit: () => void;
   onOpenPalette: () => void;
   onOpenSshManager: () => void;
   onAddTab: () => void;
@@ -117,10 +115,9 @@ export function SplitToolbar({
   activeLayout,
   broadcastEnabled,
   sidebarOpen,
-  sidebarTab,
   onLayoutChange,
   onToggleBroadcast,
-  onToggleSidebar,
+  onToggleToolkit,
   onOpenPalette,
   onOpenSshManager,
   onAddTab,
@@ -277,31 +274,20 @@ export function SplitToolbar({
                     <span className="more-menu-item-label">SSH Profiles</span>
                   </button>
                   <div className="more-menu-sep" />
-                  {/* Notes */}
+                  {/* Toolkit */}
                   <button
-                    className={`more-menu-item${sidebarOpen && sidebarTab === "notes" ? " more-menu-item--active" : ""}`}
-                    onClick={() => { onToggleSidebar("notes"); setMenuOpen(false); }}
+                    className={`more-menu-item${sidebarOpen ? " more-menu-item--active" : ""}`}
+                    onClick={() => { onToggleToolkit(); setMenuOpen(false); }}
                     role="menuitem"
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <rect x="2" y="1.5" width="12" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                      <path d="M5 5.5h6M5 8h6M5 10.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                      <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+                      <rect x="9" y="1.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+                      <rect x="1.5" y="9" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+                      <rect x="9" y="9" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
                     </svg>
-                    <span className="more-menu-item-label">Notes</span>
+                    <span className="more-menu-item-label">Toolkit</span>
                     <span className="more-menu-kbd">Ctrl+Shift+N</span>
-                  </button>
-                  {/* Alarms */}
-                  <button
-                    className={`more-menu-item${sidebarOpen && sidebarTab === "alerts" ? " more-menu-item--active" : ""}`}
-                    onClick={() => { onToggleSidebar("alerts"); setMenuOpen(false); }}
-                    role="menuitem"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <path d="M8 2a4.5 4.5 0 0 0-4.5 4.5V9.5L2 12h12l-1.5-2.5V6.5A4.5 4.5 0 0 0 8 2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-                      <path d="M6 12a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                    </svg>
-                    <span className="more-menu-item-label">Alarms</span>
-                    <span className="more-menu-kbd">Ctrl+Shift+A</span>
                   </button>
                   <div className="more-menu-sep" />
                   {/* Appearance */}

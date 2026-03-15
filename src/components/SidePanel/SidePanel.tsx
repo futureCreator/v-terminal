@@ -36,7 +36,7 @@ export function SidePanel({ tabId, activeTab, onTabChange, onClose }: SidePanelP
           <button
             className={`side-panel-tab${activeTab === "notes" ? " side-panel-tab--active" : ""}`}
             onClick={() => onTabChange("notes")}
-            title="Notes (Ctrl+Shift+N)"
+            title="Notes"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <rect x="2.5" y="1" width="9" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.1"/>
@@ -49,7 +49,7 @@ export function SidePanel({ tabId, activeTab, onTabChange, onClose }: SidePanelP
           <button
             className={`side-panel-tab${activeTab === "alerts" ? " side-panel-tab--active" : ""}`}
             onClick={() => onTabChange("alerts")}
-            title="Alerts (Ctrl+Shift+A)"
+            title="Alerts"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 1.5C4.5 1.5 3.5 3.5 3.5 5.5v2L2 9.5h10l-1.5-2v-2c0-2-1-4-3.5-4z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>

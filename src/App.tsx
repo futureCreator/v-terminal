@@ -60,21 +60,13 @@ export function App() {
   useAlarmTick();
 
   const sidebarOpenRef = useRef(sidebarOpen);
-  const sidebarTabRef = useRef(sidebarTab);
   useEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
-  useEffect(() => { sidebarTabRef.current = sidebarTab; }, [sidebarTab]);
 
-  const handleToggleSidebar = useCallback((tab: SidebarTab) => {
-    if (sidebarOpen && sidebarTab === tab) {
-      setSidebarOpen(false);
-      localStorage.setItem("v-terminal:sidebar-open", "false");
-    } else {
-      setSidebarOpen(true);
-      setSidebarTab(tab);
-      localStorage.setItem("v-terminal:sidebar-open", "true");
-      localStorage.setItem("v-terminal:sidebar-tab", tab);
-    }
-  }, [sidebarOpen, sidebarTab]);
+  const handleToggleToolkit = useCallback(() => {
+    const next = !sidebarOpen;
+    setSidebarOpen(next);
+    localStorage.setItem("v-terminal:sidebar-open", String(next));
+  }, [sidebarOpen]);
 
   const handleCloseSidebar = useCallback(() => {
     setSidebarOpen(false);
@@ -97,32 +89,9 @@ export function App() {
       if (e.ctrlKey && e.shiftKey && e.key === "N") {
         e.preventDefault();
         e.stopPropagation();
-        const isOpen = sidebarOpenRef.current;
-        const curTab = sidebarTabRef.current;
-        if (isOpen && curTab === "notes") {
-          setSidebarOpen(false);
-          localStorage.setItem("v-terminal:sidebar-open", "false");
-        } else {
-          setSidebarOpen(true);
-          setSidebarTab("notes");
-          localStorage.setItem("v-terminal:sidebar-open", "true");
-          localStorage.setItem("v-terminal:sidebar-tab", "notes");
-        }
-      }
-      if (e.ctrlKey && e.shiftKey && e.key === "A") {
-        e.preventDefault();
-        e.stopPropagation();
-        const isOpen = sidebarOpenRef.current;
-        const curTab = sidebarTabRef.current;
-        if (isOpen && curTab === "alerts") {
-          setSidebarOpen(false);
-          localStorage.setItem("v-terminal:sidebar-open", "false");
-        } else {
-          setSidebarOpen(true);
-          setSidebarTab("alerts");
-          localStorage.setItem("v-terminal:sidebar-open", "true");
-          localStorage.setItem("v-terminal:sidebar-tab", "alerts");
-        }
+        const next = !sidebarOpenRef.current;
+        setSidebarOpen(next);
+        localStorage.setItem("v-terminal:sidebar-open", String(next));
       }
       // Terminal font size: Ctrl+= / Ctrl+- / Ctrl+0
       if (e.ctrlKey && !e.shiftKey && (e.key === "=" || e.key === "+")) {
@@ -315,34 +284,21 @@ export function App() {
         },
       ] : []),
       {
-        id: "view:notes",
-        label: sidebarOpen && sidebarTab === "notes" ? "Hide Notes Panel" : "Show Notes Panel",
+        id: "view:toolkit",
+        label: sidebarOpen ? "Hide Toolkit" : "Show Toolkit",
         meta: "Ctrl+Shift+N",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="2" y="1.5" width="10" height="11" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M4.5 4.5h5M4.5 7h5M4.5 9.5h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+              <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" />
+              <rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" />
+              <rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" />
+              <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" />
             </svg>
           </span>
         ),
-        isActive: sidebarOpen && sidebarTab === "notes",
-        action: () => handleToggleSidebar("notes"),
-      },
-      {
-        id: "view:alarms",
-        label: sidebarOpen && sidebarTab === "alerts" ? "Hide Alerts Panel" : "Show Alerts Panel",
-        meta: "Ctrl+Shift+A",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 1.5a4 4 0 0 0-4 4v2.5l-1 1.5h10l-1-1.5V5.5a4 4 0 0 0-4-4z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-              <path d="M5.5 10.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-          </span>
-        ),
-        isActive: sidebarOpen && sidebarTab === "alerts",
-        action: () => handleToggleSidebar("alerts"),
+        isActive: sidebarOpen,
+        action: handleToggleToolkit,
       },
       {
         id: "ssh:profiles",
@@ -404,7 +360,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleSidebar, activeTab, tabs, sidebarOpen, sidebarTab]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -648,10 +604,9 @@ export function App() {
           activeLayout={activeTab?.layout ?? 1}
           broadcastEnabled={activeTab?.broadcastEnabled ?? false}
           sidebarOpen={sidebarOpen}
-          sidebarTab={sidebarTab}
           onLayoutChange={handleLayoutChange}
           onToggleBroadcast={handleToggleBroadcast}
-          onToggleSidebar={handleToggleSidebar}
+          onToggleToolkit={handleToggleToolkit}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenSshManager={() => setSshModalOpen(true)}
           onAddTab={handleNewTab}
