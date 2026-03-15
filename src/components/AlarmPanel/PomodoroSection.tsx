@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAlarmStore, getPhaseDuration } from "../../store/alarmStore";
 
 function formatMs(ms: number): string {
@@ -12,6 +13,8 @@ export function PomodoroSection() {
   const pomodoroState = useAlarmStore((s) => s.pomodoroState);
   const { startPomodoro, pausePomodoro, resumePomodoro, resetPomodoro, setPomodoroConfig } =
     useAlarmStore();
+
+  const [showSettings, setShowSettings] = useState(false);
 
   const { phase, remainingMs, completedSessions, lastTickAt } = pomodoroState;
   const isRunning = phase !== "idle" && lastTickAt !== null;
@@ -108,66 +111,70 @@ export function PomodoroSection() {
             </button>
           </>
         )}
+        <button
+            className={`pomodoro-gear-btn${showSettings ? " pomodoro-gear-btn--active" : ""}`}
+            onClick={() => setShowSettings((v) => !v)}
+            title="Settings"
+            aria-label="Toggle settings"
+        >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6.8 1.5h2.4l.3 1.8.8.4 1.6-.9 1.7 1.7-.9 1.6.4.8 1.8.3v2.4l-1.8.3-.4.8.9 1.6-1.7 1.7-1.6-.9-.8.4-.3 1.8H6.8l-.3-1.8-.8-.4-1.6.9-1.7-1.7.9-1.6-.4-.8-1.8-.3V6.8l1.8-.3.4-.8-.9-1.6 1.7-1.7 1.6.9.8-.4z"/>
+                <circle cx="8" cy="8" r="2.2"/>
+            </svg>
+        </button>
       </div>
 
-      {/* Settings (always visible) */}
-      <div className="pomodoro-settings">
-        <div className="pomodoro-settings-header">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-            <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M12.95 3.05l-1.41 1.41M4.46 11.54l-1.41 1.41" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-          <span>Settings</span>
-        </div>
-        <div className="pomodoro-setting-row">
-          <label className="pomodoro-setting-label">Focus</label>
-          <input
-            className="pomodoro-setting-input"
-            type="number"
-            min="1"
-            max="120"
-            value={pomodoroConfig.focusMinutes}
-            onChange={(e) => setPomodoroConfig({ focusMinutes: Math.max(1, parseInt(e.target.value) || 1) })}
-          />
-          <span className="pomodoro-setting-unit">min</span>
-        </div>
-        <div className="pomodoro-setting-row">
-          <label className="pomodoro-setting-label">Break</label>
-          <input
-            className="pomodoro-setting-input"
-            type="number"
-            min="1"
-            max="60"
-            value={pomodoroConfig.breakMinutes}
-            onChange={(e) => setPomodoroConfig({ breakMinutes: Math.max(1, parseInt(e.target.value) || 1) })}
-          />
-          <span className="pomodoro-setting-unit">min</span>
-        </div>
-        <div className="pomodoro-setting-row">
-          <label className="pomodoro-setting-label">Long Break</label>
-          <input
-            className="pomodoro-setting-input"
-            type="number"
-            min="1"
-            max="60"
-            value={pomodoroConfig.longBreakMinutes}
-            onChange={(e) => setPomodoroConfig({ longBreakMinutes: Math.max(1, parseInt(e.target.value) || 1) })}
-          />
-          <span className="pomodoro-setting-unit">min</span>
-        </div>
-        <div className="pomodoro-setting-row">
-          <label className="pomodoro-setting-label">Long Break Every</label>
-          <input
-            className="pomodoro-setting-input"
-            type="number"
-            min="1"
-            max="12"
-            value={pomodoroConfig.sessionsBeforeLongBreak}
-            onChange={(e) => setPomodoroConfig({ sessionsBeforeLongBreak: Math.max(1, parseInt(e.target.value) || 1) })}
-          />
-          <span className="pomodoro-setting-unit">sessions</span>
-        </div>
-      </div>
+      {/* Settings (stepper) */}
+      {showSettings && (
+          <div className={`pomodoro-settings${phase !== "idle" ? " pomodoro-settings--disabled" : ""}`}>
+              {phase !== "idle" && (
+                  <span className="pomodoro-settings-hint">Reset to edit</span>
+              )}
+              <div className="pomodoro-stepper-row">
+                  <span className="pomodoro-stepper-label">Focus</span>
+                  <div className="pomodoro-stepper">
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.focusMinutes <= 5}
+                          onClick={() => setPomodoroConfig({ focusMinutes: pomodoroConfig.focusMinutes - 5 })}>−</button>
+                      <span className="pomodoro-stepper-value">{pomodoroConfig.focusMinutes}<span className="pomodoro-stepper-unit">m</span></span>
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.focusMinutes >= 120}
+                          onClick={() => setPomodoroConfig({ focusMinutes: pomodoroConfig.focusMinutes + 5 })}>+</button>
+                  </div>
+              </div>
+              <div className="pomodoro-stepper-row">
+                  <span className="pomodoro-stepper-label">Break</span>
+                  <div className="pomodoro-stepper">
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.breakMinutes <= 1}
+                          onClick={() => setPomodoroConfig({ breakMinutes: pomodoroConfig.breakMinutes - 1 })}>−</button>
+                      <span className="pomodoro-stepper-value">{pomodoroConfig.breakMinutes}<span className="pomodoro-stepper-unit">m</span></span>
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.breakMinutes >= 60}
+                          onClick={() => setPomodoroConfig({ breakMinutes: pomodoroConfig.breakMinutes + 1 })}>+</button>
+                  </div>
+              </div>
+              <div className="pomodoro-stepper-row">
+                  <span className="pomodoro-stepper-label">Long Break</span>
+                  <div className="pomodoro-stepper">
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.longBreakMinutes <= 5}
+                          onClick={() => setPomodoroConfig({ longBreakMinutes: pomodoroConfig.longBreakMinutes - 5 })}>−</button>
+                      <span className="pomodoro-stepper-value">{pomodoroConfig.longBreakMinutes}<span className="pomodoro-stepper-unit">m</span></span>
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.longBreakMinutes >= 60}
+                          onClick={() => setPomodoroConfig({ longBreakMinutes: pomodoroConfig.longBreakMinutes + 5 })}>+</button>
+                  </div>
+              </div>
+              <div className="pomodoro-stepper-row pomodoro-stepper-row--last">
+                  <div className="pomodoro-stepper-label-group">
+                      <span className="pomodoro-stepper-label">Sessions</span>
+                      <span className="pomodoro-stepper-sublabel">before long break</span>
+                  </div>
+                  <div className="pomodoro-stepper">
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.sessionsBeforeLongBreak <= 1}
+                          onClick={() => setPomodoroConfig({ sessionsBeforeLongBreak: pomodoroConfig.sessionsBeforeLongBreak - 1 })}>−</button>
+                      <span className="pomodoro-stepper-value">{pomodoroConfig.sessionsBeforeLongBreak}</span>
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.sessionsBeforeLongBreak >= 12}
+                          onClick={() => setPomodoroConfig({ sessionsBeforeLongBreak: pomodoroConfig.sessionsBeforeLongBreak + 1 })}>+</button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 }
