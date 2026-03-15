@@ -299,109 +299,35 @@
   gap: 10px;
 }
 
-/* ── Presets ─────────────────────────────────────────────────────── */
-.timer-presets {
-  display: flex;
+/* ── Preset grid ───────────────────────────────────────────────── */
+.timer-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
+  margin-bottom: 12px;
 }
 
 .timer-preset-btn {
-  flex: 1;
-  height: 36px;
+  padding: 8px 0;
   border: 1px solid var(--separator);
-  border-radius: var(--radius-sm);
-  background: var(--bg-terminal);
-  color: var(--label-secondary);
-  font-size: 13px;
-  font-weight: 600;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
-  cursor: pointer;
-  transition: all 0.12s;
-  padding: 0;
-}
-
-.timer-preset-btn:hover {
+  border-radius: 8px;
   background: var(--bg-tertiary);
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-.timer-preset-btn:active {
-  transform: scale(0.96);
-}
-
-/* ── Custom input ───────────────────────────────────────────────── */
-.timer-custom-row {
-  display: flex;
-  gap: 4px;
-}
-
-.timer-custom-input {
-  height: 32px;
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-sm);
-  background: var(--bg-terminal);
   color: var(--label-primary);
-  font-size: 13px;
-  font-family: "Pretendard", sans-serif;
-  padding: 0 10px;
-  outline: none;
-  transition: border-color 0.15s;
-  box-sizing: border-box;
-}
-
-.timer-custom-input::placeholder {
-  color: var(--label-disabled);
-}
-
-.timer-custom-input:focus {
-  border-color: var(--accent);
-}
-
-.timer-custom-label {
-  flex: 1;
-  min-width: 0;
-}
-
-.timer-custom-minutes {
-  width: 52px;
-  flex-shrink: 0;
-  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
-  -moz-appearance: textfield;
-}
-
-.timer-custom-minutes::-webkit-inner-spin-button,
-.timer-custom-minutes::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.timer-add-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-sm);
-  background: var(--bg-terminal);
-  color: var(--label-secondary);
+  text-align: center;
   cursor: pointer;
-  padding: 0;
-  transition: all 0.12s;
+  transition: background 0.1s, border-color 0.1s;
 }
-
-.timer-add-btn:hover:not(:disabled) {
-  color: var(--accent);
+.timer-preset-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--label-tertiary);
+}
+.timer-preset-btn:active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   border-color: var(--accent);
-  background: var(--bg-tertiary);
-}
-
-.timer-add-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
+  color: var(--accent);
 }
 
 /* ── Timer list header ──────────────────────────────────────────── */
@@ -447,10 +373,11 @@
 
 .timer-item {
   position: relative;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   overflow: hidden;
   background: var(--bg-terminal);
   border: 1px solid var(--bg-panel-border);
+  margin-bottom: 6px;
 }
 
 .timer-item--finished {
@@ -462,8 +389,8 @@
   top: 0;
   left: 0;
   height: 100%;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 8px;
   transition: width 1s linear;
   pointer-events: none;
 }
@@ -472,9 +399,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 4px 8px;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 10px;
 }
 
 .timer-item:hover .timer-remove-btn {
@@ -485,15 +412,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   border: none;
-  background: none;
+  background: rgba(255, 255, 255, 0.05);
   padding: 0;
   cursor: pointer;
   color: var(--label-secondary);
-  border-radius: var(--radius-xs);
+  border-radius: 6px;
   transition: color 0.12s, background 0.12s;
 }
 
@@ -506,14 +433,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
 }
 
 .timer-label {
   flex: 1;
   font-size: 13px;
+  font-weight: 500;
   font-family: "Pretendard", sans-serif;
   color: var(--label-primary);
   min-width: 0;
@@ -523,10 +451,10 @@
 }
 
 .timer-time {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
-  color: var(--label-secondary);
+  color: var(--label-primary);
   flex-shrink: 0;
 }
 

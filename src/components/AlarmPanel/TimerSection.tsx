@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAlarmStore } from "../../store/alarmStore";
 import type { CountdownTimer } from "../../store/alarmStore";
 
@@ -13,76 +12,51 @@ function formatMs(ms: number): string {
 
 function formatDuration(ms: number): string {
   const minutes = Math.round(ms / 60_000);
-  return minutes >= 60 ? `${minutes / 60}h` : `${minutes}m`;
+  if (minutes >= 120) return `${minutes / 60}h`;
+  if (minutes >= 60 && minutes % 60 === 0) return `${minutes / 60}h`;
+  if (minutes > 60) return `${(minutes / 60).toFixed(1)}h`;
+  return `${minutes}m`;
 }
 
-const PRESETS = [5, 10, 15, 30, 60];
+interface PresetDef {
+  minutes: number;
+  label: string;
+}
+
+const PRESETS: PresetDef[] = [
+  { minutes: 1, label: "1m" },
+  { minutes: 3, label: "3m" },
+  { minutes: 5, label: "5m" },
+  { minutes: 10, label: "10m" },
+  { minutes: 15, label: "15m" },
+  { minutes: 20, label: "20m" },
+  { minutes: 25, label: "25m" },
+  { minutes: 30, label: "30m" },
+  { minutes: 45, label: "45m" },
+  { minutes: 60, label: "1h" },
+  { minutes: 90, label: "1.5h" },
+  { minutes: 120, label: "2h" },
+];
 
 export function TimerSection() {
-  const [customLabel, setCustomLabel] = useState("");
-  const [customMinutes, setCustomMinutes] = useState("");
-
   const timers = useAlarmStore((s) => s.timers);
   const { addTimer, removeTimer, pauseTimer, resumeTimer, clearFinishedTimers } = useAlarmStore();
 
   const finishedCount = timers.filter((t) => t.status === "finished").length;
 
-  const handleAddPreset = (minutes: number) => {
-    addTimer("", minutes * 60_000);
-  };
-
-  const handleAddCustom = () => {
-    const mins = parseInt(customMinutes);
-    if (isNaN(mins) || mins <= 0) return;
-    addTimer(customLabel.trim(), mins * 60_000);
-    setCustomLabel("");
-    setCustomMinutes("");
+  const handleAddPreset = (preset: PresetDef) => {
+    addTimer(preset.label, preset.minutes * 60_000);
   };
 
   return (
     <div className="timer-section">
-      {/* Presets */}
-      <div className="timer-presets">
-        {PRESETS.map((m) => (
-          <button
-            key={m}
-            className="timer-preset-btn"
-            onClick={() => handleAddPreset(m)}
-          >
-            {m >= 60 ? `${m / 60}h` : `${m}m`}
+      {/* Preset grid */}
+      <div className="timer-preset-grid">
+        {PRESETS.map((p) => (
+          <button key={p.minutes} className="timer-preset-btn" onClick={() => handleAddPreset(p)}>
+            {p.label}
           </button>
         ))}
-      </div>
-
-      {/* Custom input */}
-      <div className="timer-custom-row">
-        <input
-          className="timer-custom-input timer-custom-label"
-          type="text"
-          placeholder="Label (optional)"
-          value={customLabel}
-          onChange={(e) => setCustomLabel(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleAddCustom(); }}
-        />
-        <input
-          className="timer-custom-input timer-custom-minutes"
-          type="number"
-          placeholder="min"
-          min="1"
-          value={customMinutes}
-          onChange={(e) => setCustomMinutes(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleAddCustom(); }}
-        />
-        <button
-          className="timer-add-btn"
-          onClick={handleAddCustom}
-          title="Add"
-          disabled={!customMinutes || parseInt(customMinutes) <= 0}
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-        </button>
       </div>
 
       {/* Timer list */}
@@ -91,24 +65,14 @@ export function TimerSection() {
           <div className="timer-list-header">
             <span className="timer-list-title">Active Timers</span>
             {finishedCount > 0 && (
-              <button
-                className="timer-clear-btn"
-                onClick={clearFinishedTimers}
-                title="Clear finished timers"
-              >
+              <button className="timer-clear-btn" onClick={clearFinishedTimers} title="Clear finished timers">
                 Clear Done
               </button>
             )}
           </div>
           <div className="timer-list">
             {timers.map((timer) => (
-              <TimerItem
-                key={timer.id}
-                timer={timer}
-                onPause={pauseTimer}
-                onResume={resumeTimer}
-                onRemove={removeTimer}
-              />
+              <TimerItem key={timer.id} timer={timer} onPause={pauseTimer} onResume={resumeTimer} onRemove={removeTimer} />
             ))}
           </div>
         </>
@@ -120,7 +84,7 @@ export function TimerSection() {
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          <span>Select a preset or<br />add a custom timer</span>
+          <span>Select a preset to start a timer</span>
         </div>
       )}
     </div>
