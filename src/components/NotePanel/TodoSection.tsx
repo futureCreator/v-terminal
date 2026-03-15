@@ -61,7 +61,7 @@ export function TodoSection({ tabId }: TodoSectionProps) {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="todo-header-label">할 일</span>
+        <span className="todo-header-label">TODO</span>
         {total > 0 && (
           <span className="todo-header-count">
             {completed}/{total}
@@ -74,8 +74,8 @@ export function TodoSection({ tabId }: TodoSectionProps) {
               e.stopPropagation();
               clearCompleted(tabId);
             }}
-            aria-label="완료 항목 삭제"
-            title="완료 항목 삭제"
+            aria-label="Clear completed"
+            title="Clear completed"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path
@@ -101,7 +101,7 @@ export function TodoSection({ tabId }: TodoSectionProps) {
                 <button
                   className="todo-checkbox"
                   onClick={() => toggleTodo(tabId, todo.id)}
-                  aria-label={todo.completed ? "완료 해제" : "완료 처리"}
+                  aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
                 >
                   {todo.completed ? (
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -155,8 +155,8 @@ export function TodoSection({ tabId }: TodoSectionProps) {
                 <button
                   className="todo-delete"
                   onClick={() => removeTodo(tabId, todo.id)}
-                  aria-label="삭제"
-                  title="삭제"
+                  aria-label="Delete"
+                  title="Delete"
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -175,7 +175,7 @@ export function TodoSection({ tabId }: TodoSectionProps) {
               ref={inputRef}
               className="todo-input"
               type="text"
-              placeholder="할 일 추가..."
+              placeholder="Add a task..."
               onKeyDown={handleAdd}
             />
           </div>
