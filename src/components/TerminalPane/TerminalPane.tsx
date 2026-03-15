@@ -109,6 +109,8 @@ export function TerminalPane({
     let disposed = false;
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
+    let disposeBufferChange: { dispose(): void } | null = null;
+    let compositionTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const init = async () => {
       await ensureFontLoaded();
@@ -168,6 +170,35 @@ export function TerminalPane({
         return;
       }
 
+      // Buffer change listener — handles scroll restoration and IME reset on alternate ↔ normal transitions
+      disposeBufferChange = term.buffer.onBufferChange((newBuffer) => {
+        if (disposed) return;
+
+        // IME reset: any in-progress composition is invalid after a buffer switch
+        isComposing = false;
+        if (compositionTimeout) {
+          clearTimeout(compositionTimeout);
+          compositionTimeout = null;
+        }
+
+        // Scroll restoration: when returning to normal buffer, restore saved viewport position
+        if (newBuffer.type === "normal") {
+          const maxScroll = Math.max(0, term.buffer.normal.length - term.rows);
+          const clamped = Math.min(savedNormalViewportY, maxScroll);
+          term.scrollToLine(clamped);
+          requestAnimationFrame(() => {
+            if (!disposed) {
+              const maxScroll = Math.max(0, term.buffer.normal.length - term.rows);
+              const clamped = Math.min(savedNormalViewportY, maxScroll);
+              term.scrollToLine(clamped);
+            }
+          });
+        } else {
+          // Switching TO alternate buffer — snapshot normal buffer position before it's hidden
+          savedNormalViewportY = term.buffer.normal.viewportY;
+        }
+      });
+
       if (disposed) {
         await ipc.daemonDetach(ptyId).catch(() => {});
         term.dispose();
@@ -186,6 +217,9 @@ export function TerminalPane({
 
       // IME composition state — prevents custom key handler from interfering with Korean/CJK input
       let isComposing = false;
+
+      // Normal buffer scroll position — tracked independently so it survives alternate buffer sessions
+      let savedNormalViewportY = term.buffer.normal.viewportY;
 
       // Clipboard key handling (Ctrl+C to copy, Ctrl+V to paste)
       term.attachCustomKeyEventHandler((e) => {
