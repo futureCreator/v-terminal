@@ -47,18 +47,23 @@ ResizeObserver fires:
 
 #### 1b. Normal buffer viewport tracking
 
-Add a persistent variable `savedNormalViewportY` that is updated:
-- On every resize when in normal buffer mode (before fit)
-- On buffer change event (capture normal buffer position before switching to alternate)
+Add `savedNormalViewportY` as a **closure variable inside `init()`** (same scope as `isComposing`), tied to the lifetime of the Terminal instance. NOT a React ref — React refs survive component re-renders and would hold stale values across reinitializations.
+
+Updated on:
+- Every resize when in normal buffer mode (before fit)
+- On buffer change event: use `term.buffer.normal.viewportY` (NOT `term.buffer.active.viewportY`, which already points to the new buffer at callback time)
 
 #### 1c. Buffer change scroll restoration
 
 ```
 term.buffer.onBufferChange:
   if switching to normal buffer (alternate → normal):
-    → restore savedNormalViewportY via scrollToLine()
+    → clamp: Math.min(savedNormalViewportY, Math.max(0, term.buffer.normal.length - term.rows))
+    → restore via scrollToLine()
     → follow up with requestAnimationFrame restoration
 ```
+
+The clamp is necessary because after a resize the normal buffer's `length` may have changed due to reflow, making the saved position out of range.
 
 #### 1d. Font/lineHeight useEffects
 
@@ -68,6 +73,8 @@ Apply the same alternate buffer check to all three scroll-restoring useEffects:
 - lineHeight (lines 398-426)
 
 When in alternate buffer: apply the option change and call `fitAddon.fit()` + `daemonResize()`, but skip scroll capture/restore.
+
+**Implementation note:** Consider extracting a shared `fitWithScrollPreservation(term, fitAddon, ptyId)` helper to reduce the four instances of duplicated scroll-preservation logic.
 
 ### Part 2: IME — Composition State Corruption Recovery
 
@@ -97,7 +104,7 @@ attachCustomKeyEventHandler((e) => {
 });
 ```
 
-This provides immediate self-healing: even if the state gets corrupted, the very next keydown auto-recovers.
+This provides immediate self-healing: even if the state gets corrupted, the very next keydown auto-recovers. The recovery check is placed BEFORE the `isComposing` guard — placing it after would mean it never executes for the stuck case.
 
 #### 2c. Composition timeout (safety net)
 
@@ -109,23 +116,45 @@ compositionstart:
 compositionend:
   → clear timeout
   → requestAnimationFrame(() => { isComposing = false })
+
+blur:
+  → isComposing = false
+  → clear composition timeout (for consistency with onBufferChange)
 ```
 
 Normal Korean input completes within seconds. A 10-second timeout is a conservative safety net for cases where compositionend is never fired.
+
+### Part 3: Resource Cleanup
+
+All new resources must be disposed in the cleanup function (lines 309-324):
+
+- **`onBufferChange` listener**: `term.buffer.onBufferChange` returns an `IDisposable`. Store and call `.dispose()` in cleanup, alongside `unlistenData` and `unlistenExit`.
+- **Composition timeout**: Clear the pending `setTimeout` in cleanup to prevent firing against a disposed terminal.
+
+### Registration Order
+
+The `onBufferChange` listener should be registered **after** scrollback replay (line 162-163: `term.write(new Uint8Array(scrollback))`). If scrollback data contains escape sequences that switch to alternate buffer, the listener would fire during initialization before `savedNormalViewportY` has a meaningful value. Registering after replay ensures the normal buffer's state is established first.
+
+### Notes
+
+- **Rapid buffer switching**: Some TUI apps or escape sequence glitches may rapidly toggle buffers. The design is safe because all operations are idempotent — restoring scroll position and resetting `isComposing` are harmless when called multiple times.
+- **Nested TUI apps**: Workflows like tmux → vim share the same alternate buffer. The binary check (`type === 'alternate'`) handles this correctly.
 
 ## Change Summary
 
 | Location | Change | Purpose |
 |----------|--------|---------|
-| `init()` | Add `term.buffer.onBufferChange` listener | Buffer switch detection |
-| `init()` | Add `savedNormalViewportY` variable | Normal buffer scroll preservation |
+| `init()` | Add `term.buffer.onBufferChange` listener (after scrollback replay) | Buffer switch detection |
+| `init()` | Add `savedNormalViewportY` closure variable | Normal buffer scroll preservation |
+| `init()` cleanup | Dispose `onBufferChange` listener + clear composition timeout | Prevent memory leaks |
 | ResizeObserver | Check `buffer.active.type === 'alternate'` → skip scroll restore | Fix scroll jump |
-| `onBufferChange` | Restore `savedNormalViewportY` on alternate→normal | Preserve scroll after TUI exit |
+| `onBufferChange` | Restore clamped `savedNormalViewportY` on alternate→normal | Preserve scroll after TUI exit |
 | font/lineHeight useEffects (×3) | Same alternate buffer check | Fix scroll jump on config change |
 | Custom key handler | Add `isComposing && !e.isComposing` recovery | IME auto-recovery |
 | `compositionstart` | Add 10s timeout | IME safety net |
 | `compositionend` | Clear timeout | - |
-| `onBufferChange` | Force `isComposing = false` | IME reset on buffer switch |
+| `blur` | Also clear composition timeout | Consistency |
+| `onBufferChange` | Force `isComposing = false`, clear timeout | IME reset on buffer switch |
 
 ## Files Modified
 
@@ -133,7 +162,11 @@ Normal Korean input completes within seconds. A 10-second timeout is a conservat
 
 ## Testing
 
-- **Scroll**: Run claude-code → resize terminal window → verify no scroll jump. Open/close side panel → verify no jump. Exit claude-code → verify scrollback position is preserved.
+- **Scroll**: Run claude-code → resize terminal window → verify no scroll jump. Open/close side panel → verify no jump. Exit claude-code → verify scrollback position is preserved at the line where it was before entering the TUI.
 - **Scroll desync**: Run claude-code → resize → verify scrollbar position matches rendered content.
-- **IME**: Run claude-code → type Korean text repeatedly over several minutes → verify no character drops. Exit claude-code → verify Korean input works in shell prompt.
+- **Scroll clamp**: Scroll up in normal buffer → run a TUI that produces output → exit TUI → verify scroll position is reasonable (not beyond buffer length).
+- **IME basic**: Run claude-code → type Korean text repeatedly over several minutes → verify no character drops. Exit claude-code → verify Korean input works in shell prompt.
 - **IME recovery**: If character drops occur, verify next keystroke auto-recovers (stuck state detection).
+- **IME timeout**: Simulate stuck composition (interrupt mid-composition by switching focus) → verify input recovers within 10 seconds.
+- **Session reattach**: Detach and reattach to a session that was in a TUI → verify no scroll jump or IME issues.
+- **Cleanup**: Open multiple tabs → close them → verify no memory leaks or console errors from stale listeners.
