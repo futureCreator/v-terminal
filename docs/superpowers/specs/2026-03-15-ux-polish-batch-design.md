@@ -150,10 +150,19 @@ Hide settings by default; disable editing during active sessions.
 - Toggle: click gear icon to show/hide
 - Animation: fade-in with translateY(-4px), 0.15s ease
 
+**Settings input redesign — Stepper controls:**
+- Replace raw `<input type="number">` with unified `[-] value [+]` stepper controls
+- Layout: label left, stepper control right, each row separated by subtle border-bottom
+- Stepper control: bordered container (border-radius 8px) with `−` button, value+unit center, `+` button
+- Value display: JetBrains Mono, 13px, font-weight 600, unit suffix (e.g., "25m", "5m")
+- Buttons: 30×30px, hover → bg lighten, active → accent tint
+- "Long Break Every" row: label "Sessions" with sublabel "before long break"
+- Step increments: Focus ±5min, Break ±1min, Long Break ±5min, Sessions ±1
+
 **Disabled state during active session:**
-- When `phase !== "idle"`: all inputs disabled, opacity 0.3
+- When `phase !== "idle"`: all stepper buttons disabled, value text opacity 0.3
 - Show hint text: "Reset to edit" (right-aligned, italic, small)
-- When `phase === "idle"`: inputs enabled, hint hidden
+- When `phase === "idle"`: steppers enabled, hint hidden
 
 **Gear icon fix:**
 - Replace current sun-like icon (circle + radiating lines) with proper cog/gear SVG path
