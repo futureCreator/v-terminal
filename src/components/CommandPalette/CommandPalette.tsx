@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import "./CommandPalette.css";
+
+/* ── Types ──────────────────────────────────────────────────────── */
 
 export interface PaletteCommand {
   id: string;
   label: string;
   meta?: string;
+  description?: string;
   icon: React.ReactNode;
   isActive?: boolean;
   action: () => void | Promise<void>;
@@ -20,6 +23,7 @@ interface Command {
   id: string;
   label: string;
   meta?: string;
+  description?: string;
   category: string;
   subSection: string | null;
   icon: React.ReactNode;
@@ -33,22 +37,115 @@ interface Props {
   extraSections?: PaletteSection[];
 }
 
+/* ── Fuzzy matching ─────────────────────────────────────────────── */
+
+interface FuzzyResult {
+  score: number;
+  indices: number[];
+}
+
+function fuzzyMatch(query: string, text: string): FuzzyResult | null {
+  const q = query.toLowerCase();
+  const t = text.toLowerCase();
+
+  let qi = 0;
+  let score = 0;
+  const indices: number[] = [];
+  let lastMatch = -1;
+
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) {
+      indices.push(ti);
+      if (lastMatch === ti - 1) score += 5; // consecutive
+      if (ti === 0 || /[\s\-:_]/.test(t[ti - 1])) score += 3; // word boundary
+      if (ti === qi) score += 2; // prefix
+      score += 1;
+      lastMatch = ti;
+      qi++;
+    }
+  }
+
+  if (qi < q.length) return null;
+  return { score, indices };
+}
+
+function fuzzyMatchCommand(query: string, cmd: Command): FuzzyResult | null {
+  const results = [
+    fuzzyMatch(query, cmd.label),
+    fuzzyMatch(query, cmd.category),
+    cmd.subSection ? fuzzyMatch(query, cmd.subSection) : null,
+    cmd.description ? fuzzyMatch(query, cmd.description) : null,
+  ].filter((r): r is FuzzyResult => r !== null);
+
+  if (results.length === 0) return null;
+  return results.reduce((best, r) => (r.score > best.score ? r : best));
+}
+
+function highlightText(text: string, indices: number[]): React.ReactNode {
+  if (indices.length === 0) return text;
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const idx of indices) {
+    if (idx < 0 || idx >= text.length) continue;
+    if (idx > last) parts.push(text.slice(last, idx));
+    parts.push(<mark key={idx} className="cp-match">{text[idx]}</mark>);
+    last = idx + 1;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
+
+/* ── Recent commands ────────────────────────────────────────────── */
+
+const RECENT_KEY = "v-terminal:cp-recent";
+const MAX_RECENT = 8;
+
+function getRecent(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function pushRecent(id: string) {
+  const list = getRecent().filter((x) => x !== id);
+  list.unshift(id);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT)));
+}
+
+/* ── Prefix mode ────────────────────────────────────────────────── */
+
+type PrefixMode = "all" | "tabs";
+
+function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
+  const trimmed = raw.trimStart();
+  if (trimmed.startsWith(">")) {
+    return { mode: "tabs", query: trimmed.slice(1).trimStart() };
+  }
+  return { mode: "all", query: trimmed };
+}
+
+/* ── Component ──────────────────────────────────────────────────── */
+
 export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState<"in" | "out" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  /* ── Build command list ─────────────────────────────────── */
   const commands = useMemo<Command[]>(() => {
     const list: Command[] = [];
-
-    // Extra sections first (e.g., tab navigation)
     for (const section of extraSections) {
       for (const cmd of section.commands) {
         list.push({
           id: cmd.id,
           label: cmd.label,
           meta: cmd.meta,
+          description: cmd.description,
           category: section.category,
           subSection: null,
           icon: cmd.icon,
@@ -57,76 +154,198 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
         });
       }
     }
-
     return list;
   }, [extraSections]);
 
-  const q = query.trim().toLowerCase();
+  /* ── Parse query prefix + fuzzy filter ──────────────────── */
+  const { mode, query: q } = useMemo(() => parsePrefix(query), [query]);
 
   const filtered = useMemo(() => {
-    if (!q) return commands;
-    return commands.filter(
-      (c) =>
-        c.label.toLowerCase().includes(q) ||
-        (c.subSection?.toLowerCase().includes(q) ?? false) ||
-        c.category.toLowerCase().includes(q)
-    );
-  }, [commands, q]);
+    let pool = commands;
 
-  // Reset on open
+    // Prefix mode filter
+    if (mode === "tabs") {
+      pool = pool.filter((c) => c.category === "Tab List");
+    }
+
+    if (!q) return pool;
+
+    // Fuzzy filter + sort by score
+    const scored = pool
+      .map((cmd) => ({ cmd, result: fuzzyMatchCommand(q, cmd) }))
+      .filter((x): x is { cmd: Command; result: FuzzyResult } => x.result !== null);
+
+    scored.sort((a, b) => b.result.score - a.result.score);
+    return scored.map((x) => x.cmd);
+  }, [commands, q, mode]);
+
+  // Fuzzy match indices for highlighted label rendering
+  const matchIndicesMap = useMemo(() => {
+    if (!q) return new Map<string, number[]>();
+    const map = new Map<string, number[]>();
+    for (const cmd of filtered) {
+      const r = fuzzyMatch(q, cmd.label);
+      if (r) map.set(cmd.id, r.indices);
+    }
+    return map;
+  }, [filtered, q]);
+
+  /* ── Recent commands ────────────────────────────────────── */
+  const recentIds = useMemo(() => getRecent(), [visible]); // refresh when palette opens
+
+  const recentCommands = useMemo(() => {
+    if (q || mode !== "all") return [];
+    return recentIds
+      .map((id) => commands.find((c) => c.id === id))
+      .filter((c): c is Command => c !== undefined);
+  }, [recentIds, commands, q, mode]);
+
+  /* ── Open / close animation ─────────────────────────────── */
   useEffect(() => {
     if (isOpen) {
+      setVisible(true);
+      setPhase("in");
       setQuery("");
       setActiveIndex(0);
       requestAnimationFrame(() => inputRef.current?.focus());
+    } else if (visible) {
+      setPhase("out");
+      const timer = setTimeout(() => {
+        setVisible(false);
+        setPhase(null);
+      }, 120);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Clamp activeIndex when filtered list shrinks
+  // Clamp activeIndex
+  const totalCount = recentCommands.length + filtered.length;
   useEffect(() => {
-    setActiveIndex((i) => Math.min(i, Math.max(filtered.length - 1, 0)));
-  }, [filtered.length]);
+    setActiveIndex((i) => Math.min(i, Math.max(totalCount - 1, 0)));
+  }, [totalCount]);
 
   // Scroll active item into view
   useEffect(() => {
-    const highlighted = listRef.current?.querySelector<HTMLElement>(".cp-item--highlighted");
-    highlighted?.scrollIntoView({ block: "nearest" });
+    const el = listRef.current?.querySelector<HTMLElement>(".cp-item--highlighted");
+    el?.scrollIntoView({ block: "nearest" });
   }, [activeIndex, q]);
 
-  const execute = async (cmd: Command) => {
+  /* ── Execute ────────────────────────────────────────────── */
+  const execute = useCallback(async (cmd: Command) => {
+    pushRecent(cmd.id);
     await cmd.action();
     onClose();
-  };
+  }, [onClose]);
 
+  /* ── Keyboard ───────────────────────────────────────────── */
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (filtered[activeIndex]) execute(filtered[activeIndex]);
+    const max = totalCount - 1;
+    switch (e.key) {
+      case "Escape":
+        e.preventDefault();
+        onClose();
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(i + 1, max));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(i - 1, 0));
+        break;
+      case "Enter":
+        e.preventDefault();
+        {
+          const cmd = resolveCommandAtIndex(activeIndex);
+          if (cmd) execute(cmd);
+        }
+        break;
+      case "Home":
+        e.preventDefault();
+        setActiveIndex(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setActiveIndex(max);
+        break;
+      case "PageDown":
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(i + 8, max));
+        break;
+      case "PageUp":
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(i - 8, 0));
+        break;
+      case "Tab":
+        e.preventDefault();
+        if (e.shiftKey) {
+          // Jump to previous category
+          jumpCategory(-1);
+        } else {
+          // Jump to next category
+          jumpCategory(1);
+        }
+        break;
     }
   };
 
-  if (!isOpen) return null;
+  /* ── Category jump (Tab key) ────────────────────────────── */
+  const jumpCategory = (dir: 1 | -1) => {
+    if (q) return; // flat mode, no categories
+    const allItems = buildFlatList();
+    if (allItems.length === 0) return;
 
-  const renderItem = (cmd: Command, cmdIndex: number) => {
-    const isHighlighted = cmdIndex === activeIndex;
+    // Find boundaries of each category
+    const catStarts: number[] = [];
+    let lastCat = "";
+    allItems.forEach((item, i) => {
+      if (item.category !== lastCat) {
+        catStarts.push(i);
+        lastCat = item.category;
+      }
+    });
+
+    const currentCatIdx = catStarts.findIndex((start, i) => {
+      const nextStart = catStarts[i + 1] ?? allItems.length;
+      return activeIndex >= start && activeIndex < nextStart;
+    });
+
+    let nextCatIdx = currentCatIdx + dir;
+    if (nextCatIdx < 0) nextCatIdx = catStarts.length - 1;
+    if (nextCatIdx >= catStarts.length) nextCatIdx = 0;
+    setActiveIndex(catStarts[nextCatIdx]);
+  };
+
+  /* ── Helpers to resolve flat index ──────────────────────── */
+  const buildFlatList = (): (Command & { _source: "recent" | "main" })[] => {
+    const list: (Command & { _source: "recent" | "main" })[] = [];
+    for (const cmd of recentCommands) list.push({ ...cmd, _source: "recent" });
+    for (const cmd of filtered) list.push({ ...cmd, _source: "main" });
+    return list;
+  };
+
+  const resolveCommandAtIndex = (idx: number): Command | undefined => {
+    if (idx < recentCommands.length) return recentCommands[idx];
+    return filtered[idx - recentCommands.length];
+  };
+
+  /* ── Render ─────────────────────────────────────────────── */
+  if (!visible) return null;
+
+  const renderItem = (cmd: Command, globalIndex: number) => {
+    const isHighlighted = globalIndex === activeIndex;
+    const matchIndices = matchIndicesMap.get(cmd.id);
     return (
       <div
-        key={cmd.id}
+        key={`${cmd.id}-${globalIndex}`}
         className={`cp-item${isHighlighted ? " cp-item--highlighted" : ""}${cmd.isActive ? " cp-item--active" : ""}`}
-        onMouseEnter={() => setActiveIndex(cmdIndex)}
+        onMouseEnter={() => setActiveIndex(globalIndex)}
         onMouseDown={(e) => { e.preventDefault(); execute(cmd); }}
       >
         {cmd.icon}
-        <span className="cp-item-label">{cmd.label}</span>
+        <span className="cp-item-label">
+          {q && matchIndices ? highlightText(cmd.label, matchIndices) : cmd.label}
+        </span>
         {cmd.meta && <span className="cp-item-meta">{cmd.meta}</span>}
         {cmd.isActive && (
           <svg className="cp-item-check" width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -137,14 +356,20 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     );
   };
 
-  // Grouped view: no search query — groups by category then subSection
+  // Description for the currently highlighted command
+  const highlightedCmd = resolveCommandAtIndex(activeIndex);
+  const showDescription = highlightedCmd?.description && !q;
+
+  // Grouped view: no search query
   const renderGrouped = () => {
+    let globalIndex = recentCommands.length; // offset past recent items
+
     const categoryOrder: string[] = [];
     const categoryMap = new Map<string, { sectionOrder: (string | null)[]; sectionMap: Map<string | null, Command[]> }>();
-    const cmdIndexMap = new Map<string, number>();
-    let idx = 0;
+    const cmdIndexMap = new Map<number, number>(); // internal idx -> global idx
 
-    for (const cmd of commands) {
+    let idx = 0;
+    for (const cmd of filtered) {
       if (!categoryMap.has(cmd.category)) {
         categoryOrder.push(cmd.category);
         categoryMap.set(cmd.category, { sectionOrder: [], sectionMap: new Map() });
@@ -155,20 +380,26 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
         cat.sectionMap.set(cmd.subSection, []);
       }
       cat.sectionMap.get(cmd.subSection)!.push(cmd);
-      cmdIndexMap.set(cmd.id, idx++);
+      cmdIndexMap.set(idx, globalIndex + idx);
+      idx++;
     }
 
+    let runningIdx = 0;
     return categoryOrder.map((catLabel, catIdx) => {
       const { sectionOrder, sectionMap } = categoryMap.get(catLabel)!;
       return (
-        <div key={catLabel} className={`cp-category${catIdx > 0 ? " cp-category--divided" : ""}`}>
+        <div key={catLabel} className={`cp-category${catIdx > 0 || recentCommands.length > 0 ? " cp-category--divided" : ""}`}>
           <div className="cp-category-label">{catLabel}</div>
           {sectionOrder.map((secLabel) => {
             const cmds = sectionMap.get(secLabel)!;
             return (
               <div key={secLabel ?? "__root"} className="cp-section">
                 {secLabel && <div className="cp-section-label">{secLabel}</div>}
-                {cmds.map((cmd) => renderItem(cmd, cmdIndexMap.get(cmd.id)!))}
+                {cmds.map((cmd) => {
+                  const gi = cmdIndexMap.get(runningIdx)!;
+                  runningIdx++;
+                  return renderItem(cmd, gi);
+                })}
               </div>
             );
           })}
@@ -177,29 +408,75 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
     });
   };
 
-  // Flat view: search query active
+  // Recent section
+  const renderRecent = () => {
+    if (recentCommands.length === 0) return null;
+    return (
+      <div className="cp-category">
+        <div className="cp-category-label">Recent</div>
+        <div className="cp-section">
+          {recentCommands.map((cmd, i) => renderItem(cmd, i))}
+        </div>
+      </div>
+    );
+  };
+
+  // Flat filtered view
   const renderFiltered = () => (
     <>
       {filtered.map((cmd, i) => renderItem(cmd, i))}
     </>
   );
 
+  // Empty state
+  const renderEmpty = () => {
+    const suggestions = ["tab", "layout", "panel", "ssh"];
+    return (
+      <div className="cp-empty">
+        <div className="cp-empty-title">No results for "{q}"</div>
+        <div className="cp-empty-suggestions">
+          Try{" "}
+          {suggestions.map((s, i) => (
+            <span key={s}>
+              {i > 0 && (i === suggestions.length - 1 ? ", or " : ", ")}
+              <button
+                className="cp-empty-suggestion"
+                onMouseDown={(e) => { e.preventDefault(); setQuery(s); }}
+              >
+                {s}
+              </button>
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Mode indicator for prefix
+  const modeLabel = mode === "tabs" ? "Tabs" : null;
+
   return createPortal(
     <div
-      className="cp-backdrop"
+      className={`cp-backdrop${phase === "out" ? " cp-backdrop--out" : ""}`}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="cp-panel" role="dialog" aria-modal="true" aria-label="Command Palette">
+      <div
+        className={`cp-panel${phase === "out" ? " cp-panel--out" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command Palette"
+      >
         {/* Search row */}
         <div className="cp-search-row">
           <svg className="cp-search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none">
             <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.4" />
             <path d="M10.5 10.5L13.5 13.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
+          {modeLabel && <span className="cp-mode-badge">{modeLabel}</span>}
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder="Search commands..."
+            placeholder={mode === "tabs" ? "Switch to tab..." : "Search commands..."}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
             onKeyDown={handleKeyDown}
@@ -211,19 +488,30 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
 
         {/* Command list */}
         <div ref={listRef} className="cp-list">
-          {filtered.length === 0 ? (
-            <div className="cp-empty">No results</div>
+          {totalCount === 0 ? (
+            renderEmpty()
           ) : q ? (
             renderFiltered()
           ) : (
-            renderGrouped()
+            <>
+              {renderRecent()}
+              {renderGrouped()}
+            </>
           )}
         </div>
+
+        {/* Description bar */}
+        {showDescription && (
+          <div className="cp-description">
+            {highlightedCmd!.description}
+          </div>
+        )}
 
         {/* Footer hint */}
         <div className="cp-footer">
           <span className="cp-hint"><kbd>↑↓</kbd> Navigate</span>
           <span className="cp-hint"><kbd>↵</kbd> Execute</span>
+          <span className="cp-hint"><kbd>Tab</kbd> Jump</span>
           <span className="cp-hint"><kbd>Ctrl K</kbd> Close</span>
         </div>
       </div>

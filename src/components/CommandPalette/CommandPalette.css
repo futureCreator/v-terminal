@@ -14,9 +14,18 @@
   animation: cp-backdrop-in 0.14s ease;
 }
 
+.cp-backdrop--out {
+  animation: cp-backdrop-out 0.1s ease forwards;
+}
+
 @keyframes cp-backdrop-in {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+@keyframes cp-backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 /* ── Panel ────────────────────────────────────────────────────── */
@@ -37,9 +46,18 @@
   animation: cp-panel-in 0.16s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+.cp-panel--out {
+  animation: cp-panel-out 0.1s ease forwards;
+}
+
 @keyframes cp-panel-in {
   from { opacity: 0; transform: scale(0.96) translateY(-10px); }
   to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes cp-panel-out {
+  from { opacity: 1; transform: scale(1)    translateY(0); }
+  to   { opacity: 0; transform: scale(0.97) translateY(-6px); }
 }
 
 /* ── Search row ───────────────────────────────────────────────── */
@@ -89,6 +107,24 @@
   line-height: 1.5;
   flex-shrink: 0;
   user-select: none;
+}
+
+/* ── Mode badge (prefix indicator) ────────────────────────────── */
+
+.cp-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: "Pretendard", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: var(--radius-xs);
+  padding: 2px 7px;
+  line-height: 1.5;
+  flex-shrink: 0;
+  user-select: none;
+  letter-spacing: 0.03em;
 }
 
 /* ── List ─────────────────────────────────────────────────────── */
@@ -186,29 +222,6 @@
   color: var(--label-primary);
 }
 
-/* ── Swatch ───────────────────────────────────────────────────── */
-
-.cp-swatch {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  width: 28px;
-  height: 18px;
-  border-radius: 4px;
-  overflow: hidden;
-  padding: 3px 4px;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.cp-swatch-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 /* ── Auto icon ────────────────────────────────────────────────── */
 
 .cp-auto-icon {
@@ -228,7 +241,7 @@
   background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
-/* ── Label & Check ────────────────────────────────────────────── */
+/* ── Label & Meta & Check ─────────────────────────────────────── */
 
 .cp-item-label {
   flex: 1;
@@ -252,13 +265,68 @@
   flex-shrink: 0;
 }
 
-/* ── Empty ────────────────────────────────────────────────────── */
+/* ── Fuzzy match highlight ────────────────────────────────────── */
+
+.cp-match {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent);
+  border-radius: 2px;
+  padding: 0 1px;
+  font-weight: 600;
+}
+
+/* ── Description bar ──────────────────────────────────────────── */
+
+.cp-description {
+  padding: 6px 14px;
+  border-top: 1px solid var(--separator);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--label-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Empty state ──────────────────────────────────────────────── */
 
 .cp-empty {
-  padding: 32px;
+  padding: 32px 24px;
   text-align: center;
+}
+
+.cp-empty-title {
   color: var(--label-tertiary);
   font-size: 13px;
+  font-weight: 450;
+  margin-bottom: 8px;
+}
+
+.cp-empty-suggestions {
+  font-size: 12px;
+  color: var(--label-quaternary, var(--label-tertiary));
+}
+
+.cp-empty-suggestion {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  transition: background 0.1s;
+}
+
+.cp-empty-suggestion:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 /* ── Footer ───────────────────────────────────────────────────── */

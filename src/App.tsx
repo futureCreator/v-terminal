@@ -208,6 +208,7 @@ export function App() {
       {
         id: "tab:close",
         label: "Close Current Tab",
+        description: "Save session to background and close the active tab",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -220,6 +221,7 @@ export function App() {
       {
         id: "tab:send-to-background",
         label: "Send Current Tab to Background",
+        description: "Preserve the tab session and move it to background",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -228,11 +230,13 @@ export function App() {
             </svg>
           </span>
         ),
-        action: handleCloseCurrentTab,
+        action: () => { if (activeTab) saveAndRemoveTab(activeTab.id); },
       },
       {
         id: "tab:new",
         label: "New Tab",
+        description: "Open a new terminal tab",
+        meta: "Ctrl+T",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -245,6 +249,7 @@ export function App() {
       {
         id: "tab:broadcast",
         label: activeTab?.broadcastEnabled ? "Disable Broadcast" : "Enable Broadcast",
+        description: "Send keyboard input to all panels in the current tab simultaneously",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -261,6 +266,7 @@ export function App() {
         {
           id: "tab:prev",
           label: "Previous Tab",
+          description: "Switch to the tab on the left",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -274,6 +280,7 @@ export function App() {
         {
           id: "tab:next",
           label: "Next Tab",
+          description: "Switch to the tab on the right",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -288,6 +295,7 @@ export function App() {
       {
         id: "view:toolkit",
         label: sidebarOpen ? "Hide Toolkit" : "Show Toolkit",
+        description: "Toggle the side panel with notes, timers, and tools",
         meta: "Ctrl+Shift+N",
         icon: (
           <span className="cp-cmd-icon">
@@ -305,6 +313,7 @@ export function App() {
       {
         id: "ssh:profiles",
         label: "SSH Profiles",
+        description: "Manage and connect to saved SSH servers",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -323,6 +332,7 @@ export function App() {
         {
           id: "panel:zoom",
           label: "Zoom Current Panel",
+          description: "Toggle fullscreen for the focused panel",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -335,6 +345,7 @@ export function App() {
         {
           id: "panel:prev",
           label: "Previous Panel",
+          description: "Move focus to the previous panel",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -349,6 +360,7 @@ export function App() {
         {
           id: "panel:next",
           label: "Next Panel",
+          description: "Move focus to the next panel",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -362,7 +374,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen, saveAndRemoveTab]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -496,6 +508,7 @@ export function App() {
       commands: LAYOUT_OPTIONS.map(({ value, label, icon }) => ({
         id: `layout:${value}`,
         label,
+        description: `Split the current tab into ${label.toLowerCase()}`,
         icon,
         isActive: activeTab?.layout === value,
         action: () => handleLayoutChange(value),
@@ -512,10 +525,10 @@ export function App() {
       const minutes = Math.floor(seconds / 60);
       const hours = Math.floor(minutes / 60);
       const days = Math.floor(hours / 24);
-      if (seconds < 60) return "방금 전";
-      if (minutes < 60) return `${minutes}분 전`;
-      if (hours < 24) return `${hours}시간 전`;
-      return `${days}일 전`;
+      if (seconds < 60) return "just now";
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      return `${days}d ago`;
     };
 
     return {
@@ -523,7 +536,8 @@ export function App() {
       commands: savedTabs.map((saved) => ({
         id: `background:${saved.id}`,
         label: saved.label,
-        meta: `${saved.panels.length > 1 ? `${saved.panels.length}개 패널 · ` : ""}${formatRelativeTime(saved.savedAt)}`,
+        description: "Restore this saved tab session",
+        meta: `${saved.panels.length > 1 ? `${saved.panels.length} panels · ` : ""}${formatRelativeTime(saved.savedAt)}`,
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
