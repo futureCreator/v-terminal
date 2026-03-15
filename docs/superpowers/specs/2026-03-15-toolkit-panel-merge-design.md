@@ -38,7 +38,7 @@ SidebarTab = "notes" | "timers"
 ```
 
 - Timers tab icon: reuse the existing clock icon from the Pomodoro tab
-- localStorage migration: `"pomodoro"` | `"timer"` | `"recurring"` → `"timers"`
+- localStorage migration: `"pomodoro"` | `"timer"` | `"recurring"` | `"alerts"` (legacy) → `"timers"`
 
 ## Timers Tab Internal Structure
 
@@ -103,9 +103,16 @@ The entire Timers tab body uses `overflow-y: auto`, so all 3 sections can be exp
 - **`SidePanel`** — Update `SidebarTab` type, reduce to 2 tab buttons, render `TimersPanel` for "timers" tab, remove `QuickStatus` component
 - **`TodoSection`** — Change Korean labels to English
 
+### Deleted Files
+- **`src/components/AlarmPanel/AlarmPanel.tsx`** — Legacy component, not imported anywhere. Contains its own tab structure and QuickStatus that were superseded by `SidePanel.tsx`. Safe to delete.
+
 ### Removed
 - **`QuickStatus`** component (in SidePanel.tsx)
 - Quick Status Bar CSS styles (in AlarmPanel.css)
+
+### Import Changes in SidePanel.tsx
+- **Remove:** imports of `PomodoroSection`, `TimerSection`, `RecurringSection`, `useAlarmStore`, and `../AlarmPanel/AlarmPanel.css`
+- **Add:** import of `TimersPanel`
 
 ### Unchanged (internals preserved)
 - `PomodoroSection` — ring, controls, settings all stay as-is
@@ -123,12 +130,17 @@ The entire Timers tab body uses `overflow-y: auto`, so all 3 sections can be exp
 | Checkbox aria-label (incomplete) | 완료 처리 | Mark complete |
 | Delete button aria-label & title | 삭제 | Delete |
 
+### Accessibility
+- All collapsible section header buttons must include `aria-expanded` attribute, consistent with existing `TodoSection` pattern.
+
 ## Files Affected
 
 | File | Change |
 |------|--------|
-| `src/components/SidePanel/SidePanel.tsx` | Update SidebarTab type, 2 tab buttons, render TimersPanel, remove QuickStatus |
-| `src/components/SidePanel/TimersPanel.tsx` | **New** — merged Timers tab with 3 collapsible sections |
+| `src/components/SidePanel/SidePanel.tsx` | Update SidebarTab type, 2 tab buttons, render TimersPanel, remove QuickStatus, remove section/alarm imports |
+| `src/components/SidePanel/TimersPanel.tsx` | **New** — merged Timers tab with 3 collapsible sections. Imports AlarmPanel.css and section components. |
+| `src/components/SidePanel/SidePanel.css` | Add collapsible section header styles (chevron, label, active dot) shared by TimersPanel and TodoSection |
 | `src/components/NotePanel/TodoSection.tsx` | Korean → English labels |
-| `src/components/AlarmPanel/AlarmPanel.css` | Remove Quick Status Bar styles |
-| `src/App.tsx` | Update sidebar tab references (type, migration, defaults) |
+| `src/components/AlarmPanel/AlarmPanel.tsx` | **Delete** — dead legacy component |
+| `src/components/AlarmPanel/AlarmPanel.css` | Remove Quick Status Bar styles, keep section-internal styles |
+| `src/App.tsx` | Update sidebar tab references (type, migration including legacy "alerts", defaults) |
