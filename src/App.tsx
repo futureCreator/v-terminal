@@ -31,7 +31,7 @@ export function App() {
   const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
     useTabStore();
   const { themeId } = useThemeStore();
-  const { fontSize: terminalFontSize, increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useTerminalFontStore();
+  const { increase: fontIncrease, decrease: fontDecrease, reset: fontReset } = useTerminalFontStore();
   const { profiles: sshProfiles } = useSshStore();
 
   const activeTab = useMemo(
@@ -144,15 +144,6 @@ export function App() {
       return () => mq.removeEventListener("change", applyTheme);
     }
   }, [themeId]);
-
-  // Apply terminal font size to all open terminals
-  useEffect(() => {
-    for (const term of terminalRegistry.values()) {
-      term.options.fontSize = terminalFontSize;
-    }
-    // Trigger resize so xterm recalculates cell dimensions
-    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
-  }, [terminalFontSize]);
 
   const activateTab = useCallback((tabId: string) => {
     setActiveTab(tabId);

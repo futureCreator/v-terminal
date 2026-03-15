@@ -256,22 +256,34 @@ export function TerminalPane({
       // Resize observer with debounce and scroll-position preservation
       if (containerRef.current) {
         let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+        let savedViewportY = 0;
+        let savedIsAtBottom = true;
         const observer = new ResizeObserver(() => {
+          if (disposed || !fitAddonRef.current || !termRef.current) return;
+          // Capture viewport position at the first event in each debounce window,
+          // before xterm has a chance to internally reset it during reflow
+          if (!resizeTimeout) {
+            const buffer = term.buffer.active;
+            savedViewportY = buffer.viewportY;
+            savedIsAtBottom = savedViewportY >= buffer.length - term.rows;
+          }
           if (resizeTimeout) clearTimeout(resizeTimeout);
           resizeTimeout = setTimeout(() => {
+            resizeTimeout = null;
             if (disposed || !fitAddonRef.current || !termRef.current) return;
             try {
-              const buffer = term.buffer.active;
-              const savedViewportY = buffer.viewportY;
-              const isAtBottom = savedViewportY >= buffer.length - term.rows;
-
               fitAddon.fit();
 
-              if (isAtBottom) {
-                term.scrollToBottom();
-              } else {
-                term.scrollToLine(savedViewportY);
-              }
+              const restore = () => {
+                if (savedIsAtBottom) {
+                  term.scrollToBottom();
+                } else {
+                  term.scrollToLine(savedViewportY);
+                }
+              };
+              restore();
+              // Follow-up restoration after the browser has computed the new layout
+              requestAnimationFrame(restore);
 
               ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
             } catch {}
@@ -309,6 +321,37 @@ export function TerminalPane({
       termRef.current.focus();
     }
   }, [isActive]);
+
+  // Apply font size changes with scroll-position preservation
+  useEffect(() => {
+    const term = termRef.current;
+    const fitAddon = fitAddonRef.current;
+    if (!term || !fitAddon) return;
+
+    term.options.fontSize = fontSize;
+    try {
+      const buffer = term.buffer.active;
+      const savedViewportY = buffer.viewportY;
+      const isAtBottom = savedViewportY >= buffer.length - term.rows;
+
+      fitAddon.fit();
+
+      const restore = () => {
+        if (isAtBottom) {
+          term.scrollToBottom();
+        } else {
+          term.scrollToLine(savedViewportY);
+        }
+      };
+      restore();
+      requestAnimationFrame(restore);
+
+      const ptyId = ptyIdRef.current;
+      if (ptyId) {
+        ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
+      }
+    } catch {}
+  }, [fontSize]);
 
   return (
     <div
