@@ -383,21 +383,27 @@ export function TerminalPane({
 
     term.options.fontSize = fontSize;
     try {
-      const buffer = term.buffer.active;
-      const savedViewportY = buffer.viewportY;
-      const isAtBottom = savedViewportY >= buffer.length - term.rows;
+      const isAlternate = term.buffer.active.type === "alternate";
 
-      fitAddon.fit();
+      if (!isAlternate) {
+        const buffer = term.buffer.active;
+        const savedViewportY = buffer.viewportY;
+        const isAtBottom = savedViewportY >= buffer.length - term.rows;
 
-      const restore = () => {
-        if (isAtBottom) {
-          term.scrollToBottom();
-        } else {
-          term.scrollToLine(savedViewportY);
-        }
-      };
-      restore();
-      requestAnimationFrame(restore);
+        fitAddon.fit();
+
+        const restore = () => {
+          if (isAtBottom) {
+            term.scrollToBottom();
+          } else {
+            term.scrollToLine(savedViewportY);
+          }
+        };
+        restore();
+        requestAnimationFrame(restore);
+      } else {
+        fitAddon.fit();
+      }
 
       const ptyId = ptyIdRef.current;
       if (ptyId) {
@@ -414,21 +420,27 @@ export function TerminalPane({
 
     term.options.fontFamily = `"${fontFamily}", "JetBrains Mono", "Nanum Gothic Coding", monospace`;
     try {
-      const buffer = term.buffer.active;
-      const savedViewportY = buffer.viewportY;
-      const isAtBottom = savedViewportY >= buffer.length - term.rows;
+      const isAlternate = term.buffer.active.type === "alternate";
 
-      fitAddon.fit();
+      if (!isAlternate) {
+        const buffer = term.buffer.active;
+        const savedViewportY = buffer.viewportY;
+        const isAtBottom = savedViewportY >= buffer.length - term.rows;
 
-      const restore = () => {
-        if (isAtBottom) {
-          term.scrollToBottom();
-        } else {
-          term.scrollToLine(savedViewportY);
-        }
-      };
-      restore();
-      requestAnimationFrame(restore);
+        fitAddon.fit();
+
+        const restore = () => {
+          if (isAtBottom) {
+            term.scrollToBottom();
+          } else {
+            term.scrollToLine(savedViewportY);
+          }
+        };
+        restore();
+        requestAnimationFrame(restore);
+      } else {
+        fitAddon.fit();
+      }
 
       const ptyId = ptyIdRef.current;
       if (ptyId) {
@@ -445,21 +457,27 @@ export function TerminalPane({
 
     term.options.lineHeight = lineHeight;
     try {
-      const buffer = term.buffer.active;
-      const savedViewportY = buffer.viewportY;
-      const isAtBottom = savedViewportY >= buffer.length - term.rows;
+      const isAlternate = term.buffer.active.type === "alternate";
 
-      fitAddon.fit();
+      if (!isAlternate) {
+        const buffer = term.buffer.active;
+        const savedViewportY = buffer.viewportY;
+        const isAtBottom = savedViewportY >= buffer.length - term.rows;
 
-      const restore = () => {
-        if (isAtBottom) {
-          term.scrollToBottom();
-        } else {
-          term.scrollToLine(savedViewportY);
-        }
-      };
-      restore();
-      requestAnimationFrame(restore);
+        fitAddon.fit();
+
+        const restore = () => {
+          if (isAtBottom) {
+            term.scrollToBottom();
+          } else {
+            term.scrollToLine(savedViewportY);
+          }
+        };
+        restore();
+        requestAnimationFrame(restore);
+      } else {
+        fitAddon.fit();
+      }
 
       const ptyId = ptyIdRef.current;
       if (ptyId) {
