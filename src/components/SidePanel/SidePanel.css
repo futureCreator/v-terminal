@@ -94,3 +94,78 @@
   padding: 6px;
   gap: 6px;
 }
+
+/* ── Collapsible section — shared by TimersPanel & TodoSection ──── */
+.collapsible-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-terminal);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.collapsible-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.collapsible-chevron {
+  color: var(--label-tertiary);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.collapsible-chevron--open {
+  transform: rotate(90deg);
+}
+
+.collapsible-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-family: "Pretendard", sans-serif;
+}
+
+.collapsible-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.collapsible-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.collapsible-status-text {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  color: var(--label-secondary);
+  white-space: nowrap;
+}
+
+.collapsible-body {
+  border-top: 1px solid var(--bg-panel-border);
+}
