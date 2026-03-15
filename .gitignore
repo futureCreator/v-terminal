@@ -23,6 +23,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Superpowers
+.superpowers/
+
 # Logs
 *.log
 npm-debug.log*
