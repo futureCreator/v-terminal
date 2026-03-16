@@ -21,10 +21,7 @@ const FONT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "Victor Mono", label: "Victor Mono" },
   { value: "Commit Mono", label: "Commit Mono" },
   { value: "Maple Mono", label: "Maple Mono" },
-  { value: "Recursive Mono", label: "Recursive Mono" },
   { value: "Iosevka", label: "Iosevka" },
-  { value: "Sarasa Mono K", label: "Sarasa Mono K" },
-  { value: "Tab0 Mono K", label: "Tab0 Mono K" },
 ];
 
 const CURSOR_OPTIONS: Array<{ value: CursorStyle; label: string }> = [

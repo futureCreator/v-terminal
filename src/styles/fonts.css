@@ -119,40 +119,6 @@
   font-display: swap;
 }
 
-/* Sarasa Mono K */
-@font-face {
-  font-family: "Sarasa Mono K";
-  src: url("../assets/fonts/sarasa-mono-k/SarasaMonoK-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Sarasa Mono K";
-  src: url("../assets/fonts/sarasa-mono-k/SarasaMonoK-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Tab0 Mono K */
-@font-face {
-  font-family: "Tab0 Mono K";
-  src: url("../assets/fonts/tab0-mono-k/Tab0MonoK-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Tab0 Mono K";
-  src: url("../assets/fonts/tab0-mono-k/Tab0MonoK-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* Geist Mono */
 @font-face {
   font-family: "Geist Mono";
@@ -216,23 +182,6 @@
 @font-face {
   font-family: "Maple Mono";
   src: url("../assets/fonts/maple-mono/MapleMono-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Recursive Mono */
-@font-face {
-  font-family: "Recursive Mono";
-  src: url("../assets/fonts/recursive-mono/Recursive-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Recursive Mono";
-  src: url("../assets/fonts/recursive-mono/Recursive-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
