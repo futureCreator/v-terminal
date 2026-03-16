@@ -110,7 +110,12 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin({
+            use tauri_plugin_window_state::StateFlags;
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
+                .build()
+        })
         .plugin(tauri_plugin_notification::init())
         .manage(app_state)
         .manage(browser_state)
