@@ -143,7 +143,7 @@ export function TerminalPane({
       // Renderer: WebGL → Canvas → DOM fallback
       try {
         const webglAddon = new WebglAddon();
-        webglAddon.onContextLost(() => {
+        webglAddon.onContextLoss(() => {
           webglAddon.dispose();
           try {
             term.loadAddon(new CanvasAddon());
