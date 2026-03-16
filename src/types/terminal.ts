@@ -55,4 +55,5 @@ export interface SavedTab {
   layout: Layout;
   panels: SavedTabPanel[];
   savedAt: number; // ms timestamp
+  notes?: { markdown: string; todos: { id: string; text: string; completed: boolean }[] };
 }

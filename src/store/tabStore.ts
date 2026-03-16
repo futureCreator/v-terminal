@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 import type { Tab, Panel, Layout, SavedTab, PanelConnection } from "../types/terminal";
 import { panelCount } from "../lib/layoutMath";
+import { useNoteStore } from "./noteStore";
 
 // We import uuid lazily since we bundle it
 function genId() {
@@ -138,6 +139,7 @@ export const useTabStore = create<TabStore>((set, get) => {
 
         let newSavedTabs = s.savedTabs;
         if (tab && savablePanels.length > 0) {
+          const tabNotes = useNoteStore.getState().notes[id];
           const savedTab: SavedTab = {
             id: genId(),
             label: tab.label,
@@ -148,6 +150,7 @@ export const useTabStore = create<TabStore>((set, get) => {
               connection: p.connection,
             })),
             savedAt: Date.now(),
+            notes: tabNotes,
           };
           newSavedTabs = [...s.savedTabs, savedTab];
           persistSavedTabs(newSavedTabs);
@@ -205,6 +208,17 @@ export const useTabStore = create<TabStore>((set, get) => {
         broadcastEnabled: false,
         pendingSessionPick: false,
       };
+
+      // Restore notes & todos to the new tab
+      if (savedTab.notes) {
+        const noteStore = useNoteStore.getState();
+        const updatedNotes = { ...noteStore.notes, [newTabId]: savedTab.notes };
+        useNoteStore.setState({ notes: updatedNotes });
+        // Persist immediately
+        try {
+          localStorage.setItem("v-terminal:tab-notes", JSON.stringify(updatedNotes));
+        } catch {}
+      }
 
       set((s) => {
         const savedTabs = s.savedTabs.filter((t) => t.id !== savedTabId);
@@ -355,6 +369,7 @@ export const useTabStore = create<TabStore>((set, get) => {
 
     saveAllOpenTabsToBackground: () => {
       set((s) => {
+        const allNotes = useNoteStore.getState().notes;
         const newSaved = s.tabs
           .filter((t) => !t.pendingSessionPick)
           .flatMap((t) => {
@@ -372,6 +387,7 @@ export const useTabStore = create<TabStore>((set, get) => {
                 connection: p.connection,
               })),
               savedAt: Date.now(),
+              notes: allNotes[t.id],
             };
             return [savedTab];
           });
