@@ -8,10 +8,14 @@ pub fn get_wsl_distros(state: State<AppState>) -> Result<Vec<String>, String> {
     #[cfg(windows)]
     {
         let cached = state.wsl_distros_cache.get_or_init(|| {
-            let Ok(output) = std::process::Command::new("wsl")
-                .args(["--list", "--quiet"])
-                .output()
-            else {
+            let mut cmd = std::process::Command::new("wsl");
+            cmd.args(["--list", "--quiet"]);
+            #[cfg(windows)]
+            {
+                use std::os::windows::process::CommandExt;
+                cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+            }
+            let Ok(output) = cmd.output() else {
                 return vec![];
             };
 
