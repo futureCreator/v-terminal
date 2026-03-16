@@ -59,51 +59,84 @@ async fn ensure_daemon_and_connect(app: tauri::AppHandle) -> Result<DaemonClient
 
 fn start_daemon_watchdog(app: tauri::AppHandle) {
     tauri::async_runtime::spawn(async move {
-        let mut backoff_ms = 500u64;
-        let mut first_connect = true;
+        // --- First connect: 15s hard timeout ---
+        update_splash(&app, "Starting daemon...");
 
+        let first_result = tokio::time::timeout(
+            std::time::Duration::from_secs(15),
+            first_connect_loop(&app),
+        )
+        .await;
+
+        let mut client = match first_result {
+            Ok(Ok(c)) => c,
+            _ => {
+                show_splash_error(
+                    &app,
+                    "Failed to start daemon. Please restart the application.",
+                );
+                tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+                std::process::exit(1);
+            }
+        };
+
+        // Store client and notify frontend
+        {
+            let state = app.state::<AppState>();
+            *state.daemon_client.lock().await = Some(client.clone());
+        }
+        update_splash(&app, "Almost ready...");
+        eprintln!("daemon connected");
+        let _ = app.emit("daemon-status", "connected");
+
+        // --- Ongoing reconnection loop (no timeout, infinite retry) ---
         loop {
-            // Keep retrying until connected
-            let client = loop {
-                match ensure_daemon_and_connect(app.clone()).await {
-                    Ok(c) => {
-                        backoff_ms = 500;
-                        break c;
-                    }
-                    Err(e) => {
-                        eprintln!("daemon connect failed: {e}, retrying in {backoff_ms}ms");
-                        tokio::time::sleep(std::time::Duration::from_millis(backoff_ms)).await;
-                        backoff_ms = (backoff_ms * 2).min(10_000);
-                    }
-                }
-            };
-
-            // Store client in app state
-            {
-                let state = app.state::<AppState>();
-                *state.daemon_client.lock().await = Some(client.clone());
-            }
-
-            if first_connect {
-                first_connect = false;
-                eprintln!("daemon connected");
-            } else {
-                eprintln!("daemon reconnected");
-            }
-            let _ = app.emit("daemon-status", "connected");
-
-            // Block until connection drops
             client.wait_for_disconnect().await;
 
-            // Clear stale client and notify frontend
             {
                 let state = app.state::<AppState>();
                 *state.daemon_client.lock().await = None;
             }
             eprintln!("daemon disconnected, reconnecting...");
             let _ = app.emit("daemon-status", "reconnecting");
+
+            let mut backoff_ms = 500u64;
+            client = loop {
+                match ensure_daemon_and_connect(app.clone()).await {
+                    Ok(c) => {
+                        break c;
+                    }
+                    Err(e) => {
+                        eprintln!("daemon reconnect failed: {e}, retrying in {backoff_ms}ms");
+                        tokio::time::sleep(std::time::Duration::from_millis(backoff_ms)).await;
+                        backoff_ms = (backoff_ms * 2).min(10_000);
+                    }
+                }
+            };
+
+            {
+                let state = app.state::<AppState>();
+                *state.daemon_client.lock().await = Some(client.clone());
+            }
+            eprintln!("daemon reconnected");
+            let _ = app.emit("daemon-status", "connected");
         }
     });
+}
+
+async fn first_connect_loop(app: &tauri::AppHandle) -> Result<DaemonClient, String> {
+    let mut backoff_ms = 500u64;
+    loop {
+        match ensure_daemon_and_connect(app.clone()).await {
+            Ok(c) => return Ok(c),
+            Err(e) => {
+                eprintln!("daemon connect failed: {e}, retrying in {backoff_ms}ms");
+                update_splash(app, "Connecting...");
+                tokio::time::sleep(std::time::Duration::from_millis(backoff_ms)).await;
+                backoff_ms = (backoff_ms * 2).min(10_000);
+            }
+        }
+    }
 }
 
 fn update_splash(app: &tauri::AppHandle, msg: &str) {
