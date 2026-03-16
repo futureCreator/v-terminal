@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { Tab } from "../../types/terminal";
 import { TerminalPane } from "../TerminalPane/TerminalPane";
+import { BrowserPane } from "../BrowserPane/BrowserPane";
 import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
 import "./PanelGrid.css";
@@ -13,11 +14,12 @@ export interface PanelNavHandle {
 
 interface PanelGridProps {
   tab: Tab;
+  isVisible: boolean;
   onActivePanelChanged?: (ptyId: string | null) => void;
   navRef?: React.MutableRefObject<PanelNavHandle | null>;
 }
 
-export function PanelGrid({ tab, onActivePanelChanged, navRef }: PanelGridProps) {
+export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: PanelGridProps) {
   const { setPtyId, clearPtyId } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
   const [zoomedPanelId, setZoomedPanelId] = useState<string | null>(null);
@@ -105,27 +107,37 @@ export function PanelGrid({ tab, onActivePanelChanged, navRef }: PanelGridProps)
     >
       {tab.panels.map((panel, index) => {
         const hidden = isZoomed && panel.id !== zoomedPanelId;
-        return (
-        <TerminalPane
-          key={panel.id}
-          style={{
-            ...(tab.layout === 3 && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
-            ...(hidden ? { display: "none" } : {}),
-          }}
-          cwd={tab.cwd}
-          isActive={panel.id === activePanelId}
-          broadcastEnabled={tab.broadcastEnabled}
-          siblingPtyIds={siblingPtyIds}
-          sshCommand={panel.connection?.sshCommand}
-          shellProgram={panel.connection?.shellProgram}
-          shellArgs={panel.connection?.shellArgs}
-          existingSessionId={panel.existingSessionId}
-          onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
-          onPtyKilled={() => handlePtyKilled(panel.id)}
-          onFocus={() => setActivePanelId(panel.id)}
-          onNextPanel={handleNextPanel}
-          onPrevPanel={handlePrevPanel}
-        />
+        return panel.connection?.type === "browser" ? (
+          <BrowserPane
+            key={panel.id}
+            panelId={panel.id}
+            tabId={tab.id}
+            initialUrl={panel.connection.browserUrl}
+            isActive={activePanelId === panel.id}
+            isVisible={isVisible && !hidden}
+            onFocus={() => setActivePanelId(panel.id)}
+          />
+        ) : (
+          <TerminalPane
+            key={panel.id}
+            style={{
+              ...(tab.layout === 3 && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
+              ...(hidden ? { display: "none" } : {}),
+            }}
+            cwd={tab.cwd}
+            isActive={panel.id === activePanelId}
+            broadcastEnabled={tab.broadcastEnabled}
+            siblingPtyIds={siblingPtyIds}
+            sshCommand={panel.connection?.sshCommand}
+            shellProgram={panel.connection?.shellProgram}
+            shellArgs={panel.connection?.shellArgs}
+            existingSessionId={panel.existingSessionId}
+            onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
+            onPtyKilled={() => handlePtyKilled(panel.id)}
+            onFocus={() => setActivePanelId(panel.id)}
+            onNextPanel={handleNextPanel}
+            onPrevPanel={handlePrevPanel}
+          />
         );
       })}
     </div>

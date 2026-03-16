@@ -706,6 +706,7 @@ export function App() {
             ) : (
               <PanelGrid
                 tab={tab}
+                isVisible={tab.id === activeTabId && !paletteOpen && !sshModalOpen && !settingsModalOpen}
                 onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
                 navRef={tab.id === activeTabId ? panelNavRef : undefined}
               />
