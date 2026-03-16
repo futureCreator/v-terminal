@@ -78,6 +78,29 @@ export function App() {
     ipc.getWslDistros().catch(() => {});
   }, []);
 
+  // Signal app_ready when daemon is connected (closes splash, shows main window)
+  useEffect(() => {
+    const readyFired = { current: false };
+    const fireReady = () => {
+      if (readyFired.current) return;
+      readyFired.current = true;
+      ipc.appReady().catch(() => {});
+    };
+
+    // 1. Register listener FIRST (prevents race condition)
+    let unlisten: (() => void) | null = null;
+    ipc.onDaemonStatus((status) => {
+      if (status === "connected") fireReady();
+    }).then((fn) => { unlisten = fn; });
+
+    // 2. THEN check current status (in case already connected)
+    ipc.getDaemonStatus().then((status) => {
+      if (status === "connected") fireReady();
+    }).catch(() => {});
+
+    return () => { unlisten?.(); };
+  }, []);
+
   // Alarm tick engine
   useAlarmTick();
 

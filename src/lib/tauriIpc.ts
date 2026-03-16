@@ -107,4 +107,8 @@ export const ipc = {
       handler(event.payload as "connected" | "reconnecting")
     );
   },
+
+  async appReady(): Promise<void> {
+    return invoke("app_ready");
+  },
 };
