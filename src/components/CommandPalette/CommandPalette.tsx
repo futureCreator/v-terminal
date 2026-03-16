@@ -36,6 +36,7 @@ interface Props {
   onClose: () => void;
   extraSections?: PaletteSection[];
   onQueryChange?: (query: string) => void;
+  initialQuery?: string;
 }
 
 /* ── Fuzzy matching ─────────────────────────────────────────────── */
@@ -116,7 +117,7 @@ function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
 
 /* ── Component ──────────────────────────────────────────────────── */
 
-export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange }: Props) {
+export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange, initialQuery = "" }: Props) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -187,9 +188,9 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
     if (isOpen) {
       setVisible(true);
       setPhase("in");
-      setQuery("");
+      setQuery(initialQuery);
       setActiveIndex(0);
-      onQueryChange?.("");
+      onQueryChange?.(initialQuery);
     } else if (visible) {
       setPhase("out");
       const timer = setTimeout(() => {
