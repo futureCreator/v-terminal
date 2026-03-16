@@ -35,6 +35,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   extraSections?: PaletteSection[];
+  onQueryChange?: (query: string) => void;
 }
 
 /* ── Fuzzy matching ─────────────────────────────────────────────── */
@@ -112,7 +113,7 @@ function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
 
 /* ── Component ──────────────────────────────────────────────────── */
 
-export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
+export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange }: Props) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -183,6 +184,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
       setPhase("in");
       setQuery("");
       setActiveIndex(0);
+      onQueryChange?.("");
     } else if (visible) {
       setPhase("out");
       const timer = setTimeout(() => {
@@ -447,7 +449,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [] }: Props) {
             className="cp-input"
             placeholder={mode === "tabs" ? "Switch to tab..." : mode === "ssh" ? "Connect to server..." : "Search commands..."}
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); }}
+            onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); onQueryChange?.(e.target.value); }}
             onKeyDown={handleKeyDown}
             spellCheck={false}
             autoComplete="off"

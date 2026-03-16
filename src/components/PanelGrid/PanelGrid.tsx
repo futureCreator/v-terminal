@@ -16,7 +16,7 @@ export interface PanelNavHandle {
 interface PanelGridProps {
   tab: Tab;
   isVisible: boolean;
-  onActivePanelChanged?: (ptyId: string | null) => void;
+  onActivePanelChanged?: (ptyId: string | null, panelId?: string) => void;
   navRef?: React.MutableRefObject<PanelNavHandle | null>;
 }
 
@@ -93,7 +93,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
   useEffect(() => {
     if (!onActivePanelChanged) return;
     const activePanel = tab.panels.find((p) => p.id === activePanelId);
-    onActivePanelChanged(activePanel?.ptyId ?? null);
+    onActivePanelChanged(activePanel?.ptyId ?? null, activePanelId);
   }, [activePanelId, tab.panels, onActivePanelChanged]);
 
   useEffect(() => {

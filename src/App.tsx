@@ -21,7 +21,11 @@ import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useTerminalConfigStore } from "./store/terminalConfigStore";
 import { useSshStore } from "./store/sshStore";
+import { useBookmarkStore } from "./store/bookmarkStore";
+import { useBrowserHistoryStore } from "./store/browserHistoryStore";
+import { useBrowserStore } from "./store/browserStore";
 import { buildSshCommand } from "./lib/sshUtils";
+import { browserIpc } from "./lib/browserIpc";
 import { ipc } from "./lib/tauriIpc";
 import { terminalRegistry } from "./components/TerminalPane/TerminalPane";
 import type { Layout } from "./types/terminal";
@@ -30,11 +34,14 @@ import "./styles/globals.css";
 import "./App.css";
 
 export function App() {
-  const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground } =
+  const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground, switchPanelConnection } =
     useTabStore();
   const { themeId } = useThemeStore();
   const { increaseFontSize: fontIncrease, decreaseFontSize: fontDecrease, resetFontSize: fontReset } = useTerminalConfigStore();
   const { profiles: sshProfiles } = useSshStore();
+  const { bookmarks, isBookmarked, addBookmark, removeBookmark, getBookmarkByUrl } = useBookmarkStore();
+  const browserPanels = useBrowserStore((s) => s.panels);
+  const searchBrowserHistory = useBrowserHistoryStore((s) => s.searchHistory);
 
   const activeTab = useMemo(
     () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
@@ -61,6 +68,8 @@ export function App() {
     return localStorage.getItem("v-terminal:alarm-open") === "true" ? "timers" : "notes";
   });
   const activePanelPtyIdRef = useRef<string | null>(null);
+  const activePanelIdRef = useRef<string | null>(null);
+  const [activePanelId, setActivePanelId] = useState<string | null>(null);
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
   // Prefetch WSL distros on startup to warm the Rust-side cache
@@ -200,8 +209,10 @@ export function App() {
     setActiveTab(tabs[nextIdx].id);
   }, [tabs, activeTabId, setActiveTab]);
 
-  const handleActivePanelChanged = useCallback((ptyId: string | null) => {
+  const handleActivePanelChanged = useCallback((ptyId: string | null, panelId?: string) => {
     activePanelPtyIdRef.current = ptyId;
+    activePanelIdRef.current = panelId ?? null;
+    setActivePanelId(panelId ?? null);
   }, []);
 
   const handlePaletteClose = useCallback(() => {
@@ -610,6 +621,201 @@ export function App() {
     };
   }, [sshProfiles, addTab, resolveSessionPick]);
 
+  // Derive active panel object from the active tab
+  const activePanel = useMemo(() => {
+    if (!activeTab || !activePanelId) return null;
+    return activeTab.panels.find((p) => p.id === activePanelId) ?? null;
+  }, [activeTab, activePanelId]);
+
+  const isBrowserPanel = activePanel?.connection?.type === "browser";
+
+  // Step 1: Browser-specific palette section (visible only when browser panel is focused)
+  const browserPaletteSection = useMemo<PaletteSection | null>(() => {
+    if (!isBrowserPanel || !activePanel) return null;
+
+    const panelState = browserPanels[activePanel.id];
+    const currentUrl = panelState?.url ?? "";
+    const currentTitle = panelState?.title ?? "";
+    const bookmarked = currentUrl ? isBookmarked(currentUrl) : false;
+
+    return {
+      category: "Browser",
+      commands: [
+        {
+          id: "browser:back",
+          label: "Go Back",
+          description: "Navigate to the previous page in browser history",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          ),
+          action: () => { browserIpc.goBack(activePanel.id); },
+        },
+        {
+          id: "browser:forward",
+          label: "Go Forward",
+          description: "Navigate to the next page in browser history",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M5 2l5 5-5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          ),
+          action: () => { browserIpc.goForward(activePanel.id); },
+        },
+        {
+          id: "browser:reload",
+          label: "Reload Page",
+          description: "Reload the current page",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M11.5 7A4.5 4.5 0 1 1 7 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <path d="M7 1l2 1.5L7 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          ),
+          action: () => { browserIpc.reload(activePanel.id); },
+        },
+        {
+          id: "browser:toggle-bookmark",
+          label: bookmarked ? "Remove from Bookmarks" : "Add to Bookmarks",
+          description: bookmarked ? "Remove the current page from bookmarks" : "Save the current page as a bookmark",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path
+                  d="M7 1.5l1.76 3.56 3.93.57-2.84 2.77.67 3.9L7 10.38 3.48 12.3l.67-3.9L1.31 5.63l3.93-.57L7 1.5z"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                  fill={bookmarked ? "currentColor" : "none"}
+                />
+              </svg>
+            </span>
+          ),
+          isActive: bookmarked,
+          action: () => {
+            if (bookmarked) {
+              const bm = getBookmarkByUrl(currentUrl);
+              if (bm) removeBookmark(bm.id);
+            } else if (currentUrl) {
+              addBookmark({ name: currentTitle || currentUrl, url: currentUrl });
+            }
+          },
+        },
+        {
+          id: "browser:manage-bookmarks",
+          label: "Manage Bookmarks",
+          description: "Open the bookmark manager to view and organize bookmarks",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="2" y="1" width="10" height="12" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M5 4h4M5 7h4M5 10h2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+              </svg>
+            </span>
+          ),
+          action: () => { setBookmarkModalOpen(true); },
+        },
+      ],
+    };
+  }, [isBrowserPanel, activePanel, browserPanels, isBookmarked, getBookmarkByUrl, addBookmark, removeBookmark, bookmarks]);
+
+  // Step 2: Switch Panel commands (always visible)
+  const switchPanelPaletteSection = useMemo<PaletteSection | null>(() => {
+    if (!activeTab || !activePanelId) return null;
+
+    return {
+      category: "Switch Panel",
+      commands: [
+        {
+          id: "panel:switch-browser",
+          label: "Switch Panel \u2192 Browser",
+          description: "Convert the active panel to a browser",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M1.5 7h11M7 1.5c-2 2-2 9 0 11M7 1.5c2 2 2 9 0 11" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+              </svg>
+            </span>
+          ),
+          isActive: isBrowserPanel,
+          action: () => {
+            switchPanelConnection(activeTab.id, activePanelId, { type: "browser", browserUrl: "https://www.google.com" });
+          },
+        },
+        {
+          id: "panel:switch-terminal",
+          label: "Switch Panel \u2192 Terminal",
+          description: "Convert the active panel to a local terminal",
+          icon: (
+            <span className="cp-cmd-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M3.5 6l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M7.5 9.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+            </span>
+          ),
+          isActive: activePanel?.connection?.type === "local" || (!activePanel?.connection?.type && !isBrowserPanel),
+          action: () => {
+            switchPanelConnection(activeTab.id, activePanelId, { type: "local" });
+          },
+        },
+      ],
+    };
+  }, [activeTab, activePanelId, isBrowserPanel, activePanel, switchPanelConnection]);
+
+  // Step 3: Browser history search results (populated when search query is present)
+  // This is handled dynamically via a state + effect pattern
+  const [paletteQuery, setPaletteQuery] = useState("");
+  const browserHistoryPaletteSection = useMemo<PaletteSection | null>(() => {
+    if (!paletteQuery || !activeTabId) return null;
+
+    const entries = searchBrowserHistory(activeTabId, paletteQuery);
+    if (entries.length === 0) return null;
+
+    // Deduplicate by URL (take the most recent visit)
+    const seen = new Set<string>();
+    const unique = entries.filter((e) => {
+      if (seen.has(e.url)) return false;
+      seen.add(e.url);
+      return true;
+    });
+
+    return {
+      category: "Browser History",
+      commands: unique.slice(0, 10).map((entry, i) => ({
+        id: `history:${i}:${entry.url}`,
+        label: entry.title || entry.url,
+        description: entry.url,
+        meta: new Date(entry.visitedAt).toLocaleDateString(),
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M7 3.5V7l2.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        ),
+        action: () => {
+          // Navigate the active browser panel to this URL, or open in a new browser panel
+          if (isBrowserPanel && activePanel) {
+            browserIpc.navigate(activePanel.id, entry.url);
+          } else if (activeTab && activePanelId) {
+            switchPanelConnection(activeTab.id, activePanelId, { type: "browser", browserUrl: entry.url });
+          }
+        },
+      })),
+    };
+  }, [paletteQuery, activeTabId, searchBrowserHistory, isBrowserPanel, activePanel, activeTab, activePanelId, switchPanelConnection]);
+
   // 앱 종료 시 열려있는 탭을 모두 백그라운드로 저장
   useEffect(() => {
     let cancelled = false;
@@ -746,12 +952,16 @@ export function App() {
       <CommandPalette
         isOpen={paletteOpen}
         onClose={handlePaletteClose}
+        onQueryChange={setPaletteQuery}
         extraSections={[
           tabPaletteSection,
           tabListPaletteSection,
+          ...(browserPaletteSection ? [browserPaletteSection] : []),
+          ...(switchPanelPaletteSection ? [switchPanelPaletteSection] : []),
           ...(sshProfilesPaletteSection ? [sshProfilesPaletteSection] : []),
           ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
+          ...(browserHistoryPaletteSection ? [browserHistoryPaletteSection] : []),
         ]}
       />
     </div>
