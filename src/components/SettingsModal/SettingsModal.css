@@ -242,6 +242,19 @@
 .settings-preview-number { color: var(--destructive); }
 .settings-preview-text { color: var(--label-primary); }
 
+/* ── Font Status ──────────────────────────────────────────────── */
+.settings-font-status {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  margin-bottom: 8px;
+}
+
+.settings-font-status--fallback {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+}
+
 /* ── Font Size Stepper ─────────────────────────────────────────── */
 .settings-stepper-row {
   display: flex;

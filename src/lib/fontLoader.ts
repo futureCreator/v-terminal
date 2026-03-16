@@ -18,14 +18,21 @@ export async function ensureFontLoaded(): Promise<void> {
 /**
  * Ensure a specific font family is loaded before applying it to the terminal.
  * Uses the Font Loading API to trigger @font-face download and wait for it.
+ * Returns true if the font was successfully loaded, false if it fell back.
  */
-export async function ensureSpecificFontLoaded(family: string): Promise<void> {
+export async function ensureSpecificFontLoaded(family: string): Promise<boolean> {
   try {
     await Promise.all([
       document.fonts.load(`14px "${family}"`),
       document.fonts.load(`bold 14px "${family}"`),
     ]);
+    const loaded = document.fonts.check(`14px "${family}"`);
+    if (!loaded) {
+      console.warn(`[font] "${family}" not available — will use fallback font`);
+    }
+    return loaded;
   } catch {
-    // Font may not exist or load failed — xterm will fall back
+    console.warn(`[font] Failed to load "${family}" — will use fallback font`);
+    return false;
   }
 }

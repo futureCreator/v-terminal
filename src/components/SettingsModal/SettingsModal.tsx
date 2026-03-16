@@ -4,6 +4,7 @@ import { useTerminalConfigStore, MIN_FONT_SIZE, MAX_FONT_SIZE, DEFAULT_FONT_SIZE
 import type { CursorStyle } from "../../store/terminalConfigStore";
 import { useThemeStore } from "../../store/themeStore";
 import { THEME_GROUPS } from "../../themes/definitions";
+import { ensureSpecificFontLoaded } from "../../lib/fontLoader";
 import "./SettingsModal.css";
 
 type Tab = "appearance" | "terminal";
@@ -183,6 +184,17 @@ function AppearanceTab({
   onFontSizeReset,
   onThemeChange,
 }: AppearanceTabProps) {
+  const [fontLoaded, setFontLoaded] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setFontLoaded(null);
+    let cancelled = false;
+    ensureSpecificFontLoaded(fontFamily).then((ok) => {
+      if (!cancelled) setFontLoaded(ok);
+    });
+    return () => { cancelled = true; };
+  }, [fontFamily]);
+
   return (
     <>
       {/* Font Section */}
@@ -204,6 +216,12 @@ function AppearanceTab({
             <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
+
+        {fontLoaded === false && (
+          <div className="settings-font-status settings-font-status--fallback">
+            Font not available — using fallback
+          </div>
+        )}
 
         {/* Font Preview */}
         <div className="settings-font-preview">
