@@ -150,7 +150,7 @@ export function PomodoroSection() {
               <div className="pomodoro-stepper-row">
                   <span className="pomodoro-stepper-label">Long Break</span>
                   <div className="pomodoro-stepper">
-                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.longBreakMinutes <= 5}
+                      <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.longBreakMinutes <= 10}
                           onClick={() => setPomodoroConfig({ longBreakMinutes: pomodoroConfig.longBreakMinutes - 5 })}>−</button>
                       <span className="pomodoro-stepper-value">{pomodoroConfig.longBreakMinutes}<span className="pomodoro-stepper-unit">m</span></span>
                       <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.longBreakMinutes >= 60}

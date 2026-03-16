@@ -85,9 +85,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         {/* Header */}
         <div className="settings-header">
           <div className="settings-title-group">
-            <svg className="settings-title-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.3" />
-              <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M3.05 3.05l1.06 1.06M9.89 9.89l1.06 1.06M10.95 3.05l-1.06 1.06M4.11 9.89l-1.06 1.06" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <svg className="settings-title-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6.8 1.5h2.4l.3 1.8.8.4 1.6-.9 1.7 1.7-.9 1.6.4.8 1.8.3v2.4l-1.8.3-.4.8.9 1.6-1.7 1.7-1.6-.9-.8.4-.3 1.8H6.8l-.3-1.8-.8-.4-1.6.9-1.7-1.7.9-1.6-.4-.8-1.8-.3V6.8l1.8-.3.4-.8-.9-1.6 1.7-1.7 1.6.9.8-.4z"/>
+              <circle cx="8" cy="8" r="2.2"/>
             </svg>
             <span className="settings-title">Settings</span>
           </div>
@@ -107,8 +107,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               onClick={() => setActiveTab("appearance")}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="3.5" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                <path d="M7 1C3.7 1 1 3.7 1 7s2.7 6 6 6c.7 0 1.2-.5 1.2-1 0-.2-.1-.4-.2-.6-.1-.2-.2-.4-.2-.6 0-.5.4-1 1-1h1.2c2.2 0 4-1.8 4-4 0-2.8-2.7-4.8-6-4.8z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                <circle cx="4.5" cy="5.5" r=".8" fill="currentColor"/>
+                <circle cx="7" cy="4" r=".8" fill="currentColor"/>
+                <circle cx="9.5" cy="5.5" r=".8" fill="currentColor"/>
               </svg>
               Appearance
             </button>

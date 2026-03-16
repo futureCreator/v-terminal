@@ -99,7 +99,7 @@ function highlightText(text: string, indices: number[]): React.ReactNode {
 
 /* ── Prefix mode ────────────────────────────────────────────────── */
 
-type PrefixMode = "all" | "tabs" | "layout" | "connection";
+type PrefixMode = "all" | "tabs" | "layout" | "connection" | "background";
 
 function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
   const trimmed = raw.trimStart();
@@ -111,6 +111,9 @@ function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
   }
   if (trimmed.startsWith("!")) {
     return { mode: "layout", query: trimmed.slice(1).trimStart() };
+  }
+  if (trimmed.startsWith("@")) {
+    return { mode: "background", query: trimmed.slice(1).trimStart() };
   }
   return { mode: "all", query: trimmed };
 }
@@ -159,6 +162,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
       pool = pool.filter((c) => c.category === "Switch Connection");
     } else if (mode === "layout") {
       pool = pool.filter((c) => c.category === "Layout");
+    } else if (mode === "background") {
+      pool = pool.filter((c) => c.category === "Background");
     }
 
     if (!q) return pool;
@@ -272,13 +277,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
         break;
       case "Tab":
         e.preventDefault();
-        if (e.shiftKey) {
-          // Jump to previous category
-          jumpCategory(-1);
-        } else {
-          // Jump to next category
-          jumpCategory(1);
-        }
         break;
     }
   };
@@ -430,7 +428,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
   };
 
   // Mode indicator for prefix
-  const modeLabel = mode === "tabs" ? "Tabs" : mode === "connection" ? "Connection" : mode === "layout" ? "Layout" : null;
+  const modeLabel = mode === "tabs" ? "Tabs" : mode === "connection" ? "Connection" : mode === "layout" ? "Layout" : mode === "background" ? "Background" : null;
 
   return createPortal(
     <div
@@ -453,7 +451,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "connection" ? "Switch connection..." : mode === "layout" ? "Change layout..." : "Search commands..."}
+            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "connection" ? "Switch connection..." : mode === "layout" ? "Change layout..." : mode === "background" ? "Restore background tab..." : "Search commands..."}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); onQueryChange?.(e.target.value); }}
             onKeyDown={handleKeyDown}
@@ -485,8 +483,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
         <div className="cp-footer">
           <span className="cp-hint"><kbd>↑↓</kbd> Navigate</span>
           <span className="cp-hint"><kbd>↵</kbd> Execute</span>
-          <span className="cp-hint"><kbd>Tab</kbd> Jump</span>
           <span className="cp-hint"><kbd>&gt;</kbd> Tabs</span>
+          <span className="cp-hint"><kbd>@</kbd> Background</span>
           <span className="cp-hint"><kbd>#</kbd> Connect</span>
           <span className="cp-hint"><kbd>!</kbd> Layout</span>
         </div>

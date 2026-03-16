@@ -142,9 +142,12 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
     >
       {tab.panels.map((panel, index) => {
         const hidden = isZoomed && panel.id !== zoomedPanelId;
+        const connKey = panel.connection
+          ? `${panel.connection.type}-${panel.connection.sshCommand ?? ""}-${panel.connection.shellProgram ?? ""}-${panel.connection.browserUrl ?? ""}`
+          : "local";
         return panel.connection?.type === "browser" ? (
           <div
-            key={panel.id}
+            key={`${panel.id}-${connKey}`}
             className="panel-ctx-wrapper"
             onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
             style={hidden ? { display: "none" } : undefined}
@@ -160,7 +163,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
           </div>
         ) : (
           <div
-            key={panel.id}
+            key={`${panel.id}-${connKey}`}
             className="panel-ctx-wrapper"
             onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
             style={{

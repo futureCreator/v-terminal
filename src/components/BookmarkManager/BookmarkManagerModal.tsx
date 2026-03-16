@@ -100,11 +100,13 @@ export function BookmarkManagerModal({ onClose }: Props) {
     if (!url) return;
     const finalName = name || url;
     if (isNew) {
-      addBookmark({ name: finalName, url });
+      const created = addBookmark({ name: finalName, url });
+      setSelectedId(created.id);
+      setIsNew(false);
+      setForm({ name: created.name, url: created.url });
     } else if (selectedId) {
       updateBookmark(selectedId, { name: finalName, url });
     }
-    onClose();
   };
 
   const handleDelete = () => {

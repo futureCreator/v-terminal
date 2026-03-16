@@ -100,7 +100,7 @@ function load(): PersistedData {
     const data = JSON.parse(raw) as PersistedData;
     const config = { ...DEFAULT_POMODORO_CONFIG, ...data.pomodoroConfig };
     config.focusMinutes = Math.max(5, Math.round(config.focusMinutes / 5) * 5);
-    config.longBreakMinutes = Math.max(5, Math.round(config.longBreakMinutes / 5) * 5);
+    config.longBreakMinutes = Math.max(10, Math.round(config.longBreakMinutes / 5) * 5);
     return {
       alarms: data.alarms ?? [],
       pomodoroConfig: config,

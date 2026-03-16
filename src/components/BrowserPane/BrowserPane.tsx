@@ -108,6 +108,9 @@ export function BrowserPane({
         await browserIpc.createWebview(panelId, targetUrl, x, y, width, height)
         webviewCreatedRef.current = true
         updatePanel(panelId, { url: targetUrl, isLoading: true, error: undefined })
+        // Ensure the webview is visible — the visibility effect may not re-run
+        // since webviewCreatedRef is a ref, not state.
+        browserIpc.show(panelId).catch(() => {})
       } catch (err) {
         updatePanel(panelId, {
           error: err instanceof Error ? err.message : "Failed to create browser",
