@@ -76,3 +76,18 @@
   color: var(--accent);
   flex-shrink: 0;
 }
+
+/* ── Divider ───────────────────────────────────────────────── */
+.panel-ctx-divider {
+  height: 1px;
+  background: var(--separator);
+  margin: 3px 8px;
+}
+
+/* ── Meta (subtitle) ───────────────────────────────────────── */
+.panel-ctx-item-meta {
+  font-size: 11px;
+  color: var(--label-tertiary);
+  flex-shrink: 0;
+  margin-left: auto;
+}

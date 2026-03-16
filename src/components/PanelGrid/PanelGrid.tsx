@@ -5,6 +5,8 @@ import { BrowserPane } from "../BrowserPane/BrowserPane";
 import { PanelContextMenu } from "../PanelContextMenu/PanelContextMenu";
 import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
+import { useSshStore } from "../../store/sshStore";
+import { ipc } from "../../lib/tauriIpc";
 import "./PanelGrid.css";
 
 export interface PanelNavHandle {
@@ -33,24 +35,27 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
     x: number;
     y: number;
     panelId: string;
-    currentType: string;
+    currentConnection?: PanelConnection;
   } | null>(null);
 
+  // Connection data for context menu
+  const { profiles: sshProfiles } = useSshStore();
+  const [wslDistros, setWslDistros] = useState<string[]>([]);
+  useEffect(() => {
+    ipc.getWslDistros().then(setWslDistros).catch(() => setWslDistros([]));
+  }, []);
+
   const handleContextMenu = useCallback(
-    (e: React.MouseEvent, panelId: string, currentType: string) => {
+    (e: React.MouseEvent, panelId: string, connection?: PanelConnection) => {
       e.preventDefault();
-      setCtxMenu({ x: e.clientX, y: e.clientY, panelId, currentType });
+      setCtxMenu({ x: e.clientX, y: e.clientY, panelId, currentConnection: connection });
     },
     []
   );
 
   const handleSwitchConnection = useCallback(
-    (type: "local" | "browser") => {
+    (connection: PanelConnection) => {
       if (!ctxMenu) return;
-      const connection: PanelConnection =
-        type === "browser"
-          ? { type: "browser", browserUrl: "https://www.google.com" }
-          : { type: "local" };
       switchPanelConnection(tab.id, ctxMenu.panelId, connection);
       setCtxMenu(null);
     },
@@ -137,12 +142,11 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
     >
       {tab.panels.map((panel, index) => {
         const hidden = isZoomed && panel.id !== zoomedPanelId;
-        const panelType = panel.connection?.type ?? "local";
         return panel.connection?.type === "browser" ? (
           <div
             key={panel.id}
             className="panel-ctx-wrapper"
-            onContextMenu={(e) => handleContextMenu(e, panel.id, panelType)}
+            onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
             style={hidden ? { display: "none" } : undefined}
           >
             <BrowserPane
@@ -158,7 +162,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
           <div
             key={panel.id}
             className="panel-ctx-wrapper"
-            onContextMenu={(e) => handleContextMenu(e, panel.id, panelType)}
+            onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
             style={{
               ...(tab.layout === 3 && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
               ...(hidden ? { display: "none" } : {}),
@@ -186,7 +190,9 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
         <PanelContextMenu
           x={ctxMenu.x}
           y={ctxMenu.y}
-          currentType={ctxMenu.currentType}
+          currentConnection={ctxMenu.currentConnection}
+          wslDistros={wslDistros}
+          sshProfiles={sshProfiles}
           onSwitchConnection={handleSwitchConnection}
           onClose={() => setCtxMenu(null)}
         />
