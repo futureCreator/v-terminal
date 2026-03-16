@@ -27,12 +27,11 @@ export interface SshProfile {
 }
 
 export interface PanelConnection {
-  type: 'local' | 'ssh' | 'wsl' | 'browser';
+  type: 'local' | 'ssh' | 'wsl';
   sshCommand?: string;
   shellProgram?: string;
   shellArgs?: string[];
   label?: string;
-  browserUrl?: string;
 }
 
 export interface DaemonSessionInfo {

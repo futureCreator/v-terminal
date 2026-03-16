@@ -63,7 +63,6 @@ export function PanelContextMenu({
 
   const connType = currentConnection?.type ?? "local";
   const isLocal = connType === "local";
-  const isBrowser = connType === "browser";
 
   const handleClick = (connection: PanelConnection) => {
     onSwitchConnection(connection);
@@ -145,18 +144,6 @@ export function PanelContextMenu({
         );
       })}
 
-      {/* Browser */}
-      <div className="panel-ctx-divider" />
-      <button
-        className={`panel-ctx-item${isBrowser ? " panel-ctx-item--active" : ""}`}
-        onClick={() => !isBrowser && handleClick({ type: "browser" })}
-        role="menuitem"
-      >
-        <span className="panel-ctx-item-icon">🌐</span>
-        <span className="panel-ctx-item-label">Browser</span>
-        <span className="panel-ctx-item-meta">Web panel</span>
-        {isBrowser && checkIcon}
-      </button>
     </div>,
     document.body
   );

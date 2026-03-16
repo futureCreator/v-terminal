@@ -134,7 +134,7 @@ export const useTabStore = create<TabStore>((set, get) => {
       set((s) => {
         const tab = s.tabs.find((t) => t.id === id);
         const savablePanels = tab?.panels.filter(
-          (p) => p.ptyId !== null || p.connection?.type === 'browser'
+          (p) => p.ptyId !== null
         ) ?? [];
 
         let newSavedTabs = s.savedTabs;
@@ -192,10 +192,7 @@ export const useTabStore = create<TabStore>((set, get) => {
         panels.push({
           id: genId(),
           ptyId: null,
-          ...(sp?.connection?.type === 'browser'
-            ? { connection: sp.connection }
-            : { existingSessionId: sp?.ptyId ?? undefined }
-          ),
+          existingSessionId: sp?.ptyId ?? undefined,
         });
       }
 
@@ -374,7 +371,7 @@ export const useTabStore = create<TabStore>((set, get) => {
           .filter((t) => !t.pendingSessionPick)
           .flatMap((t) => {
             const savablePanels = t.panels.filter(
-              (p) => p.ptyId !== null || p.connection?.type === 'browser'
+              (p) => p.ptyId !== null
             );
             if (savablePanels.length === 0) return [];
             const savedTab: SavedTab = {

@@ -24,7 +24,7 @@ interface SessionPickerProps {
 
 interface ConnectionOption {
   id: string;
-  type: "local" | "ssh" | "wsl" | "browser";
+  type: "local" | "ssh" | "wsl";
   name: string;
   subtitle: string;
   sshCommand?: string;
@@ -33,18 +33,13 @@ interface ConnectionOption {
 }
 
 function optionToConnection(opt: ConnectionOption): PanelConnection {
-  switch (opt.type) {
-    case "browser":
-      return { type: "browser", label: "Browser" };
-    default:
-      return {
-        type: opt.type,
-        sshCommand: opt.sshCommand,
-        shellProgram: opt.shellProgram,
-        shellArgs: opt.shellArgs,
-        label: opt.type === "local" ? undefined : opt.name,
-      };
-  }
+  return {
+    type: opt.type,
+    sshCommand: opt.sshCommand,
+    shellProgram: opt.shellProgram,
+    shellArgs: opt.shellArgs,
+    label: opt.type === "local" ? undefined : opt.name,
+  };
 }
 
 /* ── Icons ──────────────────────────────────────────────────────── */
@@ -79,14 +74,6 @@ const IconSsh = () => (
     <rect x="9.5" y="4.5" width="5" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
     <path d="M6.5 8h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     <path d="M8.5 6.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const IconGlobe = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
-    <ellipse cx="8" cy="8" rx="3" ry="6" stroke="currentColor" strokeWidth="1.2" />
-    <path d="M2.5 6h11M2.5 10h11" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
   </svg>
 );
 
@@ -362,7 +349,6 @@ export function SessionPicker({
   const connectionOptions = useMemo<ConnectionOption[]>(() => {
     const opts: ConnectionOption[] = [
       { id: "local", type: "local", name: "Local Shell", subtitle: "PowerShell" },
-      { id: "browser", type: "browser", name: "Browser", subtitle: "Web panel" },
     ];
     for (const distro of wslDistros) {
       opts.push({
@@ -544,8 +530,6 @@ export function SessionPicker({
                       <IconSsh />
                     ) : opt.type === "wsl" ? (
                       <IconLinux />
-                    ) : opt.type === "browser" ? (
-                      <IconGlobe />
                     ) : (
                       <IconTerminal />
                     )}

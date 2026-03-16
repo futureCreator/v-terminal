@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { Tab, PanelConnection } from "../../types/terminal";
 import { TerminalPane } from "../TerminalPane/TerminalPane";
-import { BrowserPane } from "../BrowserPane/BrowserPane";
 import { PanelContextMenu } from "../PanelContextMenu/PanelContextMenu";
 import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
@@ -143,25 +142,9 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
       {tab.panels.map((panel, index) => {
         const hidden = isZoomed && panel.id !== zoomedPanelId;
         const connKey = panel.connection
-          ? `${panel.connection.type}-${panel.connection.sshCommand ?? ""}-${panel.connection.shellProgram ?? ""}-${panel.connection.browserUrl ?? ""}`
+          ? `${panel.connection.type}-${panel.connection.sshCommand ?? ""}-${panel.connection.shellProgram ?? ""}`
           : "local";
-        return panel.connection?.type === "browser" ? (
-          <div
-            key={`${panel.id}-${connKey}`}
-            className="panel-ctx-wrapper"
-            onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
-            style={hidden ? { display: "none" } : undefined}
-          >
-            <BrowserPane
-              panelId={panel.id}
-              tabId={tab.id}
-              initialUrl={panel.connection.browserUrl}
-              isActive={activePanelId === panel.id}
-              isVisible={isVisible && !hidden && !ctxMenu}
-              onFocus={() => setActivePanelId(panel.id)}
-            />
-          </div>
-        ) : (
+        return (
           <div
             key={`${panel.id}-${connKey}`}
             className="panel-ctx-wrapper"
