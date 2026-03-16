@@ -17,6 +17,12 @@ const FONT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "Hack", label: "Hack" },
   { value: "Inconsolata", label: "Inconsolata" },
   { value: "Monaspace Neon", label: "Monaspace Neon" },
+  { value: "Geist Mono", label: "Geist Mono" },
+  { value: "Victor Mono", label: "Victor Mono" },
+  { value: "Commit Mono", label: "Commit Mono" },
+  { value: "Maple Mono", label: "Maple Mono" },
+  { value: "Recursive Mono", label: "Recursive Mono" },
+  { value: "Iosevka", label: "Iosevka" },
   { value: "Sarasa Mono K", label: "Sarasa Mono K" },
   { value: "Tab0 Mono K", label: "Tab0 Mono K" },
 ];

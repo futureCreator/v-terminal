@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Compartment } from "@codemirror/state";
 import { EditorView, placeholder, keymap } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -11,6 +11,7 @@ import {
 } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { useNoteStore } from "../../store/noteStore";
+import { useTerminalConfigStore } from "../../store/terminalConfigStore";
 
 /** CSS-variable–driven highlight style for markdown tokens */
 const mdHighlight = HighlightStyle.define([
@@ -37,6 +38,13 @@ const mdHighlight = HighlightStyle.define([
   { tag: tags.quote, fontStyle: "italic", opacity: "0.8" },
 ]);
 
+/** Font-size theme (reconfigured dynamically via Compartment) */
+function buildFontSizeTheme(fontSize: number) {
+  return EditorView.theme({
+    "&": { fontSize: `${fontSize}px` },
+  });
+}
+
 /** CodeMirror theme that reads from CSS custom properties */
 const cmTheme = EditorView.theme({
   "&": {
@@ -44,7 +52,6 @@ const cmTheme = EditorView.theme({
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
-    fontSize: "13px",
     fontFamily: '"Pretendard", sans-serif',
     backgroundColor: "transparent",
   },
@@ -99,8 +106,10 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
   const viewRef = useRef<EditorView | null>(null);
   const tabIdRef = useRef(tabId);
   const suppressRef = useRef(false);
+  const fontSizeCompartment = useRef(new Compartment());
 
   const setMarkdown = useNoteStore((s) => s.setMarkdown);
+  const terminalFontSize = useTerminalConfigStore((s) => s.fontSize);
 
   // Create editor once on mount
   useEffect(() => {
@@ -108,6 +117,8 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
 
     const content =
       useNoteStore.getState().notes[tabId]?.markdown ?? "";
+
+    const initialFontSize = useTerminalConfigStore.getState().fontSize;
 
     const updateListener = EditorView.updateListener.of((update) => {
       if (suppressRef.current) return;
@@ -121,6 +132,7 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
       doc: content,
       extensions: [
         cmTheme,
+        fontSizeCompartment.current.of(buildFontSizeTheme(initialFontSize)),
         markdown({ base: markdownLanguage, codeLanguages: languages }),
         syntaxHighlighting(mdHighlight),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
@@ -140,6 +152,17 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sync font size with terminal config
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: fontSizeCompartment.current.reconfigure(
+        buildFontSizeTheme(terminalFontSize)
+      ),
+    });
+  }, [terminalFontSize]);
 
   // Swap content when tabId changes
   useEffect(() => {
