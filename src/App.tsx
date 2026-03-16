@@ -8,6 +8,7 @@ import { PanelGrid } from "./components/PanelGrid/PanelGrid";
 import { SessionPicker } from "./components/SessionPicker/SessionPicker";
 import type { SessionPickResult } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
+import { BookmarkManagerModal } from "./components/BookmarkManager/BookmarkManagerModal";
 import { SettingsModal } from "./components/SettingsModal/SettingsModal";
 import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
@@ -42,6 +43,7 @@ export function App() {
 
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [bookmarkModalOpen, setBookmarkModalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const stored = localStorage.getItem("v-terminal:sidebar-open");
@@ -684,6 +686,7 @@ export function App() {
           onToggleToolkit={handleToggleToolkit}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenSshManager={() => setSshModalOpen(true)}
+          onOpenBookmarkManager={() => setBookmarkModalOpen(true)}
           onOpenSettings={() => setSettingsModalOpen(true)}
           onAddTab={handleNewTab}
         />
@@ -706,7 +709,7 @@ export function App() {
             ) : (
               <PanelGrid
                 tab={tab}
-                isVisible={tab.id === activeTabId && !paletteOpen && !sshModalOpen && !settingsModalOpen}
+                isVisible={tab.id === activeTabId && !paletteOpen && !sshModalOpen && !settingsModalOpen && !bookmarkModalOpen}
                 onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
                 navRef={tab.id === activeTabId ? panelNavRef : undefined}
               />
@@ -726,6 +729,11 @@ export function App() {
       {sshModalOpen && (
         <SshManagerModal
           onClose={() => setSshModalOpen(false)}
+        />
+      )}
+      {bookmarkModalOpen && (
+        <BookmarkManagerModal
+          onClose={() => setBookmarkModalOpen(false)}
         />
       )}
       {settingsModalOpen && (

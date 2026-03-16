@@ -105,6 +105,7 @@ interface SplitToolbarProps {
   onToggleToolkit: () => void;
   onOpenPalette: () => void;
   onOpenSshManager: () => void;
+  onOpenBookmarkManager: () => void;
   onOpenSettings: () => void;
   onAddTab: () => void;
 }
@@ -118,6 +119,7 @@ export function SplitToolbar({
   onToggleToolkit,
   onOpenPalette,
   onOpenSshManager,
+  onOpenBookmarkManager,
   onOpenSettings,
   onAddTab,
 }: SplitToolbarProps) {
@@ -262,6 +264,23 @@ export function SplitToolbar({
                   <circle cx="10" cy="11.5" r="0.7" fill="currentColor" opacity="0.5" />
                 </svg>
                 <span className="more-menu-item-label">SSH Profiles</span>
+              </button>
+              <div className="more-menu-sep" />
+              {/* Bookmarks */}
+              <button
+                className="more-menu-item"
+                onClick={() => { onOpenBookmarkManager(); setMenuOpen(false); }}
+                role="menuitem"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M3 2h10a1 1 0 0 1 1 1v11l-6-3-6 3V3a1 1 0 0 1 1-1z"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="more-menu-item-label">Bookmarks</span>
               </button>
               <div className="more-menu-sep" />
               {/* Toolkit */}
