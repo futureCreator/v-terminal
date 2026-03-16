@@ -950,6 +950,7 @@ export function App() {
           onCloseTab={handleTabClose}
           onKillTab={handleTabKill}
           onActivateTab={activateTab}
+          onOpenPalette={() => setPaletteOpen(true)}
         />
         <SplitToolbar
           activeLayout={activeTab?.layout ?? 1}

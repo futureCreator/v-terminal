@@ -7,10 +7,11 @@ interface TabBarProps {
   onCloseTab?: (tabId: string) => void;
   onKillTab?: (tabId: string) => void;
   onActivateTab?: (tabId: string) => void;
+  onOpenPalette?: () => void;
 }
 
-export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
-  const { tabs, activeTabId, removeTab, setActiveTab, renameTab } = useTabStore();
+export function TabBar({ onCloseTab, onKillTab, onActivateTab, onOpenPalette }: TabBarProps) {
+  const { tabs, activeTabId, savedTabs, removeTab, setActiveTab, renameTab } = useTabStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -112,6 +113,19 @@ export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M4.5 2L8.5 6L4.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
+        </button>
+      )}
+      {savedTabs.length > 0 && (
+        <button
+          className="tabbar-bg-tray"
+          onClick={() => onOpenPalette?.()}
+          aria-label={`${savedTabs.length} background tab${savedTabs.length > 1 ? "s" : ""}`}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M5 2v5M3 5l2 2 2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 9h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+          <span className="tabbar-bg-tray-count">{savedTabs.length}</span>
         </button>
       )}
     </div>
