@@ -251,6 +251,20 @@ export function App() {
     category: "Tab",
     commands: [
       {
+        id: "tab:new",
+        label: "New Tab",
+        description: "Open a new terminal tab",
+        meta: "Ctrl+Shift+T",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        action: handleNewTab,
+      },
+      {
         id: "tab:close",
         label: "Close Current Tab",
         description: "Save session to background and close the active tab",
@@ -276,20 +290,6 @@ export function App() {
           </span>
         ),
         action: () => { if (activeTab) saveAndRemoveTab(activeTab.id); },
-      },
-      {
-        id: "tab:new",
-        label: "New Tab",
-        description: "Open a new terminal tab",
-        meta: "Ctrl+Shift+T",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-          </span>
-        ),
-        action: handleNewTab,
       },
       {
         id: "tab:broadcast",
@@ -612,39 +612,6 @@ export function App() {
     };
   }, [savedTabs, restoreSavedTab]);
 
-  const sshProfilesPaletteSection = useMemo<PaletteSection | null>(() => {
-    if (sshProfiles.length === 0) return null;
-
-    return {
-      category: "SSH Profiles",
-      commands: sshProfiles.map((profile) => ({
-        id: `ssh:connect:${profile.id}`,
-        label: profile.name,
-        description: `Connect to ${profile.username}@${profile.host}${profile.port !== 22 ? `:${profile.port}` : ""}`,
-        meta: `${profile.username}@${profile.host}`,
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-              <path d="M1 5.5h12" stroke="currentColor" strokeWidth="1.3" />
-              <circle cx="3" cy="4.25" r="0.6" fill="currentColor" />
-              <circle cx="5" cy="4.25" r="0.6" fill="currentColor" />
-              <path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-          </span>
-        ),
-        action: async () => {
-          let cwd: string;
-          try { cwd = await homeDir(); } catch { cwd = "~"; }
-          const tabId = addTab(cwd, profile.name);
-          const sshCmd = buildSshCommand(profile);
-          resolveSessionPick(tabId, 1, [{ type: "ssh", sshCommand: sshCmd }]);
-        },
-      })),
-    };
-  }, [sshProfiles, addTab, resolveSessionPick]);
-
   // Derive active panel object from the active tab
   const activePanel = useMemo(() => {
     if (!activeTab || !activePanelId) return null;
@@ -750,51 +717,126 @@ export function App() {
     };
   }, [isBrowserPanel, activePanel, browserPanels, isBookmarked, getBookmarkByUrl, addBookmark, removeBookmark, bookmarks]);
 
-  // Step 2: Switch Panel commands (always visible)
-  const switchPanelPaletteSection = useMemo<PaletteSection | null>(() => {
+  const [wslDistros, setWslDistros] = useState<string[]>([]);
+  useEffect(() => {
+    ipc.getWslDistros().then(setWslDistros).catch(() => setWslDistros([]));
+  }, []);
+
+  const switchConnectionPaletteSection = useMemo<PaletteSection | null>(() => {
     if (!activeTab || !activePanelId) return null;
 
-    return {
-      category: "Switch Panel",
-      commands: [
-        {
-          id: "panel:switch-browser",
-          label: "Switch Panel \u2192 Browser",
-          description: "Convert the active panel to a browser",
+    const conn = activePanel?.connection;
+    const connType = conn?.type ?? "local";
+
+    const isActiveLocal = connType === "local";
+    const isActiveBrowser = connType === "browser";
+
+    const commands = [
+      // Local Shell
+      {
+        id: "conn:local",
+        label: "Local Shell",
+        description: "Switch to a local terminal session",
+        meta: "PowerShell",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M3.5 6l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M7.5 9.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        isActive: isActiveLocal,
+        action: () => {
+          if (isActiveLocal) return; // no-op if already active
+          switchPanelConnection(activeTab.id, activePanelId, { type: "local" });
+        },
+      },
+      // WSL distros
+      ...wslDistros.map((distro) => {
+        const isActiveWsl = connType === "wsl"
+          && conn?.shellArgs?.[0] === "-d"
+          && conn?.shellArgs?.[1] === distro;
+        return {
+          id: `conn:wsl:${distro}`,
+          label: distro,
+          description: `Switch to WSL: ${distro}`,
+          meta: "WSL",
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M1.5 7h11M7 1.5c-2 2-2 9 0 11M7 1.5c2 2 2 9 0 11" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+                <path d="M4 5.5c.5-1 1.5-1.5 3-1.5s2.5.5 3 1.5M4 8.5c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
               </svg>
             </span>
           ),
-          isActive: isBrowserPanel,
+          isActive: isActiveWsl,
           action: () => {
-            switchPanelConnection(activeTab.id, activePanelId, { type: "browser", browserUrl: "https://www.google.com" });
+            if (isActiveWsl) return;
+            switchPanelConnection(activeTab.id, activePanelId, {
+              type: "wsl",
+              shellProgram: "wsl.exe",
+              shellArgs: ["-d", distro],
+            });
           },
-        },
-        {
-          id: "panel:switch-terminal",
-          label: "Switch Panel \u2192 Terminal",
-          description: "Convert the active panel to a local terminal",
+        };
+      }),
+      // SSH profiles
+      ...sshProfiles.map((profile) => {
+        const sshCmd = buildSshCommand(profile);
+        const isActiveSsh = connType === "ssh" && conn?.sshCommand === sshCmd;
+        return {
+          id: `conn:ssh:${profile.id}`,
+          label: profile.name,
+          description: `Switch to SSH: ${profile.username}@${profile.host}${profile.port !== 22 ? `:${profile.port}` : ""}`,
+          meta: `${profile.username}@${profile.host}`,
           icon: (
             <span className="cp-cmd-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="2" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M3.5 6l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M7.5 9.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                <rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+                <path d="M1 5.5h12" stroke="currentColor" strokeWidth="1.3" />
+                <circle cx="3" cy="4.25" r="0.6" fill="currentColor" />
+                <circle cx="5" cy="4.25" r="0.6" fill="currentColor" />
+                <path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
             </span>
           ),
-          isActive: activePanel?.connection?.type === "local" || (!activePanel?.connection?.type && !isBrowserPanel),
+          isActive: isActiveSsh,
           action: () => {
-            switchPanelConnection(activeTab.id, activePanelId, { type: "local" });
+            if (isActiveSsh) return;
+            switchPanelConnection(activeTab.id, activePanelId, {
+              type: "ssh",
+              sshCommand: sshCmd,
+            });
           },
+        };
+      }),
+      // Browser
+      {
+        id: "conn:browser",
+        label: "Browser",
+        description: "Switch to a web browser panel",
+        meta: "Web panel",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M1.5 7h11M7 1.5c-2 2-2 9 0 11M7 1.5c2 2 2 9 0 11" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        isActive: isActiveBrowser,
+        action: () => {
+          if (isActiveBrowser) return;
+          switchPanelConnection(activeTab.id, activePanelId, { type: "browser" });
         },
-      ],
-    };
-  }, [activeTab, activePanelId, isBrowserPanel, activePanel, switchPanelConnection]);
+      },
+    ];
+
+    return { category: "Switch Connection", commands };
+  }, [activeTab, activePanelId, activePanel, switchPanelConnection, wslDistros, sshProfiles]);
 
   // Step 3: Browser history search results (populated when search query is present)
   // This is handled dynamically via a state + effect pattern
@@ -983,8 +1025,7 @@ export function App() {
           tabPaletteSection,
           tabListPaletteSection,
           ...(browserPaletteSection ? [browserPaletteSection] : []),
-          ...(switchPanelPaletteSection ? [switchPanelPaletteSection] : []),
-          ...(sshProfilesPaletteSection ? [sshProfilesPaletteSection] : []),
+          ...(switchConnectionPaletteSection ? [switchConnectionPaletteSection] : []),
           ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
           ...(browserHistoryPaletteSection ? [browserHistoryPaletteSection] : []),
