@@ -13,12 +13,12 @@ export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [ctrlHeld, setCtrlHeld] = useState(false);
+  const [shiftHeld, setShiftHeld] = useState(false);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => { if (e.key === "Control") setCtrlHeld(true); };
-    const up = (e: KeyboardEvent) => { if (e.key === "Control") setCtrlHeld(false); };
-    const blur = () => setCtrlHeld(false);
+    const down = (e: KeyboardEvent) => { if (e.key === "Shift") setShiftHeld(true); };
+    const up = (e: KeyboardEvent) => { if (e.key === "Shift") setShiftHeld(false); };
+    const blur = () => setShiftHeld(false);
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     window.addEventListener("blur", blur);
@@ -88,7 +88,7 @@ export function TabBar({ onCloseTab, onKillTab, onActivateTab }: TabBarProps) {
             id={tab.id}
             label={tab.label}
             isActive={tab.id === activeTabId}
-            ctrlHeld={ctrlHeld}
+            shiftHeld={shiftHeld}
             onActivate={() => {
               if (onActivateTab) {
                 onActivateTab(tab.id);
@@ -121,14 +121,14 @@ interface TabItemProps {
   id: string;
   label: string;
   isActive: boolean;
-  ctrlHeld: boolean;
+  shiftHeld: boolean;
   onActivate: () => void;
   onClose: () => void;
   onKill: () => void;
   onRename: (label: string) => void;
 }
 
-function TabItem({ id, label, isActive, ctrlHeld, onActivate, onClose, onKill, onRename }: TabItemProps) {
+function TabItem({ id, label, isActive, shiftHeld, onActivate, onClose, onKill, onRename }: TabItemProps) {
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -173,23 +173,23 @@ function TabItem({ id, label, isActive, ctrlHeld, onActivate, onClose, onKill, o
       )}
       <div className="tab-item-actions">
         <button
-          className={`tab-item-btn ${ctrlHeld ? "tab-item-btn--bg" : "tab-item-btn--kill"}`}
+          className={`tab-item-btn ${shiftHeld ? "tab-item-btn--kill" : "tab-item-btn--bg"}`}
           onClick={(e) => {
             e.stopPropagation();
-            if (e.ctrlKey) onClose();
-            else onKill();
+            if (e.shiftKey) onKill();
+            else onClose();
           }}
-          title={ctrlHeld ? "Send to Background" : "Close Tab · Ctrl+Click: Send to Background"}
-          aria-label={ctrlHeld ? "Send to background" : "Close tab"}
+          title={shiftHeld ? "Close Tab (Kill Session)" : "Send to Background · Shift+Click: Close Tab"}
+          aria-label={shiftHeld ? "Close tab" : "Send to background"}
         >
-          {ctrlHeld ? (
+          {shiftHeld ? (
             <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-              <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M1 8h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
           ) : (
             <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-              <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 8h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
           )}
         </button>
