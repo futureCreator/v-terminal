@@ -2,7 +2,8 @@ mod commands;
 mod daemon;
 mod state;
 
-use commands::{daemon_commands, session_commands};
+use commands::{browser_commands, daemon_commands, session_commands};
+use browser_commands::BrowserState;
 use daemon::client::DaemonClient;
 use state::app_state::AppState;
 use tauri::{Emitter, Manager};
@@ -103,6 +104,7 @@ fn start_daemon_watchdog(app: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app_state = AppState::new();
+    let browser_state = BrowserState::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -111,6 +113,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_notification::init())
         .manage(app_state)
+        .manage(browser_state)
         .setup(|app| {
             start_daemon_watchdog(app.handle().clone());
             Ok(())
@@ -127,6 +130,15 @@ pub fn run() {
             daemon_commands::get_wsl_distros,
             session_commands::save_session,
             session_commands::load_session,
+            browser_commands::create_browser_webview,
+            browser_commands::navigate_browser,
+            browser_commands::close_browser_webview,
+            browser_commands::set_browser_bounds,
+            browser_commands::show_browser_webview,
+            browser_commands::hide_browser_webview,
+            browser_commands::browser_go_back,
+            browser_commands::browser_go_forward,
+            browser_commands::browser_reload,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
