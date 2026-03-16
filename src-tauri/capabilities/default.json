@@ -24,6 +24,13 @@
     "shell:allow-open",
     "window-state:allow-restore-state",
     "window-state:allow-save-window-state",
-    "notification:default"
+    "notification:default",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-set-webview-position",
+    "core:webview:allow-set-webview-size",
+    "core:webview:allow-webview-close",
+    "core:webview:allow-set-webview-focus",
+    "core:webview:allow-webview-show",
+    "core:webview:allow-webview-hide"
   ]
 }
