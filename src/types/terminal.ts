@@ -27,11 +27,12 @@ export interface SshProfile {
 }
 
 export interface PanelConnection {
-  type: 'local' | 'ssh' | 'wsl';
+  type: 'local' | 'ssh' | 'wsl' | 'browser';
   sshCommand?: string;
   shellProgram?: string;
   shellArgs?: string[];
   label?: string;
+  browserUrl?: string;
 }
 
 export interface DaemonSessionInfo {
@@ -44,7 +45,8 @@ export interface DaemonSessionInfo {
 
 export interface SavedTabPanel {
   panelId: string;
-  ptyId: string;
+  ptyId: string | null;
+  connection?: PanelConnection;
 }
 
 export interface SavedTab {

@@ -657,7 +657,7 @@ export function App() {
   const handleKillSavedTab = async (savedTabId: string) => {
     const saved = savedTabs.find((t) => t.id === savedTabId);
     if (saved) {
-      await Promise.all(saved.panels.map((p) => ipc.daemonKillSession(p.ptyId).catch(() => {})));
+      await Promise.all(saved.panels.filter((p) => p.ptyId !== null).map((p) => ipc.daemonKillSession(p.ptyId!).catch(() => {})));
     }
     removeSavedTab(savedTabId);
   };

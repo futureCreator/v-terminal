@@ -182,7 +182,7 @@ export const useTabStore = create<TabStore>((set, get) => {
         panels.push({
           id: genId(),
           ptyId: null,
-          existingSessionId: savedPanel?.ptyId,
+          existingSessionId: savedPanel?.ptyId ?? undefined,
         });
       }
 
