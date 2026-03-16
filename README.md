@@ -90,6 +90,21 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.3.0 - 2026-03-17
+
+- **feat**: Splash screen with startup progress indicator and 15s daemon timeout
+- **feat**: Panel context menu with Switch Connection and full connection list
+- **feat**: Command palette `#` prefix for dynamic connection switching per panel
+- **feat**: Command palette `!` prefix for layout mode switching
+- **feat**: Background tray indicator in tab bar for backgrounded tabs
+- **feat**: Tab right-click context menu with background, close, rename actions
+- **feat**: 6 new terminal fonts (Commit Mono, Geist Mono, Iosevka, Maple Mono, Victor Mono)
+- **perf**: WebGL renderer with Canvas/DOM fallback for improved rendering performance
+- **refactor**: Tab close default changed to kill; browser/webview feature fully removed
+- **fix**: Apple HIG compliance fixes (6 items), panel context menu emoji replaced with SVG icons
+- **fix**: Terminal font hot-reload, font load failure warning in settings
+- **fix**: Session restore preserves note/todo data; note panel placeholder switched to English
+
 ### v0.2.0 - 2026-03-16
 
 - Minor version bump — consolidates all v0.1.x features into a stable baseline
