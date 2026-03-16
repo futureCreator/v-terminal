@@ -2,6 +2,8 @@ import { useRef, useEffect, useState } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
+import { WebglAddon } from "@xterm/addon-webgl";
+import { CanvasAddon } from "@xterm/addon-canvas";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { ipc } from "../../lib/tauriIpc";
 import { ensureFontLoaded } from "../../lib/fontLoader";
@@ -137,6 +139,27 @@ export function TerminalPane({
 
       term.open(containerRef.current);
       fitAddon.fit();
+
+      // Renderer: WebGL → Canvas → DOM fallback
+      try {
+        const webglAddon = new WebglAddon();
+        webglAddon.onContextLost(() => {
+          webglAddon.dispose();
+          try {
+            term.loadAddon(new CanvasAddon());
+          } catch {
+            // DOM renderer remains as final fallback
+          }
+        });
+        term.loadAddon(webglAddon);
+      } catch {
+        try {
+          term.loadAddon(new CanvasAddon());
+        } catch {
+          // DOM renderer remains as final fallback
+        }
+      }
+
       termRef.current = term;
       fitAddonRef.current = fitAddon;
 
