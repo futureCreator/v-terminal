@@ -60,9 +60,13 @@ export function BrowserUrlBar({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
+        e.preventDefault()
         const normalized = normalizeUrl(draft)
         if (normalized) {
-          onNavigate(normalized)
+          // onNavigate is async — catch errors so they don't get silently swallowed
+          Promise.resolve(onNavigate(normalized)).catch((err) => {
+            console.error("[BrowserUrlBar] navigation failed:", err)
+          })
         }
         inputRef.current?.blur()
       } else if (e.key === "Escape") {

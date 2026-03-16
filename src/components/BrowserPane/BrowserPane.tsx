@@ -95,13 +95,26 @@ export function BrowserPane({
   const createAndNavigate = useCallback(
     async (targetUrl: string) => {
       const el = contentRef.current
-      if (!el) return
+      if (!el) {
+        console.error("[BrowserPane] contentRef is null — cannot create webview")
+        return
+      }
 
       const rect = el.getBoundingClientRect()
       const x = Math.round(rect.x)
       const y = Math.round(rect.y)
       const width = Math.round(rect.width)
       const height = Math.round(rect.height)
+
+      if (width <= 0 || height <= 0) {
+        console.error("[BrowserPane] container has zero size:", { x, y, width, height })
+        updatePanel(panelId, {
+          error: "Browser container has zero size — try resizing the window",
+          isLoading: false,
+        })
+        return
+      }
+
       lastBoundsRef.current = { x, y, width, height }
 
       try {
@@ -112,8 +125,9 @@ export function BrowserPane({
         // since webviewCreatedRef is a ref, not state.
         browserIpc.show(panelId).catch(() => {})
       } catch (err) {
+        console.error("[BrowserPane] createWebview failed:", err)
         updatePanel(panelId, {
-          error: err instanceof Error ? err.message : "Failed to create browser",
+          error: err instanceof Error ? err.message : String(err),
           isLoading: false,
         })
       }
@@ -131,8 +145,9 @@ export function BrowserPane({
           updatePanel(panelId, { url: targetUrl, isLoading: true, error: undefined })
           await browserIpc.navigate(panelId, targetUrl)
         } catch (err) {
+          console.error("[BrowserPane] navigate failed:", err)
           updatePanel(panelId, {
-            error: err instanceof Error ? err.message : "Navigation failed",
+            error: err instanceof Error ? err.message : String(err),
             isLoading: false,
           })
         }
