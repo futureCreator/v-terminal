@@ -231,23 +231,23 @@ function TabItem({ id, label, isActive, ctrlHeld, onActivate, onClose, onKill, o
       )}
       <div className="tab-item-actions">
         <button
-          className={`tab-item-btn ${ctrlHeld ? "tab-item-btn--kill" : "tab-item-btn--bg"}`}
+          className={`tab-item-btn ${ctrlHeld ? "tab-item-btn--bg" : "tab-item-btn--kill"}`}
           onClick={(e) => {
             e.stopPropagation();
-            if (e.ctrlKey) onKill();
-            else onClose();
+            if (e.ctrlKey) onClose();
+            else onKill();
           }}
-          title={ctrlHeld ? "Close Tab (Kill Session)" : "Send to Background · Ctrl+Click: Close Tab"}
-          aria-label={ctrlHeld ? "Close tab" : "Send to background"}
+          title={ctrlHeld ? "Send to Background" : "Close Tab · Ctrl+Click: Send to Background"}
+          aria-label={ctrlHeld ? "Send to background" : "Close tab"}
         >
           {ctrlHeld ? (
             <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-              <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 8h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
           ) : (
             <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-              <path d="M4.5 1v5.5M2.5 4.5L4.5 6.5L6.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M1 8h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>
           )}
         </button>
@@ -258,6 +258,14 @@ function TabItem({ id, label, isActive, ctrlHeld, onActivate, onClose, onKill, o
           className="tab-ctx-menu"
           style={{ top: ctxPos.top, left: ctxPos.left }}
         >
+          <div className="tab-ctx-item tab-ctx-item--destructive" onMouseDown={(e) => { e.stopPropagation(); onKill(); setCtxMenu(null); }}>
+            <span className="tab-ctx-item-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span className="tab-ctx-item-label">Close Tab</span>
+          </div>
           <div className="tab-ctx-item" onMouseDown={(e) => { e.stopPropagation(); onClose(); setCtxMenu(null); }}>
             <span className="tab-ctx-item-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -266,14 +274,6 @@ function TabItem({ id, label, isActive, ctrlHeld, onActivate, onClose, onKill, o
               </svg>
             </span>
             <span className="tab-ctx-item-label">Send to Background</span>
-          </div>
-          <div className="tab-ctx-item tab-ctx-item--destructive" onMouseDown={(e) => { e.stopPropagation(); onKill(); setCtxMenu(null); }}>
-            <span className="tab-ctx-item-icon">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-            </span>
-            <span className="tab-ctx-item-label">Close Tab</span>
           </div>
           <div className="tab-ctx-divider" />
           <div className="tab-ctx-item" onMouseDown={(e) => { e.stopPropagation(); startEdit(); setCtxMenu(null); }}>
