@@ -23,7 +23,7 @@ Note: This is an intentional breaking UX change. The Ctrl+Click pattern was effe
 - X button click (no modifier): calls `onClose()` → `saveAndRemoveTab()` — sends tab to background
 - Shift+Click on X button: calls `onKill()` → `removeTab()` — kills session permanently
 - Tooltip updated: "Send to Background · Shift+Click: Close Tab"
-- Icon stays as X in default state, changes to a trash icon when Shift is held
+- Icon changes to a down-arrow (background semantic) in default state, changes to a trash icon when Shift is held
 
 The callback names `onClose` and `onKill` already have the correct semantic meaning in App.tsx (`onCloseTab` → `saveAndRemoveTab`, `onKillTab` → kills PTY). The current TabBar.tsx has them inverted at the call site (default calls `onKill`, Ctrl calls `onClose`). The fix is swapping which callback is called in the default vs. modifier case.
 
