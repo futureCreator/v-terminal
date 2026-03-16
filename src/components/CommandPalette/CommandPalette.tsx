@@ -98,15 +98,15 @@ function highlightText(text: string, indices: number[]): React.ReactNode {
 
 /* ── Prefix mode ────────────────────────────────────────────────── */
 
-type PrefixMode = "all" | "tabs" | "ssh" | "layout";
+type PrefixMode = "all" | "tabs" | "layout" | "connection";
 
 function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
   const trimmed = raw.trimStart();
   if (trimmed.startsWith(">")) {
     return { mode: "tabs", query: trimmed.slice(1).trimStart() };
   }
-  if (trimmed.startsWith("@")) {
-    return { mode: "ssh", query: trimmed.slice(1).trimStart() };
+  if (trimmed.startsWith("#")) {
+    return { mode: "connection", query: trimmed.slice(1).trimStart() };
   }
   if (trimmed.startsWith("!")) {
     return { mode: "layout", query: trimmed.slice(1).trimStart() };
@@ -154,8 +154,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
     // Prefix mode filter
     if (mode === "tabs") {
       pool = pool.filter((c) => c.category === "Tab List");
-    } else if (mode === "ssh") {
-      pool = pool.filter((c) => c.category === "SSH Profiles");
+    } else if (mode === "connection") {
+      pool = pool.filter((c) => c.category === "Switch Connection");
     } else if (mode === "layout") {
       pool = pool.filter((c) => c.category === "Layout");
     }
@@ -406,7 +406,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
 
   // Empty state
   const renderEmpty = () => {
-    const suggestions = ["tab", "layout", "panel", "ssh"];
+    const suggestions = ["tab", "layout", "panel", "connect"];
     return (
       <div className="cp-empty">
         <div className="cp-empty-title">No results for "{q}"</div>
@@ -429,7 +429,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
   };
 
   // Mode indicator for prefix
-  const modeLabel = mode === "tabs" ? "Tabs" : mode === "ssh" ? "SSH" : mode === "layout" ? "Layout" : null;
+  const modeLabel = mode === "tabs" ? "Tabs" : mode === "connection" ? "Connection" : mode === "layout" ? "Layout" : null;
 
   return createPortal(
     <div
@@ -452,7 +452,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "ssh" ? "Connect to server..." : mode === "layout" ? "Change layout..." : "Search commands..."}
+            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "connection" ? "Switch connection..." : mode === "layout" ? "Change layout..." : "Search commands..."}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); onQueryChange?.(e.target.value); }}
             onKeyDown={handleKeyDown}
@@ -486,7 +486,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
           <span className="cp-hint"><kbd>↵</kbd> Execute</span>
           <span className="cp-hint"><kbd>Tab</kbd> Jump</span>
           <span className="cp-hint"><kbd>&gt;</kbd> Tabs</span>
-          <span className="cp-hint"><kbd>@</kbd> SSH</span>
+          <span className="cp-hint"><kbd>#</kbd> Connect</span>
           <span className="cp-hint"><kbd>!</kbd> Layout</span>
         </div>
       </div>
