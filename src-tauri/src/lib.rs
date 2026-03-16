@@ -7,6 +7,11 @@ use browser_commands::BrowserState;
 use daemon::client::DaemonClient;
 use state::app_state::AppState;
 use tauri::{Emitter, Manager};
+use std::sync::atomic::{AtomicBool, Ordering};
+
+// Note: In dev mode, frontend hot-reloads will not reset this flag.
+// The splash is already closed at that point, so subsequent app_ready calls are correctly no-ops.
+static APP_READY_DONE: AtomicBool = AtomicBool::new(false);
 
 async fn ensure_daemon_and_connect(app: tauri::AppHandle) -> Result<DaemonClient, String> {
     // Try connecting to already-running daemon first
@@ -101,6 +106,34 @@ fn start_daemon_watchdog(app: tauri::AppHandle) {
     });
 }
 
+fn update_splash(app: &tauri::AppHandle, msg: &str) {
+    if let Some(splash) = app.get_webview_window("splash") {
+        let escaped = msg.replace('\\', "\\\\").replace('"', "\\\"");
+        let _ = splash.eval(&format!("updateStatus(\"{escaped}\")"));
+    }
+}
+
+fn show_splash_error(app: &tauri::AppHandle, msg: &str) {
+    if let Some(splash) = app.get_webview_window("splash") {
+        let escaped = msg.replace('\\', "\\\\").replace('"', "\\\"");
+        let _ = splash.eval(&format!("showError(\"{escaped}\")"));
+    }
+}
+
+#[tauri::command]
+async fn app_ready(app: tauri::AppHandle) {
+    if APP_READY_DONE.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    if let Some(splash) = app.get_webview_window("splash") {
+        let _ = splash.close();
+    }
+    if let Some(main) = app.get_webview_window("main") {
+        let _ = main.show();
+        let _ = main.set_focus();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app_state = AppState::new();
@@ -124,6 +157,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            app_ready,
             daemon_commands::get_daemon_status,
             daemon_commands::daemon_list_sessions,
             daemon_commands::daemon_create_session,
