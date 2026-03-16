@@ -7,8 +7,8 @@
   border-radius: var(--radius-lg);
   padding: 6px;
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   z-index: 1100;
   animation: panel-ctx-in 0.12s ease-out;
 }
@@ -49,8 +49,16 @@
 }
 
 .panel-ctx-item:hover {
-  background: var(--bg-tertiary);
-  color: var(--label-primary);
+  background: var(--accent);
+  color: #fff;
+}
+
+.panel-ctx-item:hover .panel-ctx-item-icon {
+  color: rgba(255,255,255,0.85);
+}
+
+.panel-ctx-item:hover .panel-ctx-item-meta {
+  color: rgba(255,255,255,0.7);
 }
 
 .panel-ctx-item--active {

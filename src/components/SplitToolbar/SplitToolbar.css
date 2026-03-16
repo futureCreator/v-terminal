@@ -71,8 +71,8 @@
   border-radius: var(--radius-lg);
   padding: 6px;
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   z-index: 1000;
   animation: more-menu-in 0.12s ease-out;
 }
@@ -291,8 +291,22 @@
 }
 
 .more-menu-item:hover {
-  background: var(--bg-tertiary);
-  color: var(--label-primary);
+  background: var(--accent);
+  color: #fff;
+}
+
+.more-menu-item:hover .more-menu-kbd {
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.15);
+}
+
+.more-menu-item:hover .more-menu-chevron {
+  color: rgba(255,255,255,0.7);
+}
+
+.more-menu-item:hover .more-menu-badge {
+  color: #fff;
+  background: rgba(255,255,255,0.2);
 }
 
 .more-menu-item--broadcast {
@@ -300,7 +314,7 @@
 }
 
 .more-menu-item--broadcast:hover {
-  color: var(--broadcast);
+  color: #fff;
 }
 
 .more-menu-item--active {
@@ -308,7 +322,7 @@
 }
 
 .more-menu-item--active:hover {
-  color: var(--accent);
+  color: #fff;
 }
 
 .more-menu-item-label {

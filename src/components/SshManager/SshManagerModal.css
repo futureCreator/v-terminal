@@ -43,14 +43,14 @@
 }
 
 .ssh-modal-title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--label-primary);
 }
 
 .ssh-modal-close {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: var(--label-tertiary);
@@ -98,8 +98,8 @@
 }
 
 .ssh-list-add-icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   color: var(--accent);
