@@ -150,7 +150,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
               tabId={tab.id}
               initialUrl={panel.connection.browserUrl}
               isActive={activePanelId === panel.id}
-              isVisible={isVisible && !hidden}
+              isVisible={isVisible && !hidden && !ctxMenu}
               onFocus={() => setActivePanelId(panel.id)}
             />
           </div>

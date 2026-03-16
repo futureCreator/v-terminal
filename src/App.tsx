@@ -42,6 +42,7 @@ export function App() {
   const { bookmarks, isBookmarked, addBookmark, removeBookmark, getBookmarkByUrl } = useBookmarkStore();
   const browserPanels = useBrowserStore((s) => s.panels);
   const searchBrowserHistory = useBrowserHistoryStore((s) => s.searchHistory);
+  const removeTabHistory = useBrowserHistoryStore((s) => s.removeTabHistory);
 
   const activeTab = useMemo(
     () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
@@ -854,6 +855,8 @@ export function App() {
           .map((p) => ipc.daemonKillSession(p.ptyId!).catch(() => {}))
       );
     }
+    // Clean up browser history for permanently killed tabs (not saved to background)
+    removeTabHistory(tabId);
     removeTab(tabId);
   };
 
