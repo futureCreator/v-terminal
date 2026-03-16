@@ -90,7 +90,10 @@ export function PanelContextMenu({
         onClick={() => !isLocal && handleClick({ type: "local" })}
         role="menuitem"
       >
-        <span className="panel-ctx-item-icon">💻</span>
+        <svg className="panel-ctx-item-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="1.5" y="2.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M5 14h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
         <span className="panel-ctx-item-label">Local Shell</span>
         <span className="panel-ctx-item-meta">PowerShell</span>
         {isLocal && checkIcon}
@@ -113,7 +116,11 @@ export function PanelContextMenu({
             })}
             role="menuitem"
           >
-            <span className="panel-ctx-item-icon">🐧</span>
+            <svg className="panel-ctx-item-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1.5C6.5 1.5 5.5 3 5.5 4.5c0 1-.5 2-1.5 3-.8.8-1 1.5-1 2.5 0 2 2 4 5 4s5-2 5-4c0-1-.2-1.7-1-2.5-1-1-1.5-2-1.5-3C10.5 3 9.5 1.5 8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+              <circle cx="6.5" cy="6" r="0.8" fill="currentColor" />
+              <circle cx="9.5" cy="6" r="0.8" fill="currentColor" />
+            </svg>
             <span className="panel-ctx-item-label">{distro}</span>
             <span className="panel-ctx-item-meta">WSL</span>
             {isActiveWsl && checkIcon}
@@ -136,7 +143,10 @@ export function PanelContextMenu({
             })}
             role="menuitem"
           >
-            <span className="panel-ctx-item-icon">🔑</span>
+            <svg className="panel-ctx-item-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <circle cx="5.5" cy="6.5" r="3" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M8 8l5.5 5.5M11.5 11.5l-2 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
             <span className="panel-ctx-item-label">{profile.name}</span>
             <span className="panel-ctx-item-meta">{profile.username}@{profile.host}</span>
             {isActiveSsh && checkIcon}
