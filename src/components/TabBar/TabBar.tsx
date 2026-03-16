@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useTabStore } from "../../store/tabStore";
 import "./TabBar.css";
 
@@ -150,12 +151,55 @@ function TabItem({ id, label, isActive, shiftHeld, onActivate, onClose, onKill, 
     else if (e.key === "Escape") setEditing(false);
   };
 
+  // Context menu state
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
+  const [ctxPos, setCtxPos] = useState({ top: 0, left: 0 });
+
+  // Viewport clamping
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const el = ctxMenuRef.current;
+    if (!el) {
+      setCtxPos({ top: ctxMenu.y, left: ctxMenu.x });
+      return;
+    }
+    const rect = el.getBoundingClientRect();
+    let top = ctxMenu.y;
+    let left = ctxMenu.x;
+    if (top + rect.height > window.innerHeight) top = window.innerHeight - rect.height - 4;
+    if (left + rect.width > window.innerWidth) left = window.innerWidth - rect.width - 4;
+    if (top < 0) top = 4;
+    if (left < 0) left = 4;
+    setCtxPos({ top, left });
+  }, [ctxMenu]);
+
+  // Close on outside click or Escape
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const onMouseDown = (e: MouseEvent) => {
+      if (ctxMenuRef.current && !ctxMenuRef.current.contains(e.target as Node)) {
+        setCtxMenu(null);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setCtxMenu(null);
+    };
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [ctxMenu]);
+
   return (
     <div
       className={`tab-item${isActive ? " tab-item--active" : ""}`}
       data-tab-id={id}
       onClick={onActivate}
       onDoubleClick={startEdit}
+      onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY }); }}
     >
       {editing ? (
         <input
@@ -194,6 +238,42 @@ function TabItem({ id, label, isActive, shiftHeld, onActivate, onClose, onKill, 
           )}
         </button>
       </div>
+      {ctxMenu && createPortal(
+        <div
+          ref={ctxMenuRef}
+          className="tab-ctx-menu"
+          style={{ top: ctxPos.top, left: ctxPos.left }}
+        >
+          <div className="tab-ctx-item" onMouseDown={(e) => { e.stopPropagation(); onClose(); setCtxMenu(null); }}>
+            <span className="tab-ctx-item-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v8M4 7l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 12h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span className="tab-ctx-item-label">Send to Background</span>
+          </div>
+          <div className="tab-ctx-item tab-ctx-item--destructive" onMouseDown={(e) => { e.stopPropagation(); onKill(); setCtxMenu(null); }}>
+            <span className="tab-ctx-item-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span className="tab-ctx-item-label">Close Tab</span>
+          </div>
+          <div className="tab-ctx-divider" />
+          <div className="tab-ctx-item" onMouseDown={(e) => { e.stopPropagation(); startEdit(); setCtxMenu(null); }}>
+            <span className="tab-ctx-item-icon">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 11h3l6.5-6.5a1.4 1.4 0 0 0-2-2L3 9v3z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                <path d="M8.5 3.5l2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span className="tab-ctx-item-label">Rename Tab</span>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
