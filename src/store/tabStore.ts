@@ -52,6 +52,7 @@ interface TabStore {
   // Panel actions
   setPtyId: (tabId: string, panelId: string, ptyId: string) => void;
   clearPtyId: (tabId: string, panelId: string) => void;
+  switchPanelConnection: (tabId: string, panelId: string, connection: PanelConnection) => void;
 
   // Broadcast
   toggleBroadcast: (tabId: string) => void;
@@ -298,6 +299,22 @@ export const useTabStore = create<TabStore>((set, get) => {
                 ...t,
                 panels: t.panels.map((p) =>
                   p.id === panelId ? { ...p, ptyId: null } : p
+                ),
+              }
+            : t
+        ),
+      })),
+
+    switchPanelConnection: (tabId, panelId, connection) =>
+      set((s) => ({
+        tabs: s.tabs.map((t) =>
+          t.id === tabId
+            ? {
+                ...t,
+                panels: t.panels.map((p) =>
+                  p.id === panelId
+                    ? { ...p, connection, ptyId: null, existingSessionId: undefined }
+                    : p
                 ),
               }
             : t

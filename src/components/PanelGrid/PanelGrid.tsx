@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import type { Tab } from "../../types/terminal";
+import type { Tab, PanelConnection } from "../../types/terminal";
 import { TerminalPane } from "../TerminalPane/TerminalPane";
 import { BrowserPane } from "../BrowserPane/BrowserPane";
+import { PanelContextMenu } from "../PanelContextMenu/PanelContextMenu";
 import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
 import "./PanelGrid.css";
@@ -20,12 +21,41 @@ interface PanelGridProps {
 }
 
 export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: PanelGridProps) {
-  const { setPtyId, clearPtyId } = useTabStore();
+  const { setPtyId, clearPtyId, switchPanelConnection } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
   const [zoomedPanelId, setZoomedPanelId] = useState<string | null>(null);
 
   const activePanelIdRef = useRef(activePanelId);
   activePanelIdRef.current = activePanelId;
+
+  // Context menu state
+  const [ctxMenu, setCtxMenu] = useState<{
+    x: number;
+    y: number;
+    panelId: string;
+    currentType: string;
+  } | null>(null);
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent, panelId: string, currentType: string) => {
+      e.preventDefault();
+      setCtxMenu({ x: e.clientX, y: e.clientY, panelId, currentType });
+    },
+    []
+  );
+
+  const handleSwitchConnection = useCallback(
+    (type: "local" | "browser") => {
+      if (!ctxMenu) return;
+      const connection: PanelConnection =
+        type === "browser"
+          ? { type: "browser", browserUrl: "https://www.google.com" }
+          : { type: "local" };
+      switchPanelConnection(tab.id, ctxMenu.panelId, connection);
+      setCtxMenu(null);
+    },
+    [ctxMenu, tab.id, switchPanelConnection]
+  );
 
   // 레이아웃이 바뀌면 줌 해제
   useEffect(() => {
@@ -107,39 +137,60 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
     >
       {tab.panels.map((panel, index) => {
         const hidden = isZoomed && panel.id !== zoomedPanelId;
+        const panelType = panel.connection?.type ?? "local";
         return panel.connection?.type === "browser" ? (
-          <BrowserPane
+          <div
             key={panel.id}
-            panelId={panel.id}
-            tabId={tab.id}
-            initialUrl={panel.connection.browserUrl}
-            isActive={activePanelId === panel.id}
-            isVisible={isVisible && !hidden}
-            onFocus={() => setActivePanelId(panel.id)}
-          />
+            className="panel-ctx-wrapper"
+            onContextMenu={(e) => handleContextMenu(e, panel.id, panelType)}
+            style={hidden ? { display: "none" } : undefined}
+          >
+            <BrowserPane
+              panelId={panel.id}
+              tabId={tab.id}
+              initialUrl={panel.connection.browserUrl}
+              isActive={activePanelId === panel.id}
+              isVisible={isVisible && !hidden}
+              onFocus={() => setActivePanelId(panel.id)}
+            />
+          </div>
         ) : (
-          <TerminalPane
+          <div
             key={panel.id}
+            className="panel-ctx-wrapper"
+            onContextMenu={(e) => handleContextMenu(e, panel.id, panelType)}
             style={{
               ...(tab.layout === 3 && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
               ...(hidden ? { display: "none" } : {}),
             }}
-            cwd={tab.cwd}
-            isActive={panel.id === activePanelId}
-            broadcastEnabled={tab.broadcastEnabled}
-            siblingPtyIds={siblingPtyIds}
-            sshCommand={panel.connection?.sshCommand}
-            shellProgram={panel.connection?.shellProgram}
-            shellArgs={panel.connection?.shellArgs}
-            existingSessionId={panel.existingSessionId}
-            onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
-            onPtyKilled={() => handlePtyKilled(panel.id)}
-            onFocus={() => setActivePanelId(panel.id)}
-            onNextPanel={handleNextPanel}
-            onPrevPanel={handlePrevPanel}
-          />
+          >
+            <TerminalPane
+              cwd={tab.cwd}
+              isActive={panel.id === activePanelId}
+              broadcastEnabled={tab.broadcastEnabled}
+              siblingPtyIds={siblingPtyIds}
+              sshCommand={panel.connection?.sshCommand}
+              shellProgram={panel.connection?.shellProgram}
+              shellArgs={panel.connection?.shellArgs}
+              existingSessionId={panel.existingSessionId}
+              onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
+              onPtyKilled={() => handlePtyKilled(panel.id)}
+              onFocus={() => setActivePanelId(panel.id)}
+              onNextPanel={handleNextPanel}
+              onPrevPanel={handlePrevPanel}
+            />
+          </div>
         );
       })}
+      {ctxMenu && (
+        <PanelContextMenu
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          currentType={ctxMenu.currentType}
+          onSwitchConnection={handleSwitchConnection}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
     </div>
   );
 }
