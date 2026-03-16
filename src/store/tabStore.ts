@@ -131,15 +131,21 @@ export const useTabStore = create<TabStore>((set, get) => {
     saveAndRemoveTab: (id) => {
       set((s) => {
         const tab = s.tabs.find((t) => t.id === id);
-        const activePanels = tab?.panels.filter((p) => p.ptyId !== null) ?? [];
+        const savablePanels = tab?.panels.filter(
+          (p) => p.ptyId !== null || p.connection?.type === 'browser'
+        ) ?? [];
 
         let newSavedTabs = s.savedTabs;
-        if (tab && activePanels.length > 0) {
+        if (tab && savablePanels.length > 0) {
           const savedTab: SavedTab = {
             id: genId(),
             label: tab.label,
             layout: tab.layout,
-            panels: activePanels.map((p) => ({ panelId: p.id, ptyId: p.ptyId! })),
+            panels: savablePanels.map((p) => ({
+              panelId: p.id,
+              ptyId: p.ptyId,
+              connection: p.connection,
+            })),
             savedAt: Date.now(),
           };
           newSavedTabs = [...s.savedTabs, savedTab];
@@ -178,11 +184,14 @@ export const useTabStore = create<TabStore>((set, get) => {
       const panels: Panel[] = [];
 
       for (let i = 0; i < totalPanels; i++) {
-        const savedPanel = savedTab.panels[i];
+        const sp = savedTab.panels[i];
         panels.push({
           id: genId(),
           ptyId: null,
-          existingSessionId: savedPanel?.ptyId ?? undefined,
+          ...(sp?.connection?.type === 'browser'
+            ? { connection: sp.connection }
+            : { existingSessionId: sp?.ptyId ?? undefined }
+          ),
         });
       }
 
@@ -332,13 +341,19 @@ export const useTabStore = create<TabStore>((set, get) => {
         const newSaved = s.tabs
           .filter((t) => !t.pendingSessionPick)
           .flatMap((t) => {
-            const activePanels = t.panels.filter((p) => p.ptyId !== null);
-            if (activePanels.length === 0) return [];
+            const savablePanels = t.panels.filter(
+              (p) => p.ptyId !== null || p.connection?.type === 'browser'
+            );
+            if (savablePanels.length === 0) return [];
             const savedTab: SavedTab = {
               id: genId(),
               label: t.label,
               layout: t.layout,
-              panels: activePanels.map((p) => ({ panelId: p.id, ptyId: p.ptyId! })),
+              panels: savablePanels.map((p) => ({
+                panelId: p.id,
+                ptyId: p.ptyId,
+                connection: p.connection,
+              })),
               savedAt: Date.now(),
             };
             return [savedTab];
