@@ -136,7 +136,7 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
         markdown({ base: markdownLanguage, codeLanguages: languages }),
         syntaxHighlighting(mdHighlight),
         syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-        placeholder("메모를 입력하세요..."),
+        placeholder("Type your note here..."),
         keymap.of([...defaultKeymap, indentWithTab]),
         EditorView.lineWrapping,
         updateListener,
