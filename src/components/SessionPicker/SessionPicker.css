@@ -236,6 +236,11 @@
   color: var(--success);
 }
 
+.sp-row-icon--browser {
+  background: color-mix(in srgb, var(--warning, #f5a623) 18%, transparent);
+  color: var(--warning, #f5a623);
+}
+
 /* ─── Row Content ────────────────────────────────────────────── */
 .sp-row-content {
   flex: 1;
@@ -311,6 +316,10 @@
 
 .sp-dot--wsl {
   background: var(--icon-wsl);
+}
+
+.sp-dot--browser {
+  background: var(--warning, #f5a623);
 }
 
 /* ─── Panel Dropdown ─────────────────────────────────────────── */
