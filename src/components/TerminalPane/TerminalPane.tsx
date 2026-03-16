@@ -6,7 +6,7 @@ import { WebglAddon } from "@xterm/addon-webgl";
 import { CanvasAddon } from "@xterm/addon-canvas";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { ipc } from "../../lib/tauriIpc";
-import { ensureFontLoaded } from "../../lib/fontLoader";
+import { ensureFontLoaded, ensureSpecificFontLoaded } from "../../lib/fontLoader";
 import { useTabStore } from "../../store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "../../store/themeStore";
 import { useTerminalConfigStore } from "../../store/terminalConfigStore";
@@ -319,16 +319,31 @@ export function TerminalPane({
     const fitAddon = fitAddonRef.current;
     if (!term || !fitAddon) return;
 
-    term.options.fontSize = fontSize;
-    term.options.fontFamily = `"${fontFamily}", "JetBrainsMonoNerdFont", "Nanum Gothic Coding", monospace`;
-    term.options.lineHeight = lineHeight;
-    try {
-      fitAddon.fit();
-      const ptyId = ptyIdRef.current;
-      if (ptyId) {
-        ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
-      }
-    } catch {}
+    let cancelled = false;
+
+    const apply = async () => {
+      // Ensure the selected font is loaded before applying
+      await ensureSpecificFontLoaded(fontFamily);
+      if (cancelled) return;
+
+      term.options.fontSize = fontSize;
+      term.options.fontFamily = `"${fontFamily}", "JetBrainsMonoNerdFont", "Nanum Gothic Coding", monospace`;
+      term.options.lineHeight = lineHeight;
+
+      // Force renderer to pick up the new font by clearing the texture atlas
+      term.clearTextureAtlas();
+
+      try {
+        fitAddon.fit();
+        const ptyId = ptyIdRef.current;
+        if (ptyId) {
+          ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
+        }
+      } catch {}
+    };
+
+    apply();
+    return () => { cancelled = true; };
   }, [fontSize, fontFamily, lineHeight]);
 
   // Apply cursor style changes
