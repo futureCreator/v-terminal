@@ -43,6 +43,9 @@ React → Tauri IPC → PtyManager (in-process) → portable-pty
 | `src-tauri/src/commands/session_commands.rs` | Session save/restore |
 | `src-tauri/src/state/persistence.rs` | Session persistence |
 | `public/splash.html` | Splash screen |
+| `scripts/build-daemon-dev.mjs` | Daemon build script |
+| `scripts/build-daemon-release.mjs` | Daemon build script |
+| `src-tauri/binaries/` | Daemon binary artifacts |
 
 ### New File Structure
 
@@ -62,24 +65,52 @@ src-tauri/src/
 
 ```rust
 pub struct PtyManager {
-    sessions: Mutex<HashMap<String, PtySession>>,
+    sessions: std::sync::Mutex<HashMap<String, PtySession>>,
+    wsl_distros_cache: std::sync::Mutex<Option<Vec<String>>>,
 }
 
 struct PtySession {
-    writer: Box<dyn Write + Send>,   // Write to PTY master
-    pair: PtyPair,                    // For resize
-    child: Box<dyn Child + Send>,     // For kill
+    writer: Box<dyn Write + Send>,
+    master: Box<dyn MasterPty + Send>,   // For resize (PtyPair cannot be stored — slave is consumed by spawn)
+    child: Box<dyn Child + Send>,         // For kill + exit detection
 }
+
+// Safety: all field access is serialized through the Mutex.
+// portable-pty types are not Send on all platforms, but exclusive
+// Mutex access guarantees no concurrent use.
+unsafe impl Send for PtySession {}
 ```
+
+**Constraints:**
+- `std::sync::Mutex` is used (not `tokio::sync::Mutex`) because all `PtyManager` methods are synchronous. PTY write and resize are blocking `std::io` operations. PtyManager methods must remain synchronous — do not add `.await` while holding the lock.
+- `wsl_distros_cache` is stored here since `AppState` is being removed.
+- Max 64 concurrent sessions enforced in `pty_create` (defensive limit, carried from daemon).
 
 ### Tauri Commands
 
-| Command | Role |
-|---------|------|
-| `pty_create` | Spawn PTY, return session ID. Starts reader thread that emits `pty-output-{id}` events. |
-| `pty_write` | Write input bytes to PTY master (binary, no base64) |
-| `pty_resize` | Resize PTY terminal dimensions |
-| `pty_kill` | Kill child process + cleanup session |
+| Command | Parameters | Role |
+|---------|-----------|------|
+| `pty_create` | `cwd`, `shell_program?`, `shell_args?`, `rows`, `cols` | Spawn PTY with optional custom shell (needed for WSL: `wsl.exe -d <distro>`, SSH: system `ssh`). Return session ID. Start reader thread emitting `pty-output-{id}` events. |
+| `pty_write` | `session_id`, `data: Vec<u8>` | Write input bytes to PTY master (binary, no base64) |
+| `pty_resize` | `session_id`, `rows`, `cols` | Resize PTY terminal dimensions |
+| `pty_kill` | `session_id` | Kill child process tree (`taskkill /F /T /PID` on Windows) + cleanup session |
+
+### Process Cleanup on App Close
+
+The daemon had explicit `kill_process_tree` logic on exit. The new architecture must preserve this:
+
+```rust
+.on_window_event(|window, event| {
+    if let tauri::WindowEvent::Destroyed = event {
+        if window.label() == "main" {
+            let pty_manager = window.state::<PtyManager>();
+            pty_manager.kill_all();  // Iterates all sessions, kills child process trees
+        }
+    }
+})
+```
+
+On Windows, `kill_process_tree` uses `taskkill /F /T /PID {pid}` to terminate the full child process tree (cmd.exe, pwsh.exe, wsl.exe, etc.).
 
 ### Simplified lib.rs
 
@@ -89,6 +120,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_notification::init())
@@ -124,27 +156,37 @@ portable-pty reader thread
 
 | Current (daemon) | New (direct) |
 |---|---|
-| `daemonCreateSession()` → TCP → daemon | `ptyCreate()` → Tauri IPC → PtyManager |
-| `daemonWrite()` → base64 → TCP | `ptyWrite()` → Tauri IPC (binary) |
-| `daemonResize()` → TCP | `ptyResize()` → Tauri IPC |
-| `daemonKillSession()` → TCP | `ptyKill()` → Tauri IPC |
+| `daemonCreateSession()` → TCP → daemon | `ptyCreate(cwd, shellProgram?, shellArgs?, rows, cols)` → Tauri IPC → PtyManager |
+| `daemonWrite()` → base64 → TCP | `ptyWrite(sessionId, data)` → Tauri IPC (binary) |
+| `daemonResize()` → TCP | `ptyResize(sessionId, rows, cols)` → Tauri IPC |
+| `daemonKillSession()` → TCP | `ptyKill(sessionId)` → Tauri IPC |
 | `daemonAttach()` / `daemonDetach()` | **Removed** (no attach/detach concept) |
 | `daemonListSessions()` | **Removed** (no sessions to restore) |
+| `onPtyOutput()` / `onPtyResync()` | **Replaced** with Tauri Event `listen("pty-output-{id}")`. Resync is removed — no broadcast channel lag in direct architecture. |
 
 ### TerminalPane Changes
 
 - Receive PTY output via Tauri Event (`pty-output-{sessionId}`) instead of TCP stream
+- Simplify init from create+attach two-step to single `ptyCreate`. Remove `existingSessionId` / attach-fallback logic.
 - Remove attach/detach logic — `ptyCreate` on mount, `ptyKill` on unmount
 - Remove scrollback snapshot restore
 - Remove base64 decoding
 
-### Removed Components
+### App.tsx Changes
+
+- Remove daemon-status `useEffect` (daemon connection wait + `ipc.appReady()` call)
+- Remove `daemon-status` event listeners
+- Main window starts visible immediately (no splash → show sequence)
+
+### Removed Components & Types
 
 | Component/Code | Reason |
 |---|---|
-| `src/components/SessionPicker/` | Session restore UI |
-| Daemon status banner in `App.tsx` | No daemon to reconnect |
+| `src/components/SessionPicker/` | Session restore UI. New tabs start a local terminal immediately. Connection type (SSH/WSL) is selected via command palette or panel context menu, same as today. |
+| `src/components/DaemonStatusBanner/` | No daemon to reconnect |
 | `tabStore.ts` saved tabs (`savedTabs`, `saveAndRemoveTab`, `saveAllOpenTabsToBackground`) | No session persistence |
+| `types/terminal.ts` `DaemonSessionInfo` type | Daemon-specific type |
+| `tabStore.ts` `pendingSessionPick` on Tab | No session picker flow; new tabs open directly |
 
 ### Unchanged (No Modifications Needed)
 
@@ -161,32 +203,43 @@ Incremental, inside-out approach. Steps 1-2 allow daemon and new PTY to coexist 
 
 ### Step 1: Implement Rust PtyManager
 
-- Create `pty/manager.rs` with PtyManager struct
-- Create `pty_commands.rs` with 4 commands
+- Create `pty/manager.rs` with PtyManager struct (store `master`, `writer`, `child`)
+- Create `pty_commands.rs` with 4 commands (accepting `shell_program`/`shell_args`)
+- Extract `get_wsl_distros` into `wsl_commands.rs`, move cache to PtyManager
+- Add process cleanup hook (`on_window_event` / Destroyed)
 - Register alongside existing daemon commands in `lib.rs`
 - Daemon still alive at this point
+
+Note: partial implementation exists in `src-tauri/src/pty/` and `src-tauri/src/commands/pty_commands.rs` but is not wired up and has gaps (no child handle, no shell_program params). This will be replaced.
 
 ### Step 2: Switch Frontend to New IPC
 
 - Add new functions to `tauriIpc.ts` (`ptyCreate`, `ptyWrite`, `ptyResize`, `ptyKill`)
-- Switch `TerminalPane` to use new IPC
+- Switch `TerminalPane` to use new IPC (single `ptyCreate` instead of create+attach)
 - Switch to Tauri Event listener for PTY output
+- Disable daemon watchdog in `lib.rs` (comment out `start_daemon_watchdog`) to prevent stale events
 - **Verify terminal works through new path**
 
 ### Step 3: Remove Daemon Code
 
 - Delete daemon binary, client module, daemon commands
 - Delete session commands, persistence module
-- Delete `SessionPicker/` component
-- Remove saved tabs from `tabStore.ts`
+- Delete `SessionPicker/` component, `DaemonStatusBanner/` component
+- Remove saved tabs + `pendingSessionPick` from `tabStore.ts`
+- Remove `DaemonSessionInfo` from `types/terminal.ts`
 - Delete `app_state.rs`
 - Remove splash screen (`splash.html`, splash window config, `app_ready`)
+- Remove `App.tsx` daemon-status useEffect
 - Simplify `lib.rs`
 
 ### Step 4: Cleanup & Verification
 
 - Remove unused dependencies from `Cargo.toml` (base64, etc.)
 - Remove splash window from `tauri.conf.json`, set main window `visible: true`
+- Remove `externalBin` entry from `tauri.conf.json`
+- Simplify `beforeDevCommand` / `beforeBuildCommand` (remove daemon build scripts)
+- Delete `scripts/build-daemon-dev.mjs`, `scripts/build-daemon-release.mjs`
+- Delete `src-tauri/binaries/` directory
 - Build verification
 - Full feature test: tabs, panel splits, broadcast, SSH, notes/todos/timer
 
