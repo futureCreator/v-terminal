@@ -58,9 +58,6 @@ impl Scrollback {
         }
         self.data.extend(bytes);
     }
-    fn snapshot(&self) -> Vec<u8> {
-        self.data.iter().cloned().collect()
-    }
     fn snapshot_b64(&self) -> String {
         let (a, b) = self.data.as_slices();
         let mut combined = Vec::with_capacity(a.len() + b.len());
