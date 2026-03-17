@@ -288,7 +288,7 @@ export function TerminalPane({
       const ptyId = ptyIdRef.current;
       if (ptyId) {
         terminalRegistry.delete(ptyId);
-        ipc.ptyKill(ptyId).catch(() => {}); // kill — no daemon to persist to
+        ipc.ptyKill(ptyId).catch(() => {});
         ptyIdRef.current = null;
       }
       termRef.current?.dispose();
