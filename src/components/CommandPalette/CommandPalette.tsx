@@ -224,7 +224,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
       const timer = setTimeout(() => {
         setVisible(false);
         setPhase(null);
-      }, 120);
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
