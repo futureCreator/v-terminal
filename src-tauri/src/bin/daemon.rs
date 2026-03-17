@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::sync::{
     Arc, Mutex,
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicU64, Ordering},
 };
 use base64::Engine;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -56,7 +56,7 @@ struct Session {
     label: String,
     cwd: String,
     created_at: u64,
-    last_active: Arc<Mutex<u64>>,
+    last_active: AtomicU64,
     writer: Arc<Mutex<Box<dyn Write + Send>>>,
     master: Arc<Mutex<Box<dyn portable_pty::MasterPty + Send>>>,
     scrollback: Arc<Mutex<Scrollback>>,
@@ -64,6 +64,9 @@ struct Session {
     exit_tx: broadcast::Sender<()>,
 }
 
+// SAFETY: All non-Send/Sync fields (writer, master) are wrapped in Arc<Mutex<>>,
+// which serializes access. portable_pty types have no interior mutability outside
+// the mutex. The MasterPty and writer are never accessed without holding the lock.
 unsafe impl Send for Session {}
 unsafe impl Sync for Session {}
 
@@ -188,7 +191,7 @@ async fn dispatch(
                     label: s.label.clone(),
                     cwd: s.cwd.clone(),
                     created_at: s.created_at,
-                    last_active: *s.last_active.lock().unwrap(),
+                    last_active: s.last_active.load(Ordering::Relaxed),
                 })
                 .collect();
             let mut resp = serde_json::json!({"event": "sessions", "sessions": sessions});
@@ -294,7 +297,7 @@ async fn dispatch(
             if let Some(session) = reg.get(session_id) {
                 if let Ok(mut w) = session.writer.lock() {
                     let _ = w.write_all(data);
-                    *session.last_active.lock().unwrap() = now_secs();
+                    session.last_active.store(now_secs(), Ordering::Relaxed);
                 }
             }
         }
@@ -413,7 +416,7 @@ async fn create_session(
         label,
         cwd,
         created_at,
-        last_active: Arc::new(Mutex::new(created_at)),
+        last_active: AtomicU64::new(created_at),
         writer: Arc::new(Mutex::new(writer_box)),
         master: Arc::new(Mutex::new(pair.master)),
         scrollback: scrollback.clone(),
