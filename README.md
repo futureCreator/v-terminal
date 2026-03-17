@@ -10,7 +10,7 @@ A fast, native terminal emulator built with Tauri + React + xterm.js. Designed f
 | Terminal | xterm.js 5 (FitAddon, WebLinksAddon, Unicode11) |
 | State | Zustand 4 |
 | Backend | Tauri 2, Rust |
-| PTY | portable-pty (in-process, direct IPC) |
+| PTY | portable-pty (local), russh (SSH) |
 | Fonts | Pretendard (UI), JetBrains Mono Nerd Font (terminal) |
 
 ## Features
@@ -35,9 +35,12 @@ A fast, native terminal emulator built with Tauri + React + xterm.js. Designed f
 - **Custom shells**: configure arbitrary shell program and arguments
 
 ### SSH
+- **Rust-native SSH** — built-in `russh` client, no external `ssh` command needed
 - **SSH profile manager** — save, edit, and delete connection profiles
 - **Connect modes**: new tab, current panel, or all panels at once
-- **Custom port and identity file** support
+- **Key file and password authentication** with interactive password dialog
+- **Connection pooling** — reuses connections per host, multi-channel support
+- **Connection state detection** — "Connection lost" overlay with reconnect
 
 ### Command Palette (`Ctrl+K`)
 
@@ -89,6 +92,19 @@ pnpm daemon:stop     # Stop daemon
 ```
 
 ## Changelog
+
+### v0.6.0 - 2026-03-18
+
+- **feat**: Rust-native SSH via `russh` — replaces shell-based `ssh` command execution with programmatic SSH connection management
+- **feat**: Unified `SessionManager` with `Session` trait abstracting local PTY and SSH shell sessions behind a single IPC API
+- **feat**: `SshConnectionPool` — connection reuse per (host, port, username), 10s timeout, TOFU host key verification
+- **feat**: Multi-channel SSH — single connection supports multiple shell channels and future SFTP
+- **feat**: Key file and password authentication with interactive password dialog
+- **feat**: SSH connection state detection with "Connection lost" overlay banner
+- **feat**: SFTP foundation code (`open_sftp` method) for future remote file access features
+- **refactor**: IPC commands renamed from `pty_*` to `session_*` (`session_create`, `session_write`, `session_resize`, `session_kill`)
+- **refactor**: Frontend migrated from `ptyId`/`sshCommand` to `sessionId`/`sshProfileId` model
+- **deps**: Added `russh` 0.48, `russh-keys` 0.48, `russh-sftp` 2.0, `async-trait`, `dirs`
 
 ### v0.5.0 - 2026-03-18
 
