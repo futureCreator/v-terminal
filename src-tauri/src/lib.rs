@@ -181,6 +181,7 @@ pub fn run() {
                 .build()
         })
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .manage(app_state)
         .setup(|app| {
             start_daemon_watchdog(app.handle().clone());
