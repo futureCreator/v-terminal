@@ -33,6 +33,9 @@ interface TabStore {
 
   // Broadcast
   toggleBroadcast: (tabId: string) => void;
+
+  // Session pick
+  resolveSessionPick: (tabId: string, layout: Layout, panelConnections: PanelConnection[]) => void;
 }
 
 const DEFAULT_CWD = "~";
@@ -52,6 +55,7 @@ function createDefaultTab(): Tab {
     layout,
     panels: makePanels(panelCount(layout)),
     broadcastEnabled: false,
+    pendingSessionPick: true,
   };
 }
 
@@ -72,6 +76,7 @@ export const useTabStore = create<TabStore>((set, get) => {
         layout,
         panels: makePanels(panelCount(layout)),
         broadcastEnabled: false,
+        pendingSessionPick: true,
       };
       set((s) => ({ tabs: [...s.tabs, tab], activeTabId: id }));
       return id;
@@ -203,6 +208,29 @@ export const useTabStore = create<TabStore>((set, get) => {
             : t
         ),
       })),
+
+    resolveSessionPick: (tabId, layout, panelConnections) => {
+      const count = panelCount(layout);
+      const panels: Panel[] = Array.from({ length: count }, (_, i) => ({
+        id: genId(),
+        ptyId: null,
+        connection: panelConnections[i],
+      }));
+
+      set((s) => ({
+        tabs: s.tabs.map((t) => {
+          if (t.id !== tabId) return t;
+          const label = panelConnections.find((c) => c?.label)?.label ?? t.label;
+          return {
+            ...t,
+            pendingSessionPick: false,
+            layout,
+            panels,
+            label,
+          };
+        }),
+      }));
+    },
 
   };
 });

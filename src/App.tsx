@@ -4,6 +4,8 @@ import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
 import { SplitToolbar } from "./components/SplitToolbar/SplitToolbar";
 import { PanelGrid } from "./components/PanelGrid/PanelGrid";
+import { SessionPicker } from "./components/SessionPicker/SessionPicker";
+import type { SessionPickResult } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { SettingsModal } from "./components/SettingsModal/SettingsModal";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
@@ -41,7 +43,7 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 export function App() {
-  const { tabs, activeTabId, addTab, removeTab, setLayout, toggleBroadcast, setActiveTab, switchPanelConnection } =
+  const { tabs, activeTabId, addTab, removeTab, setLayout, toggleBroadcast, setActiveTab, switchPanelConnection, resolveSessionPick } =
     useTabStore();
   const { themeId } = useThemeStore();
   const { increaseFontSize: fontIncrease, decreaseFontSize: fontDecrease, resetFontSize: fontReset } = useTerminalConfigStore();
@@ -177,6 +179,10 @@ export function App() {
 
   const handleNewTabRef = useRef(handleNewTab);
   useEffect(() => { handleNewTabRef.current = handleNewTab; }, [handleNewTab]);
+
+  const handleNewSession = useCallback((tabId: string, result: SessionPickResult) => {
+    resolveSessionPick(tabId, result.layout, result.panelConnections);
+  }, [resolveSessionPick]);
 
   const handleLayoutChange = useCallback((layout: Layout) => {
     if (!activeTab) return;
@@ -809,12 +815,18 @@ export function App() {
             className="tab-viewport"
             style={{ display: tab.id === activeTabId ? "flex" : "none" }}
           >
-            <PanelGrid
-              tab={tab}
-              isVisible={tab.id === activeTabId && !paletteOpen && !sshModalOpen && !settingsModalOpen}
-              onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
-              navRef={tab.id === activeTabId ? panelNavRef : undefined}
-            />
+            {tab.pendingSessionPick ? (
+              <SessionPicker
+                onNewSession={(result) => handleNewSession(tab.id, result)}
+              />
+            ) : (
+              <PanelGrid
+                tab={tab}
+                isVisible={tab.id === activeTabId && !paletteOpen && !sshModalOpen && !settingsModalOpen}
+                onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
+                navRef={tab.id === activeTabId ? panelNavRef : undefined}
+              />
+            )}
           </div>
         ))}
         </div>

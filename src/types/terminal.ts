@@ -13,6 +13,7 @@ export interface Tab {
   layout: Layout;
   panels: Panel[];
   broadcastEnabled: boolean;
+  pendingSessionPick?: boolean;
 }
 
 export interface SshProfile {
