@@ -15,6 +15,8 @@ use uuid::Uuid;
 
 const PORT: u16 = 57320;
 const MAX_SCROLLBACK: usize = 4 * 1024 * 1024; // 4MB
+const MAX_SESSIONS: usize = 64;
+const BROADCAST_CAPACITY: usize = 4096;
 
 /// Kill a process and its children.
 fn kill_process_tree(pid: u32) {
@@ -142,6 +144,26 @@ async fn main() {
 
     eprintln!("v-terminal daemon listening on 127.0.0.1:{PORT}");
 
+    tokio::select! {
+        _ = accept_loop(&listener, &registry) => {}
+        _ = tokio::signal::ctrl_c() => {
+            eprintln!("daemon: received shutdown signal");
+        }
+    }
+
+    eprintln!("daemon: cleaning up sessions...");
+    let reg = registry.write().await;
+    for session in reg.values() {
+        if let Some(pid) = session.child_pid {
+            kill_process_tree(pid);
+        }
+        let _ = session.exit_tx.send(());
+    }
+    drop(reg);
+    eprintln!("daemon: shutdown complete");
+}
+
+async fn accept_loop(listener: &TcpListener, registry: &Registry) {
     loop {
         if let Ok((stream, _)) = listener.accept().await {
             let registry = registry.clone();
@@ -151,9 +173,18 @@ async fn main() {
 }
 
 async fn handle_conn(stream: TcpStream, registry: Registry) {
-    let (reader, writer) = stream.into_split();
-    let writer = Arc::new(tokio::sync::Mutex::new(writer));
+    let (reader, mut writer) = stream.into_split();
     let mut reader = BufReader::new(reader);
+
+    let (out_tx, mut out_rx) = tokio::sync::mpsc::channel::<String>(1024);
+
+    let writer_task = tokio::spawn(async move {
+        while let Some(line) = out_rx.recv().await {
+            if writer.write_all(line.as_bytes()).await.is_err() {
+                break;
+            }
+        }
+    });
 
     let mut sub_tasks: HashMap<String, tokio::task::JoinHandle<()>> = HashMap::new();
 
@@ -171,11 +202,11 @@ async fn handle_conn(stream: TcpStream, registry: Registry) {
                     Ok(c) => c,
                     Err(e) => {
                         let msg = format!("{{\"event\":\"error\",\"message\":\"{e}\"}}\n");
-                        let _ = writer.lock().await.write_all(msg.as_bytes()).await;
+                        let _ = out_tx.send(msg).await;
                         continue;
                     }
                 };
-                dispatch(&cmd, &registry, &writer, &mut sub_tasks).await;
+                dispatch(&cmd, &registry, &out_tx, &mut sub_tasks).await;
             }
         }
     }
@@ -183,21 +214,28 @@ async fn handle_conn(stream: TcpStream, registry: Registry) {
     for (_, task) in sub_tasks {
         task.abort();
     }
+    drop(out_tx);
+    let _ = writer_task.await;
 }
 
-async fn send_json(
-    writer: &Arc<tokio::sync::Mutex<tokio::net::tcp::OwnedWriteHalf>>,
-    val: serde_json::Value,
-) {
+async fn send_json(out_tx: &tokio::sync::mpsc::Sender<String>, val: serde_json::Value) {
     let mut line = serde_json::to_string(&val).unwrap_or_default();
     line.push('\n');
-    let _ = writer.lock().await.write_all(line.as_bytes()).await;
+    let _ = out_tx.send(line).await;
+}
+
+fn try_send_json(out_tx: &tokio::sync::mpsc::Sender<String>, val: serde_json::Value) {
+    let mut line = serde_json::to_string(&val).unwrap_or_default();
+    line.push('\n');
+    if out_tx.try_send(line).is_err() {
+        eprintln!("daemon: output channel full, dropping event");
+    }
 }
 
 async fn dispatch(
     cmd: &Cmd,
     registry: &Registry,
-    writer: &Arc<tokio::sync::Mutex<tokio::net::tcp::OwnedWriteHalf>>,
+    out_tx: &tokio::sync::mpsc::Sender<String>,
     sub_tasks: &mut HashMap<String, tokio::task::JoinHandle<()>>,
 ) {
     match cmd {
@@ -217,7 +255,7 @@ async fn dispatch(
             if let Some(rid) = request_id {
                 resp["request_id"] = rid.clone().into();
             }
-            send_json(writer, resp).await;
+            send_json(out_tx, resp).await;
         }
 
         Cmd::CreateSession { request_id, cwd, cols, rows, label, shell_program, shell_args } => {
@@ -229,14 +267,14 @@ async fn dispatch(
                     if let Some(rid) = request_id {
                         resp["request_id"] = rid.clone().into();
                     }
-                    send_json(writer, resp).await;
+                    send_json(out_tx, resp).await;
                 }
                 Err(e) => {
                     let mut resp = serde_json::json!({"event": "error", "message": e});
                     if let Some(rid) = request_id {
                         resp["request_id"] = rid.clone().into();
                     }
-                    send_json(writer, resp).await;
+                    send_json(out_tx, resp).await;
                 }
             }
         }
@@ -257,10 +295,10 @@ async fn dispatch(
                 if let Some(rid) = request_id {
                     resp["request_id"] = rid.clone().into();
                 }
-                send_json(writer, resp).await;
+                send_json(out_tx, resp).await;
 
                 let sid = session_id.clone();
-                let writer_clone = writer.clone();
+                let sub_out_tx = out_tx.clone();
                 let task = tokio::spawn(async move {
                     loop {
                         tokio::select! {
@@ -272,7 +310,7 @@ async fn dispatch(
                                             "session_id": sid,
                                             "data": data,
                                         });
-                                        send_json(&writer_clone, val).await;
+                                        try_send_json(&sub_out_tx, val);
                                     }
                                     Err(broadcast::error::RecvError::Closed) => break,
                                     Err(broadcast::error::RecvError::Lagged(_)) => continue,
@@ -283,7 +321,9 @@ async fn dispatch(
                                     "event": "session_exit",
                                     "session_id": sid,
                                 });
-                                send_json(&writer_clone, val).await;
+                                let _ = sub_out_tx.send(
+                                    serde_json::to_string(&val).unwrap_or_default() + "\n"
+                                ).await;
                                 break;
                             }
                         }
@@ -301,7 +341,7 @@ async fn dispatch(
                 if let Some(rid) = request_id {
                     resp["request_id"] = rid.clone().into();
                 }
-                send_json(writer, resp).await;
+                send_json(out_tx, resp).await;
             }
         }
 
@@ -352,13 +392,13 @@ async fn dispatch(
                 if let Some(rid) = request_id {
                     resp["request_id"] = rid.clone().into();
                 }
-                send_json(writer, resp).await;
+                send_json(out_tx, resp).await;
             } else {
                 let mut resp = serde_json::json!({"event": "error", "message": "session not found"});
                 if let Some(rid) = request_id {
                     resp["request_id"] = rid.clone().into();
                 }
-                send_json(writer, resp).await;
+                send_json(out_tx, resp).await;
             }
         }
     }
@@ -373,6 +413,10 @@ async fn create_session(
     shell_args: Option<Vec<String>>,
     registry: &Registry,
 ) -> Result<String, String> {
+    if registry.read().await.len() >= MAX_SESSIONS {
+        return Err("max sessions reached (64)".to_string());
+    }
+
     let id = Uuid::new_v4().to_string();
 
     let pty_system = native_pty_system();
@@ -427,7 +471,7 @@ async fn create_session(
         .try_clone_reader()
         .map_err(|e| format!("clone_reader: {e}"))?;
 
-    let (output_tx, _) = broadcast::channel::<Vec<u8>>(512);
+    let (output_tx, _) = broadcast::channel::<Vec<u8>>(BROADCAST_CAPACITY);
     let (exit_tx, _) = broadcast::channel::<()>(1);
 
     let scrollback = Arc::new(Mutex::new(Scrollback::new()));
