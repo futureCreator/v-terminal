@@ -16,6 +16,7 @@ import { SidePanel } from "./components/SidePanel/SidePanel";
 import type { SidebarTab } from "./components/SidePanel/SidePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
+import { useClipboardPolling } from "./hooks/useClipboardPolling";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useTerminalConfigStore } from "./store/terminalConfigStore";
@@ -92,6 +93,7 @@ export function App() {
 
   // Alarm tick engine
   useAlarmTick();
+  useClipboardPolling();
 
   const sidebarOpenRef = useRef(sidebarOpen);
   useEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
