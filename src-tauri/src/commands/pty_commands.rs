@@ -2,7 +2,7 @@ use tauri::AppHandle;
 use crate::pty::manager::PtyManager;
 
 #[tauri::command]
-pub fn pty_create(
+pub async fn pty_create(
     state: tauri::State<'_, PtyManager>,
     app: AppHandle,
     cwd: String,
