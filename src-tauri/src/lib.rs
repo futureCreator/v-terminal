@@ -1,13 +1,13 @@
 mod commands;
-mod pty;
+mod session;
 
-use pty::manager::PtyManager;
-use commands::{pty_commands, wsl_commands};
+use session::manager::SessionManager;
+use commands::{session_commands, wsl_commands};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let pty_manager = PtyManager::new();
+    let session_manager = SessionManager::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -21,20 +21,23 @@ pub fn run() {
         })
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .manage(pty_manager)
+        .manage(session_manager)
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 if window.label() == "main" {
-                    let manager = window.state::<PtyManager>();
-                    manager.kill_all();
+                    let manager = window.state::<SessionManager>();
+                    tokio::task::block_in_place(|| {
+                        tokio::runtime::Handle::current().block_on(manager.kill_all());
+                    });
                 }
             }
         })
         .invoke_handler(tauri::generate_handler![
-            pty_commands::pty_create,
-            pty_commands::pty_write,
-            pty_commands::pty_resize,
-            pty_commands::pty_kill,
+            session_commands::session_create,
+            session_commands::session_create_with_password,
+            session_commands::session_write,
+            session_commands::session_resize,
+            session_commands::session_kill,
             wsl_commands::get_wsl_distros,
         ])
         .run(tauri::generate_context!())

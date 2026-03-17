@@ -22,12 +22,16 @@ interface TerminalPaneProps {
   cwd: string;
   isActive: boolean;
   broadcastEnabled: boolean;
-  siblingPtyIds: string[];
-  sshCommand?: string;
+  siblingSessionIds: string[];
+  connectionType?: 'local' | 'ssh' | 'wsl';
+  sshHost?: string;
+  sshPort?: number;
+  sshUsername?: string;
+  sshIdentityFile?: string;
   shellProgram?: string;
   shellArgs?: string[];
-  onPtyCreated: (ptyId: string) => void;
-  onPtyKilled: () => void;
+  onSessionCreated: (sessionId: string, connectionId?: string) => void;
+  onSessionKilled: () => void;
   onFocus: () => void;
   onNextPanel?: () => void;
   onPrevPanel?: () => void;
@@ -38,12 +42,16 @@ export function TerminalPane({
   cwd,
   isActive,
   broadcastEnabled,
-  siblingPtyIds,
-  sshCommand,
+  siblingSessionIds,
+  connectionType,
+  sshHost,
+  sshPort,
+  sshUsername,
+  sshIdentityFile,
   shellProgram,
   shellArgs,
-  onPtyCreated,
-  onPtyKilled,
+  onSessionCreated,
+  onSessionKilled,
   onFocus,
   onNextPanel,
   onPrevPanel,
@@ -69,23 +77,56 @@ export function TerminalPane({
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const ptyIdRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const observerRef = useRef<ResizeObserver | null>(null);
   const [exited, setExited] = useState(false);
   const exitedRef = useRef(exited);
   exitedRef.current = exited;
   const [loading, setLoading] = useState(true);
   const [initKey, setInitKey] = useState(0);
+  const [connectionLost, setConnectionLost] = useState(false);
+
+  // Password dialog state
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const passwordResolverRef = useRef<((password: string | null) => void) | null>(null);
+
+  const promptPassword = (): Promise<string | null> => {
+    return new Promise((resolve) => {
+      passwordResolverRef.current = resolve;
+      setShowPasswordDialog(true);
+      setPasswordError(null);
+    });
+  };
+
+  const handlePasswordSubmit = () => {
+    if (passwordResolverRef.current) {
+      passwordResolverRef.current(passwordInput);
+      passwordResolverRef.current = null;
+      setPasswordInput("");
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    if (passwordResolverRef.current) {
+      passwordResolverRef.current(null);
+      passwordResolverRef.current = null;
+    }
+    setShowPasswordDialog(false);
+    setExited(true);
+  };
 
   // Store broadcast state in refs to avoid stale closures in the onData handler
   const broadcastRef = useRef(broadcastEnabled);
-  const siblingsRef = useRef(siblingPtyIds);
+  const siblingsRef = useRef(siblingSessionIds);
   broadcastRef.current = broadcastEnabled;
-  siblingsRef.current = siblingPtyIds;
+  siblingsRef.current = siblingSessionIds;
 
   const handleRestart = () => {
     setExited(false);
     setLoading(true);
+    setConnectionLost(false);
     setInitKey((k) => k + 1);
   };
 
@@ -95,6 +136,7 @@ export function TerminalPane({
     let disposed = false;
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
+    let unlistenSshStatus: (() => void) | null = null;
     let visibilityHandler: (() => void) | null = null;
     let focusHandler: (() => void) | null = null;
 
@@ -151,29 +193,91 @@ export function TerminalPane({
 
       const { cols, rows } = term;
 
-      let ptyId: string;
+      // Determine session type and parameters
+      const sessType = connectionType ?? 'local';
+      let sessionId: string;
+      let connectionId: string | undefined;
+
       try {
-        ptyId = await ipc.ptyCreate(cwd, cols, rows, shellProgram, shellArgs);
+        const result = await ipc.sessionCreate({
+          type: sessType,
+          cwd,
+          cols,
+          rows,
+          shellProgram,
+          shellArgs,
+          ...(sessType === 'ssh' && sshHost && sshUsername ? {
+            ssh: {
+              host: sshHost,
+              port: sshPort ?? 22,
+              username: sshUsername,
+              identityFile: sshIdentityFile,
+            },
+          } : {}),
+        });
+        sessionId = result.sessionId;
+        connectionId = result.connectionId;
       } catch (e) {
-        term.write(`\r\n\x1b[31mFailed to start session: ${e}\x1b[0m\r\n`);
-        setLoading(false);
-        return;
+        const errStr = String(e);
+
+        // Handle password-required flow for SSH
+        if (errStr.includes("PASSWORD_REQUIRED") && sshHost && sshUsername) {
+          setLoading(false);
+          let authenticated = false;
+          while (!authenticated) {
+            const password = await promptPassword();
+            if (password === null || disposed) return;
+            try {
+              const result = await ipc.sessionCreateWithPassword({
+                host: sshHost,
+                port: sshPort ?? 22,
+                username: sshUsername,
+                password,
+                cols: term.cols,
+                rows: term.rows,
+              });
+              sessionId = result.sessionId;
+              connectionId = result.connectionId;
+              setShowPasswordDialog(false);
+              authenticated = true;
+            } catch (retryErr) {
+              if (String(retryErr).includes("AUTH_FAILED")) {
+                setPasswordError("Authentication failed. Please try again.");
+                continue;
+              }
+              setShowPasswordDialog(false);
+              term.write(`\r\n\x1b[31mFailed to connect: ${retryErr}\x1b[0m\r\n`);
+              setExited(true);
+              return;
+            }
+          }
+          setLoading(true);
+        } else {
+          term.write(`\r\n\x1b[31mFailed to start session: ${e}\x1b[0m\r\n`);
+          setLoading(false);
+          return;
+        }
       }
 
       if (disposed) {
-        ipc.ptyKill(ptyId).catch(() => {});
+        ipc.sessionKill(sessionId!).catch(() => {});
         term.dispose();
         return;
       }
 
-      ptyIdRef.current = ptyId;
-      terminalRegistry.set(ptyId, term);
+      sessionIdRef.current = sessionId!;
+      terminalRegistry.set(sessionId!, term);
       setLoading(false);
-      onPtyCreated(ptyId);
+      onSessionCreated(sessionId!, connectionId);
 
-      // Auto-execute SSH command if provided
-      if (sshCommand) {
-        ipc.ptyWrite(ptyId, encoder.encode(sshCommand + "\r")).catch(() => {});
+      // Monitor SSH connection status if we have a connectionId
+      if (connectionId) {
+        unlistenSshStatus = await ipc.onSshConnectionStatus(connectionId, (status) => {
+          if (disposed) return;
+          if (status === "disconnected") {
+            setConnectionLost(true);
+          }
+        });
       }
 
       // Clipboard and reserved key handling
@@ -205,14 +309,14 @@ export function TerminalPane({
         return true;
       });
 
-      // Input: terminal → PTY (with optional broadcast)
+      // Input: terminal → session (with optional broadcast)
       term.onData((data) => {
         const encoded = encoder.encode(data);
-        ipc.ptyWrite(ptyId, encoded).catch(() => {});
+        ipc.sessionWrite(sessionId!, encoded).catch(() => {});
         if (broadcastRef.current) {
           for (const sibId of siblingsRef.current) {
-            if (sibId !== ptyId) {
-              ipc.ptyWrite(sibId, encoded).catch(() => {});
+            if (sibId !== sessionId!) {
+              ipc.sessionWrite(sibId, encoded).catch(() => {});
             }
           }
         }
@@ -222,16 +326,16 @@ export function TerminalPane({
       focusHandler = () => onFocus();
       term.textarea?.addEventListener("focus", focusHandler);
 
-      // Output: PTY → terminal
-      unlistenData = await ipc.onPtyData(ptyId, (data) => {
+      // Output: session → terminal
+      unlistenData = await ipc.onSessionData(sessionId!, (data) => {
         if (disposed) return;
         term.write(data);
       });
 
-      unlistenExit = await ipc.onPtyExit(ptyId, () => {
+      unlistenExit = await ipc.onSessionExit(sessionId!, () => {
         if (!disposed) {
           setExited(true);
-          onPtyKilled();
+          onSessionKilled();
         }
       });
 
@@ -247,7 +351,7 @@ export function TerminalPane({
             if (disposed || !fitAddonRef.current || !termRef.current) return;
             try {
               fitAddon.fit();
-              ipc.ptyResize(ptyId, term.cols, term.rows).catch(() => {});
+              ipc.sessionResize(sessionId!, term.cols, term.rows).catch(() => {});
             } catch {}
           }, 50);
         });
@@ -276,6 +380,7 @@ export function TerminalPane({
       disposed = true;
       unlistenData?.();
       unlistenExit?.();
+      unlistenSshStatus?.();
       if (visibilityHandler) {
         document.removeEventListener("visibilitychange", visibilityHandler);
       }
@@ -285,11 +390,11 @@ export function TerminalPane({
       if (term && focusHandler) {
         term.textarea?.removeEventListener("focus", focusHandler);
       }
-      const ptyId = ptyIdRef.current;
-      if (ptyId) {
-        terminalRegistry.delete(ptyId);
-        ipc.ptyKill(ptyId).catch(() => {});
-        ptyIdRef.current = null;
+      const sid = sessionIdRef.current;
+      if (sid) {
+        terminalRegistry.delete(sid);
+        ipc.sessionKill(sid).catch(() => {});
+        sessionIdRef.current = null;
       }
       termRef.current?.dispose();
       termRef.current = null;
@@ -305,7 +410,7 @@ export function TerminalPane({
     }
   }, [isActive]);
 
-  // Apply font/layout changes — re-fit terminal and notify PTY of new dimensions
+  // Apply font/layout changes — re-fit terminal and notify session of new dimensions
   useEffect(() => {
     const term = termRef.current;
     const fitAddon = fitAddonRef.current;
@@ -327,9 +432,9 @@ export function TerminalPane({
 
       try {
         fitAddon.fit();
-        const ptyId = ptyIdRef.current;
-        if (ptyId) {
-          ipc.ptyResize(ptyId, term.cols, term.rows).catch(() => {});
+        const sid = sessionIdRef.current;
+        if (sid) {
+          ipc.sessionResize(sid, term.cols, term.rows).catch(() => {});
         }
       } catch {}
     };
@@ -365,15 +470,52 @@ export function TerminalPane({
       style={style}
       onClick={() => { onFocus(); termRef.current?.focus(); }}
     >
-      {loading && !exited && (
+      {loading && !exited && !showPasswordDialog && (
         <div className="terminal-loading">
           <div className="terminal-spinner" />
+        </div>
+      )}
+      {showPasswordDialog && (
+        <div className="terminal-password-dialog">
+          <div className="terminal-password-content">
+            <div className="terminal-password-title">SSH Authentication</div>
+            <div className="terminal-password-subtitle">
+              {sshUsername}@{sshHost}{sshPort && sshPort !== 22 ? `:${sshPort}` : ""}
+            </div>
+            {passwordError && (
+              <div className="terminal-password-error">{passwordError}</div>
+            )}
+            <input
+              type="password"
+              className="terminal-password-input"
+              placeholder="Password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handlePasswordSubmit();
+                if (e.key === "Escape") handlePasswordCancel();
+              }}
+              autoFocus
+            />
+            <button
+              className="terminal-password-submit"
+              onClick={handlePasswordSubmit}
+            >
+              Connect
+            </button>
+          </div>
+        </div>
+      )}
+      {connectionLost && !exited && (
+        <div className="terminal-connection-lost" onClick={handleRestart}>
+          <span className="terminal-connection-lost-text">Connection lost</span>
+          <span className="terminal-connection-lost-action">Click to reconnect</span>
         </div>
       )}
       <div
         ref={containerRef}
         className="terminal-container"
-        style={{ display: exited ? "none" : undefined }}
+        style={{ display: exited || showPasswordDialog ? "none" : undefined }}
       />
       {exited && (
         <div className="terminal-exit-panel" onClick={handleRestart}>

@@ -1,7 +1,7 @@
-use crate::pty::manager::PtyManager;
+use crate::session::manager::SessionManager;
 
 #[tauri::command]
-pub fn get_wsl_distros(state: tauri::State<'_, PtyManager>) -> Result<Vec<String>, String> {
+pub fn get_wsl_distros(state: tauri::State<'_, SessionManager>) -> Result<Vec<String>, String> {
     #[cfg(windows)]
     {
         let cached = state.wsl_distros_cache.get_or_init(|| {

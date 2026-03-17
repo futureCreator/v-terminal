@@ -22,7 +22,6 @@ import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useTerminalConfigStore } from "./store/terminalConfigStore";
 import { useSshStore } from "./store/sshStore";
-import { buildSshCommand } from "./lib/sshUtils";
 import { ipc } from "./lib/tauriIpc";
 import { terminalRegistry } from "./components/TerminalPane/TerminalPane";
 import type { Layout } from "./types/terminal";
@@ -71,7 +70,7 @@ export function App() {
     }
     return localStorage.getItem("v-terminal:alarm-open") === "true" ? "timers" : "notes";
   });
-  const activePanelPtyIdRef = useRef<string | null>(null);
+  const activePanelSessionIdRef = useRef<string | null>(null);
   const activePanelIdRef = useRef<string | null>(null);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
   const [cheatsheetTopic, setCheatsheetTopic] = useState<string | null>(null);
@@ -189,8 +188,8 @@ export function App() {
     const { removed } = setLayout(activeTab.id, layout);
     // Kill sessions for removed panels
     removed
-      .filter((p) => p.ptyId !== null)
-      .forEach((p) => ipc.ptyKill(p.ptyId!).catch(() => {}));
+      .filter((p) => p.sessionId !== null)
+      .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
   }, [activeTab, setLayout]);
 
   const handleToggleBroadcast = useCallback(() => {
@@ -219,8 +218,8 @@ export function App() {
     setActiveTab(tabs[nextIdx].id);
   }, [tabs, activeTabId, setActiveTab]);
 
-  const handleActivePanelChanged = useCallback((ptyId: string | null, panelId?: string) => {
-    activePanelPtyIdRef.current = ptyId;
+  const handleActivePanelChanged = useCallback((sessionId: string | null, panelId?: string) => {
+    activePanelSessionIdRef.current = sessionId;
     activePanelIdRef.current = panelId ?? null;
     setActivePanelId(panelId ?? null);
   }, []);
@@ -228,8 +227,8 @@ export function App() {
   const handlePaletteClose = useCallback(() => {
     setPaletteOpen(false);
     requestAnimationFrame(() => {
-      const ptyId = activePanelPtyIdRef.current;
-      if (ptyId) terminalRegistry.get(ptyId)?.focus();
+      const sessionId = activePanelSessionIdRef.current;
+      if (sessionId) terminalRegistry.get(sessionId)?.focus();
     });
   }, []);
 
@@ -734,8 +733,7 @@ export function App() {
       }),
       // SSH profiles
       ...sshProfiles.map((profile) => {
-        const sshCmd = buildSshCommand(profile);
-        const isActiveSsh = connType === "ssh" && conn?.sshCommand === sshCmd;
+        const isActiveSsh = connType === "ssh" && conn?.sshProfileId === profile.id;
         return {
           id: `conn:ssh:${profile.id}`,
           label: profile.name,
@@ -758,7 +756,7 @@ export function App() {
             if (isActiveSsh) return;
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "ssh",
-              sshCommand: sshCmd,
+              sshProfileId: profile.id,
             });
           },
         };
@@ -777,8 +775,8 @@ export function App() {
     if (tab) {
       await Promise.all(
         tab.panels
-          .filter((p) => p.ptyId !== null)
-          .map((p) => ipc.ptyKill(p.ptyId!).catch(() => {}))
+          .filter((p) => p.sessionId !== null)
+          .map((p) => ipc.sessionKill(p.sessionId!).catch(() => {}))
       );
     }
     removeTab(tabId);

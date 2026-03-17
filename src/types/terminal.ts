@@ -2,7 +2,8 @@ export type Layout = 1 | 2 | 3 | 4 | "4c" | 6 | 9;
 
 export interface Panel {
   id: string;
-  ptyId: string | null;
+  sessionId: string | null;
+  connectionId?: string | null;
   connection?: PanelConnection;
 }
 
@@ -27,7 +28,7 @@ export interface SshProfile {
 
 export interface PanelConnection {
   type: 'local' | 'ssh' | 'wsl';
-  sshCommand?: string;
+  sshProfileId?: string;
   shellProgram?: string;
   shellArgs?: string[];
   label?: string;
