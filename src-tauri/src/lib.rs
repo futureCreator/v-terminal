@@ -213,7 +213,18 @@ pub fn run() {
         .manage(app_state)
         .manage(pty_manager)
         .setup(|app| {
-            start_daemon_watchdog(app.handle().clone());
+            // Daemon watchdog disabled — using direct PTY IPC instead.
+            // start_daemon_watchdog(app.handle().clone());
+
+            // Show main window immediately (no daemon connection required).
+            if let Some(splash) = app.get_webview_window("splash") {
+                let _ = splash.close();
+            }
+            if let Some(main) = app.get_webview_window("main") {
+                let _ = main.show();
+                let _ = main.set_focus();
+            }
+            APP_READY_DONE.store(true, std::sync::atomic::Ordering::SeqCst);
             Ok(())
         })
         .on_window_event(|window, event| {

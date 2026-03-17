@@ -7,7 +7,6 @@ import { CanvasAddon } from "@xterm/addon-canvas";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
 import { ipc } from "../../lib/tauriIpc";
 import { ensureFontLoaded, ensureSpecificFontLoaded } from "../../lib/fontLoader";
-import { useTabStore } from "../../store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "../../store/themeStore";
 import { useTerminalConfigStore } from "../../store/terminalConfigStore";
 import "@xterm/xterm/css/xterm.css";
@@ -27,7 +26,6 @@ interface TerminalPaneProps {
   sshCommand?: string;
   shellProgram?: string;
   shellArgs?: string[];
-  existingSessionId?: string;
   onPtyCreated: (ptyId: string) => void;
   onPtyKilled: () => void;
   onFocus: () => void;
@@ -44,7 +42,6 @@ export function TerminalPane({
   sshCommand,
   shellProgram,
   shellArgs,
-  existingSessionId,
   onPtyCreated,
   onPtyKilled,
   onFocus,
@@ -92,26 +89,12 @@ export function TerminalPane({
     setInitKey((k) => k + 1);
   };
 
-  // When the daemon dies, mark this pane as exited so the user can start a new session
-  useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    ipc.onDaemonStatus((status) => {
-      if (status === "reconnecting" && !exitedRef.current && ptyIdRef.current) {
-        setExited(true);
-        onPtyKilled();
-      }
-    }).then((fn) => { unlisten = fn; });
-    return () => { unlisten?.(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   useEffect(() => {
     if (!containerRef.current) return;
 
     let disposed = false;
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
-    let unlistenResync: (() => void) | undefined;
     let visibilityHandler: (() => void) | null = null;
     let focusHandler: (() => void) | null = null;
 
@@ -169,24 +152,8 @@ export function TerminalPane({
       const { cols, rows } = term;
 
       let ptyId: string;
-      let scrollback: number[] = [];
       try {
-        if (existingSessionId) {
-          try {
-            ptyId = existingSessionId;
-            scrollback = await ipc.daemonAttach(ptyId);
-          } catch {
-            // Session no longer exists (e.g. daemon restarted) — create a fresh one
-            ptyId = await ipc.daemonCreateSession(cwd, cols, rows, undefined, shellProgram, shellArgs);
-            scrollback = await ipc.daemonAttach(ptyId);
-          }
-        } else {
-          ptyId = await ipc.daemonCreateSession(cwd, cols, rows, undefined, shellProgram, shellArgs);
-          scrollback = await ipc.daemonAttach(ptyId);
-        }
-        if (scrollback.length > 0) {
-          term.write(new Uint8Array(scrollback));
-        }
+        ptyId = await ipc.ptyCreate(cwd, cols, rows, shellProgram, shellArgs);
       } catch (e) {
         term.write(`\r\n\x1b[31mFailed to start session: ${e}\x1b[0m\r\n`);
         setLoading(false);
@@ -194,7 +161,7 @@ export function TerminalPane({
       }
 
       if (disposed) {
-        await ipc.daemonDetach(ptyId).catch(() => {});
+        ipc.ptyKill(ptyId).catch(() => {});
         term.dispose();
         return;
       }
@@ -206,7 +173,7 @@ export function TerminalPane({
 
       // Auto-execute SSH command if provided
       if (sshCommand) {
-        ipc.daemonWrite(ptyId, encoder.encode(sshCommand + "\r")).catch(() => {});
+        ipc.ptyWrite(ptyId, encoder.encode(sshCommand + "\r")).catch(() => {});
       }
 
       // Clipboard and reserved key handling
@@ -241,11 +208,11 @@ export function TerminalPane({
       // Input: terminal → PTY (with optional broadcast)
       term.onData((data) => {
         const encoded = encoder.encode(data);
-        ipc.daemonWrite(ptyId, encoded).catch(() => {});
+        ipc.ptyWrite(ptyId, encoded).catch(() => {});
         if (broadcastRef.current) {
           for (const sibId of siblingsRef.current) {
             if (sibId !== ptyId) {
-              ipc.daemonWrite(sibId, encoded).catch(() => {});
+              ipc.ptyWrite(sibId, encoded).catch(() => {});
             }
           }
         }
@@ -258,12 +225,6 @@ export function TerminalPane({
       // Output: PTY → terminal
       unlistenData = await ipc.onPtyData(ptyId, (data) => {
         if (disposed) return;
-        term.write(data);
-      });
-
-      unlistenResync = await ipc.onPtyResync(ptyId, (data) => {
-        if (disposed) return;
-        term.reset();
         term.write(data);
       });
 
@@ -286,7 +247,7 @@ export function TerminalPane({
             if (disposed || !fitAddonRef.current || !termRef.current) return;
             try {
               fitAddon.fit();
-              ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
+              ipc.ptyResize(ptyId, term.cols, term.rows).catch(() => {});
             } catch {}
           }, 50);
         });
@@ -314,7 +275,6 @@ export function TerminalPane({
     return () => {
       disposed = true;
       unlistenData?.();
-      unlistenResync?.();
       unlistenExit?.();
       if (visibilityHandler) {
         document.removeEventListener("visibilitychange", visibilityHandler);
@@ -328,7 +288,7 @@ export function TerminalPane({
       const ptyId = ptyIdRef.current;
       if (ptyId) {
         terminalRegistry.delete(ptyId);
-        ipc.daemonDetach(ptyId).catch(() => {}); // detach but don't kill — session persists in daemon
+        ipc.ptyKill(ptyId).catch(() => {}); // kill — no daemon to persist to
         ptyIdRef.current = null;
       }
       termRef.current?.dispose();
@@ -369,7 +329,7 @@ export function TerminalPane({
         fitAddon.fit();
         const ptyId = ptyIdRef.current;
         if (ptyId) {
-          ipc.daemonResize(ptyId, term.cols, term.rows).catch(() => {});
+          ipc.ptyResize(ptyId, term.cols, term.rows).catch(() => {});
         }
       } catch {}
     };

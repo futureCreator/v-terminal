@@ -1,60 +1,9 @@
-import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ipc } from "../../lib/tauriIpc";
 import "./TitleBar.css";
 
 export function TitleBar() {
   const win = getCurrentWindow();
   const isWindows = navigator.platform.toUpperCase().includes("WIN");
-  const [daemonStatus, setDaemonStatus] = useState<"connected" | "reconnecting" | null>(null);
-
-  useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    let cancelled = false;
-
-    const syncStatus = () => {
-      ipc.getDaemonStatus().then((status) => {
-        if (!cancelled) setDaemonStatus(status);
-      }).catch(() => {});
-    };
-
-    // Query immediately — covers the case where daemon was already connected
-    // before the event listener below has a chance to register.
-    syncStatus();
-
-    ipc.onDaemonStatus((status) => {
-      if (!cancelled) setDaemonStatus(status === "connected" ? "connected" : "reconnecting");
-    }).then((fn) => {
-      if (cancelled) { fn(); return; }
-      unlisten = fn;
-      // Query again after listener is registered to catch any events that fired
-      // in the gap between the first syncStatus() call and listener registration.
-      syncStatus();
-    });
-
-    return () => {
-      cancelled = true;
-      unlisten?.();
-    };
-  }, []);
-
-  const dotClass = daemonStatus === "connected"
-    ? "daemon-dot--connected"
-    : daemonStatus === "reconnecting"
-    ? "daemon-dot--reconnecting"
-    : "daemon-dot--unknown";
-
-  const statusLabel = daemonStatus === "connected"
-    ? "Connected"
-    : daemonStatus === "reconnecting"
-    ? "Reconnecting…"
-    : "Connecting…";
-
-  const indicator = (
-    <div className="daemon-indicator" title={`Daemon ${statusLabel}`}>
-      <span className={`daemon-dot ${dotClass}`} />
-    </div>
-  );
 
   if (isWindows) {
     return (
@@ -62,7 +11,6 @@ export function TitleBar() {
         <span className="titlebar-app-name" data-tauri-drag-region>
           v-terminal
         </span>
-        {indicator}
         <div className="titlebar-win-controls">
           <button
             className="win-btn win-btn--minimize"
@@ -133,7 +81,6 @@ export function TitleBar() {
           </svg>
         </button>
       </div>
-      {indicator}
       <div className="titlebar-spacer" data-tauri-drag-region />
     </div>
   );

@@ -3,7 +3,7 @@ import { ipc } from "../../lib/tauriIpc";
 import { buildSshCommand } from "../../lib/sshUtils";
 import { useSshStore } from "../../store/sshStore";
 import { panelCount, getGridConfig } from "../../lib/layoutMath";
-import type { Layout, PanelConnection, SavedTab, DaemonSessionInfo } from "../../types/terminal";
+import type { Layout, PanelConnection, SavedTab } from "../../types/terminal";
 import "./SessionPicker.css";
 
 /* ── Exported types ─────────────────────────────────────────────── */
@@ -314,9 +314,7 @@ export function SessionPicker({
   onRestoreTab,
   onKillSavedTab,
 }: SessionPickerProps) {
-  const [sessions, setSessions] = useState<DaemonSessionInfo[]>([]);
   const [wslDistros, setWslDistros] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const [killingSavedTabId, setKillingSavedTabId] = useState<string | null>(
     null
   );
@@ -378,23 +376,12 @@ export function SessionPicker({
     [connectionOptions]
   );
 
-  // Load sessions (for background tabs section)
-  const loadSessions = useCallback(() => {
-    setLoading(true);
-    ipc
-      .daemonListSessions()
-      .then(setSessions)
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false));
-  }, []);
-
   useEffect(() => {
-    loadSessions();
     ipc
       .getWslDistros()
       .then(setWslDistros)
       .catch(() => setWslDistros([]));
-  }, [loadSessions]);
+  }, []);
 
   // "All Same" mode — click connection → open immediately
   const handleAllSameClick = useCallback(
@@ -443,7 +430,6 @@ export function SessionPicker({
     setKillingSavedTabId(savedTabId);
     try {
       await onKillSavedTab?.(savedTabId);
-      loadSessions();
     } finally {
       setKillingSavedTabId(null);
     }
@@ -570,19 +556,9 @@ export function SessionPicker({
           {hasSavedTabs ? (
             <div className="sp-card-grid">
               {savedTabs!.map((savedTab) => {
-                const panelSessions = savedTab.panels
-                  .map((p) => sessions.find((s) => s.id === p.ptyId))
-                  .filter(
-                    (s): s is DaemonSessionInfo => s !== undefined
-                  );
-                const firstCwd = panelSessions[0]?.cwd ?? "~";
+                const firstCwd = "~";
                 const count = savedTab.panels.length;
-                const lastActive =
-                  panelSessions.length > 0
-                    ? Math.max(
-                        ...panelSessions.map((s) => s.last_active)
-                      )
-                    : Math.floor(savedTab.savedAt / 1000);
+                const lastActive = Math.floor(savedTab.savedAt / 1000);
 
                 return (
                   <div

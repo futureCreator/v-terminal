@@ -162,7 +162,6 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
               sshCommand={panel.connection?.sshCommand}
               shellProgram={panel.connection?.shellProgram}
               shellArgs={panel.connection?.shellArgs}
-              existingSessionId={panel.existingSessionId}
               onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
               onPtyKilled={() => handlePtyKilled(panel.id)}
               onFocus={() => setActivePanelId(panel.id)}

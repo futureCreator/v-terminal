@@ -1,6 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import type { DaemonSessionInfo } from "../types/terminal";
 
 export interface PtyDataPayload {
   ptyId: string;
@@ -11,26 +10,14 @@ export interface PtyExitPayload {
   ptyId: string;
 }
 
-export interface PtyResyncPayload {
-  ptyId: string;
-  data: number[];
-}
-
 // Centralized per-pty event dispatchers.
-// Instead of registering N Tauri listeners (one per panel), we maintain a single
-// global listener per event type and dispatch in-process to per-pty handlers.
-// This reduces event processing from O(N²) to O(N) for N concurrent panels.
+// Single global listener per event type, dispatch in-process to per-pty handlers.
 const ptyDataHandlers = new Map<string, (data: Uint8Array) => void>();
 const ptyExitHandlers = new Map<string, () => void>();
 let ptyDataUnlisten: UnlistenFn | null = null;
 let ptyExitUnlisten: UnlistenFn | null = null;
-// In-flight promises prevent duplicate registrations when multiple panels mount concurrently.
 let ptyDataListenerPromise: Promise<void> | null = null;
 let ptyExitListenerPromise: Promise<void> | null = null;
-
-const ptyResyncHandlers = new Map<string, (data: Uint8Array) => void>();
-let ptyResyncUnlisten: UnlistenFn | null = null;
-let ptyResyncListenerPromise: Promise<void> | null = null;
 
 async function ensurePtyDataListener(): Promise<void> {
   if (ptyDataUnlisten) return;
@@ -53,55 +40,31 @@ async function ensurePtyExitListener(): Promise<void> {
   return ptyExitListenerPromise;
 }
 
-async function ensurePtyResyncListener(): Promise<void> {
-  if (ptyResyncUnlisten) return;
-  if (!ptyResyncListenerPromise) {
-    ptyResyncListenerPromise = listen<PtyResyncPayload>("pty-resync", (event) => {
-      const { ptyId, data } = event.payload;
-      ptyResyncHandlers.get(ptyId)?.(new Uint8Array(data));
-    }).then((unlisten) => { ptyResyncUnlisten = unlisten; });
-  }
-  return ptyResyncListenerPromise;
-}
-
 export const ipc = {
-  async daemonListSessions(): Promise<DaemonSessionInfo[]> {
-    return invoke<DaemonSessionInfo[]>("daemon_list_sessions");
-  },
-
-  async daemonCreateSession(
+  async ptyCreate(
     cwd: string,
     cols: number,
     rows: number,
-    label?: string,
     shellProgram?: string,
-    shellArgs?: string[]
+    shellArgs?: string[],
   ): Promise<string> {
-    return invoke<string>("daemon_create_session", { cwd, cols, rows, label, shellProgram, shellArgs });
+    return invoke<string>("pty_create", { cwd, cols, rows, shellProgram, shellArgs });
+  },
+
+  async ptyWrite(sessionId: string, data: Uint8Array): Promise<void> {
+    return invoke("pty_write", { ptyId: sessionId, data: Array.from(data) });
+  },
+
+  async ptyResize(sessionId: string, cols: number, rows: number): Promise<void> {
+    return invoke("pty_resize", { ptyId: sessionId, cols, rows });
+  },
+
+  async ptyKill(sessionId: string): Promise<void> {
+    return invoke("pty_kill", { ptyId: sessionId });
   },
 
   async getWslDistros(): Promise<string[]> {
     return invoke<string[]>("get_wsl_distros");
-  },
-
-  async daemonAttach(sessionId: string): Promise<number[]> {
-    return invoke<number[]>("daemon_attach", { sessionId });
-  },
-
-  async daemonDetach(sessionId: string): Promise<void> {
-    return invoke("daemon_detach", { sessionId });
-  },
-
-  async daemonWrite(sessionId: string, data: Uint8Array): Promise<void> {
-    return invoke("daemon_write", { sessionId, data: Array.from(data) });
-  },
-
-  async daemonResize(sessionId: string, cols: number, rows: number): Promise<void> {
-    return invoke("daemon_resize", { sessionId, cols, rows });
-  },
-
-  async daemonKillSession(sessionId: string): Promise<void> {
-    return invoke("daemon_kill_session", { sessionId });
   },
 
   /** Register a per-pty data handler. One global Tauri listener is shared across all panels. */
@@ -116,25 +79,5 @@ export const ipc = {
     await ensurePtyExitListener();
     ptyExitHandlers.set(ptyId, handler);
     return () => { ptyExitHandlers.delete(ptyId); };
-  },
-
-  async onPtyResync(ptyId: string, handler: (data: Uint8Array) => void): Promise<() => void> {
-    await ensurePtyResyncListener();
-    ptyResyncHandlers.set(ptyId, handler);
-    return () => { ptyResyncHandlers.delete(ptyId); };
-  },
-
-  async getDaemonStatus(): Promise<"connected" | "reconnecting"> {
-    return invoke<string>("get_daemon_status") as Promise<"connected" | "reconnecting">;
-  },
-
-  onDaemonStatus(handler: (status: "connected" | "reconnecting") => void): Promise<UnlistenFn> {
-    return listen<string>("daemon-status", (event) =>
-      handler(event.payload as "connected" | "reconnecting")
-    );
-  },
-
-  async appReady(): Promise<void> {
-    return invoke("app_ready");
   },
 };

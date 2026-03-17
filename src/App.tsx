@@ -84,27 +84,9 @@ export function App() {
     ipc.getWslDistros().catch(() => {});
   }, []);
 
-  // Signal app_ready when daemon is connected (closes splash, shows main window)
+  // App ready: show main window immediately (no daemon required)
   useEffect(() => {
-    const readyFired = { current: false };
-    const fireReady = () => {
-      if (readyFired.current) return;
-      readyFired.current = true;
-      ipc.appReady().catch(() => {});
-    };
-
-    // 1. Register listener FIRST (prevents race condition)
-    let unlisten: (() => void) | null = null;
-    ipc.onDaemonStatus((status) => {
-      if (status === "connected") fireReady();
-    }).then((fn) => { unlisten = fn; });
-
-    // 2. THEN check current status (in case already connected)
-    ipc.getDaemonStatus().then((status) => {
-      if (status === "connected") fireReady();
-    }).catch(() => {});
-
-    return () => { unlisten?.(); };
+    // No-op: window is shown via Rust side directly on startup
   }, []);
 
   // Alarm tick engine
@@ -211,7 +193,7 @@ export function App() {
     // Kill sessions for removed panels
     removed
       .filter((p) => p.ptyId !== null)
-      .forEach((p) => ipc.daemonKillSession(p.ptyId!).catch(() => {}));
+      .forEach((p) => ipc.ptyKill(p.ptyId!).catch(() => {}));
   }, [activeTab, setLayout]);
 
   const handleToggleBroadcast = useCallback(() => {
@@ -863,7 +845,7 @@ export function App() {
       await Promise.all(
         tab.panels
           .filter((p) => p.ptyId !== null)
-          .map((p) => ipc.daemonKillSession(p.ptyId!).catch(() => {}))
+          .map((p) => ipc.ptyKill(p.ptyId!).catch(() => {}))
       );
     }
     removeTab(tabId);
@@ -880,7 +862,7 @@ export function App() {
       await Promise.all(
         saved.panels
           .filter((p) => p.ptyId !== null)
-          .map((p) => ipc.daemonKillSession(p.ptyId as string).catch(() => {}))
+          .map((p) => ipc.ptyKill(p.ptyId as string).catch(() => {}))
       );
     }
     removeSavedTab(savedTabId);
