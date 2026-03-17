@@ -10,7 +10,7 @@ A fast, native terminal emulator built with Tauri + React + xterm.js. Designed f
 | Terminal | xterm.js 5 (FitAddon, WebLinksAddon, Unicode11) |
 | State | Zustand 4 |
 | Backend | Tauri 2, Rust |
-| PTY | portable-pty (out-of-process daemon) |
+| PTY | portable-pty (in-process, direct IPC) |
 | Fonts | Pretendard (UI), JetBrains Mono Nerd Font (terminal) |
 
 ## Features
@@ -89,6 +89,16 @@ pnpm daemon:stop     # Stop daemon
 ```
 
 ## Changelog
+
+### v0.5.0 - 2026-03-18
+
+- **refactor**: Removed out-of-process daemon — PTY sessions now run directly in the Tauri backend via `PtyManager`
+- **refactor**: Removed daemon binary, client, state management, build scripts, and splash screen
+- **feat**: Direct PTY IPC commands (`pty_commands`, `wsl_commands`) for lower-latency terminal I/O
+- **feat**: Restored SessionPicker as the new tab page with layout and connection picker
+- **fix**: `pty_create` changed to async for proper tokio runtime context
+- **fix**: Window-state plugin VISIBLE flag excluded from restore; close changed to `CloseRequested`
+- **style**: New tab page content centered with cleaner layout
 
 ### v0.4.0 - 2026-03-17
 
