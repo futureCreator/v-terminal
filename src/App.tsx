@@ -19,6 +19,7 @@ import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useClipboardPolling } from "./hooks/useClipboardPolling";
 import { useClipboardStore } from "./store/clipboardStore";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { allTopics } from "./data/cheatsheets";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useTerminalConfigStore } from "./store/terminalConfigStore";
@@ -63,6 +64,7 @@ export function App() {
   const activePanelPtyIdRef = useRef<string | null>(null);
   const activePanelIdRef = useRef<string | null>(null);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
+  const [cheatsheetTopic, setCheatsheetTopic] = useState<string | null>(null);
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
   // Prefetch WSL distros on startup to warm the Rust-side cache
@@ -665,6 +667,74 @@ export function App() {
     return { category: "Clipboard", commands };
   }, [clipboardEntries, clearClipboardHistory]);
 
+  const cheatsheetPaletteSection = useMemo<PaletteSection>(() => {
+    const cheatsheetIcon = (
+      <span className="cp-cmd-icon">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M5 4.5h4M5 7h4M5 9.5h2.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+        </svg>
+      </span>
+    );
+
+    // Topic list (no topic selected yet)
+    if (!cheatsheetTopic) {
+      // Topic entries for browsing
+      const topicCommands = allTopics.map((topic) => ({
+        id: `cheatsheet-topic:${topic.id}`,
+        label: topic.name,
+        description: `Browse ${topic.name} cheatsheet`,
+        icon: cheatsheetIcon,
+        action: () => {}, // handled by CommandPalette drill-down
+      }));
+
+      // Also include ALL items from ALL topics for cross-topic fuzzy search
+      // (these only appear when user types a query like `?rebase`)
+      const allItems = allTopics.flatMap((topic) =>
+        topic.categories.flatMap((cat) =>
+          cat.items.map((item) => ({
+            id: `cheatsheet:${topic.id}:${cat.name}:${item.command}`,
+            label: item.command,
+            description: item.description,
+            meta: `${topic.name} — ${cat.name}`,
+            icon: cheatsheetIcon,
+            action: async () => {
+              try { await writeText(item.command); } catch {}
+            },
+          }))
+        )
+      );
+
+      return {
+        category: "Cheatsheet Topics",
+        commands: [...topicCommands, ...allItems],
+      };
+    }
+
+    // Specific topic selected — show all items grouped by category
+    const topic = allTopics.find((t) => t.id === cheatsheetTopic);
+    if (!topic) return { category: "Cheatsheet", commands: [] };
+
+    const commands = topic.categories.flatMap((cat) =>
+      cat.items.map((item) => ({
+        id: `cheatsheet:${topic.id}:${cat.name}:${item.command}`,
+        label: item.command,
+        description: item.description,
+        meta: cat.name,
+        icon: cheatsheetIcon,
+        action: async () => {
+          try {
+            await writeText(item.command);
+          } catch {
+            // write failed
+          }
+        },
+      }))
+    );
+
+    return { category: "Cheatsheet", commands };
+  }, [cheatsheetTopic]);
+
   const activePanel = useMemo(() => {
     if (!activeTab || !activePanelId) return null;
     return activeTab.panels.find((p) => p.id === activePanelId) ?? null;
@@ -901,6 +971,7 @@ export function App() {
       <CommandPalette
         isOpen={paletteOpen}
         onClose={handlePaletteClose}
+        onCheatsheetTopicChange={setCheatsheetTopic}
         extraSections={[
           tabPaletteSection,
           tabListPaletteSection,
@@ -908,6 +979,7 @@ export function App() {
           ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
           clipboardPaletteSection,
+          cheatsheetPaletteSection,
         ]}
       />
     </div>

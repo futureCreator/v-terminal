@@ -36,6 +36,7 @@ interface Props {
   onClose: () => void;
   extraSections?: PaletteSection[];
   onQueryChange?: (query: string) => void;
+  onCheatsheetTopicChange?: (topicId: string | null) => void;
   initialQuery?: string;
 }
 
@@ -126,13 +127,14 @@ function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
 
 /* ── Component ──────────────────────────────────────────────────── */
 
-export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange, initialQuery = "" }: Props) {
+export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange, onCheatsheetTopicChange, initialQuery = "" }: Props) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [phase, setPhase] = useState<"in" | "out" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   /* ── Build command list ─────────────────────────────────── */
   const commands = useMemo<Command[]>(() => {
@@ -215,6 +217,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
       setPhase("in");
       setQuery(initialQuery);
       setActiveIndex(0);
+      setSelectedTopic(null);
       onQueryChange?.(initialQuery);
     } else if (visible) {
       setPhase("out");
@@ -250,8 +253,19 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
     el?.scrollIntoView({ block: "nearest" });
   }, [activeIndex, q]);
 
+  useEffect(() => {
+    onCheatsheetTopicChange?.(selectedTopic);
+  }, [selectedTopic, onCheatsheetTopicChange]);
+
   /* ── Execute ────────────────────────────────────────────── */
   const execute = useCallback(async (cmd: Command) => {
+    // Cheatsheet topic selection → drill into topic
+    if (cmd.id.startsWith("cheatsheet-topic:")) {
+      const topicId = cmd.id.replace("cheatsheet-topic:", "");
+      setSelectedTopic(topicId);
+      setActiveIndex(0);
+      return;
+    }
     await cmd.action();
     onClose();
   }, [onClose]);
@@ -259,6 +273,14 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
   /* ── Keyboard ───────────────────────────────────────────── */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const max = totalCount - 1;
+
+    // Back navigation in cheatsheet drill-down
+    if (e.key === "Backspace" && mode === "cheatsheet" && selectedTopic && q === "") {
+      e.preventDefault();
+      setSelectedTopic(null);
+      return;
+    }
+
     switch (e.key) {
       case "Escape":
         e.preventDefault();
