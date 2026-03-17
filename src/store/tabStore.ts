@@ -9,7 +9,7 @@ function genId() {
 }
 
 function makePanels(count: number): Panel[] {
-  return Array.from({ length: count }, () => ({ id: genId(), ptyId: null }));
+  return Array.from({ length: count }, () => ({ id: genId(), sessionId: null }));
 }
 
 interface TabStore {
@@ -27,8 +27,8 @@ interface TabStore {
   setLayout: (tabId: string, layout: Layout) => { added: Panel[]; removed: Panel[] };
 
   // Panel actions
-  setPtyId: (tabId: string, panelId: string, ptyId: string) => void;
-  clearPtyId: (tabId: string, panelId: string) => void;
+  setSessionId: (tabId: string, panelId: string, sessionId: string, connectionId?: string) => void;
+  clearSessionId: (tabId: string, panelId: string) => void;
   switchPanelConnection: (tabId: string, panelId: string, connection: PanelConnection) => void;
 
   // Broadcast
@@ -134,7 +134,7 @@ export const useTabStore = create<TabStore>((set, get) => {
           { length: newCount - oldPanels.length },
           () => ({
             id: genId(),
-            ptyId: null,
+            sessionId: null,
             ...(baseConnection ? { connection: { ...baseConnection } } : {}),
           }),
         );
@@ -156,28 +156,28 @@ export const useTabStore = create<TabStore>((set, get) => {
       return { added, removed };
     },
 
-    setPtyId: (tabId, panelId, ptyId) =>
+    setSessionId: (tabId, panelId, sessionId, connectionId?) =>
       set((s) => ({
         tabs: s.tabs.map((t) =>
           t.id === tabId
             ? {
                 ...t,
                 panels: t.panels.map((p) =>
-                  p.id === panelId ? { ...p, ptyId } : p
+                  p.id === panelId ? { ...p, sessionId, connectionId } : p
                 ),
               }
             : t
         ),
       })),
 
-    clearPtyId: (tabId, panelId) =>
+    clearSessionId: (tabId, panelId) =>
       set((s) => ({
         tabs: s.tabs.map((t) =>
           t.id === tabId
             ? {
                 ...t,
                 panels: t.panels.map((p) =>
-                  p.id === panelId ? { ...p, ptyId: null } : p
+                  p.id === panelId ? { ...p, sessionId: null, connectionId: null } : p
                 ),
               }
             : t
@@ -192,7 +192,7 @@ export const useTabStore = create<TabStore>((set, get) => {
                 ...t,
                 panels: t.panels.map((p) =>
                   p.id === panelId
-                    ? { ...p, connection, ptyId: null }
+                    ? { ...p, connection, sessionId: null, connectionId: null }
                     : p
                 ),
               }
@@ -213,7 +213,7 @@ export const useTabStore = create<TabStore>((set, get) => {
       const count = panelCount(layout);
       const panels: Panel[] = Array.from({ length: count }, (_, i) => ({
         id: genId(),
-        ptyId: null,
+        sessionId: null,
         connection: panelConnections[i],
       }));
 
