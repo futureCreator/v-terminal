@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { NoteEditor } from "../NotePanel/NoteEditor";
 import { TodoSection } from "../NotePanel/TodoSection";
 import { TimersPanel } from "./TimersPanel";
+import { CheatsheetPanel } from "./CheatsheetPanel";
 import { useNoteStore } from "../../store/noteStore";
 import "../NotePanel/NotePanel.css";
 import "./SidePanel.css";
 
-export type SidebarTab = "notes" | "timers";
+export type SidebarTab = "notes" | "timers" | "cheatsheet";
 
 interface SidePanelProps {
   tabId: string;
@@ -50,6 +51,16 @@ export function SidePanel({ tabId, activeTab, onTabChange, onClose }: SidePanelP
               <line x1="7.5" y1="1.5" x2="7.5" y2="3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
           </button>
+          <button
+            className={`side-panel-tab${activeTab === "cheatsheet" ? " side-panel-tab--active" : ""}`}
+            onClick={() => onTabChange("cheatsheet")}
+            title="Cheatsheet"
+          >
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <rect x="2.5" y="1" width="10" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M5 4.5h5M5 7h5M5 9.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
         <button
           className="side-panel-close"
@@ -76,6 +87,7 @@ export function SidePanel({ tabId, activeTab, onTabChange, onClose }: SidePanelP
           </>
         )}
         {activeTab === "timers" && <TimersPanel />}
+        {activeTab === "cheatsheet" && <CheatsheetPanel />}
       </div>
     </div>
   );

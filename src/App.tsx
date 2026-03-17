@@ -53,7 +53,7 @@ export function App() {
   });
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
     const stored = localStorage.getItem("v-terminal:sidebar-tab");
-    if (stored === "notes" || stored === "timers") return stored;
+    if (stored === "notes" || stored === "timers" || stored === "cheatsheet") return stored;
     // Migrate legacy values
     if (stored === "pomodoro" || stored === "timer" || stored === "recurring" || stored === "alerts") {
       localStorage.setItem("v-terminal:sidebar-tab", "timers");
