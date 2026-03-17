@@ -2,9 +2,8 @@ export type Layout = 1 | 2 | 3 | 4 | "4c" | 6 | 9;
 
 export interface Panel {
   id: string;
-  ptyId: string | null; // null until attached to a daemon session
-  existingSessionId?: string; // pre-selected from session picker (attach mode)
-  connection?: PanelConnection; // per-panel connection config
+  ptyId: string | null;
+  connection?: PanelConnection;
 }
 
 export interface Tab {
@@ -14,7 +13,6 @@ export interface Tab {
   layout: Layout;
   panels: Panel[];
   broadcastEnabled: boolean;
-  pendingSessionPick?: boolean; // show session picker instead of terminals
 }
 
 export interface SshProfile {
@@ -32,27 +30,4 @@ export interface PanelConnection {
   shellProgram?: string;
   shellArgs?: string[];
   label?: string;
-}
-
-export interface DaemonSessionInfo {
-  id: string;
-  label: string;
-  cwd: string;
-  created_at: number;
-  last_active: number;
-}
-
-export interface SavedTabPanel {
-  panelId: string;
-  ptyId: string | null;
-  connection?: PanelConnection;
-}
-
-export interface SavedTab {
-  id: string;
-  label: string;
-  layout: Layout;
-  panels: SavedTabPanel[];
-  savedAt: number; // ms timestamp
-  notes?: { markdown: string; todos: { id: string; text: string; completed: boolean }[] };
 }

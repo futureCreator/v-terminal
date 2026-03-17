@@ -1,29 +1,11 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import type { Tab, Panel, Layout, SavedTab, PanelConnection } from "../types/terminal";
+import type { Tab, Panel, Layout, PanelConnection } from "../types/terminal";
 import { panelCount } from "../lib/layoutMath";
-import { useNoteStore } from "./noteStore";
 
 // We import uuid lazily since we bundle it
 function genId() {
   return uuidv4();
-}
-
-const SAVED_TABS_KEY = "v-terminal:saved-tabs";
-
-function loadSavedTabs(): SavedTab[] {
-  try {
-    const raw = localStorage.getItem(SAVED_TABS_KEY);
-    return raw ? (JSON.parse(raw) as SavedTab[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistSavedTabs(savedTabs: SavedTab[]) {
-  try {
-    localStorage.setItem(SAVED_TABS_KEY, JSON.stringify(savedTabs));
-  } catch {}
 }
 
 function makePanels(count: number): Panel[] {
@@ -33,19 +15,13 @@ function makePanels(count: number): Panel[] {
 interface TabStore {
   tabs: Tab[];
   activeTabId: string;
-  savedTabs: SavedTab[];
 
   // Tab actions
   addTab: (cwd: string, label?: string) => string;
   removeTab: (id: string) => void;
-  saveAndRemoveTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   renameTab: (id: string, label: string) => void;
   reorderTabs: (fromId: string, toId: string) => void;
-
-  // Saved tab actions
-  removeSavedTab: (id: string) => void;
-  restoreSavedTab: (savedTabId: string) => string;
 
   // Layout actions
   setLayout: (tabId: string, layout: Layout) => { added: Panel[]; removed: Panel[] };
@@ -57,16 +33,6 @@ interface TabStore {
 
   // Broadcast
   toggleBroadcast: (tabId: string) => void;
-
-  // Session picker
-  resolveSessionPick: (
-    tabId: string,
-    layout: Layout,
-    panelConnections: PanelConnection[],
-  ) => void;
-
-  // App lifecycle
-  saveAllOpenTabsToBackground: () => void;
 }
 
 const DEFAULT_CWD = "~";
@@ -86,7 +52,6 @@ function createDefaultTab(): Tab {
     layout,
     panels: makePanels(panelCount(layout)),
     broadcastEnabled: false,
-    pendingSessionPick: true,
   };
 }
 
@@ -96,7 +61,6 @@ export const useTabStore = create<TabStore>((set, get) => {
   return {
     tabs: [defaultTab],
     activeTabId: defaultTab.id,
-    savedTabs: loadSavedTabs(),
 
     addTab: (cwd, label?) => {
       const id = genId();
@@ -108,7 +72,6 @@ export const useTabStore = create<TabStore>((set, get) => {
         layout,
         panels: makePanels(panelCount(layout)),
         broadcastEnabled: false,
-        pendingSessionPick: true,
       };
       set((s) => ({ tabs: [...s.tabs, tab], activeTabId: id }));
       return id;
@@ -128,106 +91,6 @@ export const useTabStore = create<TabStore>((set, get) => {
             : s.activeTabId;
         return { tabs: newTabs, activeTabId };
       });
-    },
-
-    saveAndRemoveTab: (id) => {
-      set((s) => {
-        const tab = s.tabs.find((t) => t.id === id);
-        const savablePanels = tab?.panels.filter(
-          (p) => p.ptyId !== null
-        ) ?? [];
-
-        let newSavedTabs = s.savedTabs;
-        if (tab && savablePanels.length > 0) {
-          const tabNotes = useNoteStore.getState().notes[id];
-          const savedTab: SavedTab = {
-            id: genId(),
-            label: tab.label,
-            layout: tab.layout,
-            panels: savablePanels.map((p) => ({
-              panelId: p.id,
-              ptyId: p.ptyId,
-              connection: p.connection,
-            })),
-            savedAt: Date.now(),
-            notes: tabNotes,
-          };
-          newSavedTabs = [...s.savedTabs, savedTab];
-          persistSavedTabs(newSavedTabs);
-        }
-
-        const newTabs = s.tabs.filter((t) => t.id !== id);
-        if (newTabs.length === 0) {
-          const t = createDefaultTab();
-          return { tabs: [t], activeTabId: t.id, savedTabs: newSavedTabs };
-        }
-
-        const activeTabId =
-          s.activeTabId === id
-            ? newTabs[Math.max(0, s.tabs.findIndex((t) => t.id === id) - 1)]?.id ??
-              newTabs[0].id
-            : s.activeTabId;
-
-        return { tabs: newTabs, activeTabId, savedTabs: newSavedTabs };
-      });
-    },
-
-    removeSavedTab: (id) =>
-      set((s) => {
-        const savedTabs = s.savedTabs.filter((t) => t.id !== id);
-        persistSavedTabs(savedTabs);
-        return { savedTabs };
-      }),
-
-    restoreSavedTab: (savedTabId) => {
-      const savedTab = get().savedTabs.find((t) => t.id === savedTabId);
-      if (!savedTab) return "";
-
-      const newTabId = genId();
-      const totalPanels = panelCount(savedTab.layout);
-      const panels: Panel[] = [];
-
-      for (let i = 0; i < totalPanels; i++) {
-        const sp = savedTab.panels[i];
-        panels.push({
-          id: genId(),
-          ptyId: null,
-          existingSessionId: sp?.ptyId ?? undefined,
-        });
-      }
-
-      const tab: Tab = {
-        id: newTabId,
-        label: savedTab.label,
-        cwd: DEFAULT_CWD,
-        layout: savedTab.layout,
-        panels,
-        broadcastEnabled: false,
-        pendingSessionPick: false,
-      };
-
-      // Restore notes & todos to the new tab
-      if (savedTab.notes) {
-        const noteStore = useNoteStore.getState();
-        const updatedNotes = { ...noteStore.notes, [newTabId]: savedTab.notes };
-        useNoteStore.setState({ notes: updatedNotes });
-        // Persist immediately
-        try {
-          localStorage.setItem("v-terminal:tab-notes", JSON.stringify(updatedNotes));
-        } catch {}
-      }
-
-      set((s) => {
-        const savedTabs = s.savedTabs.filter((t) => t.id !== savedTabId);
-        persistSavedTabs(savedTabs);
-        return {
-          tabs: [...s.tabs, tab],
-          activeTabId: newTabId,
-          savedTabs,
-        };
-      });
-
-      return newTabId;
     },
 
     setActiveTab: (id) => set({ activeTabId: id }),
@@ -324,7 +187,7 @@ export const useTabStore = create<TabStore>((set, get) => {
                 ...t,
                 panels: t.panels.map((p) =>
                   p.id === panelId
-                    ? { ...p, connection, ptyId: null, existingSessionId: undefined }
+                    ? { ...p, connection, ptyId: null }
                     : p
                 ),
               }
@@ -340,60 +203,6 @@ export const useTabStore = create<TabStore>((set, get) => {
             : t
         ),
       })),
-
-    resolveSessionPick: (tabId, layout, panelConnections) => {
-      const count = panelCount(layout);
-      const panels: Panel[] = Array.from({ length: count }, (_, i) => ({
-        id: genId(),
-        ptyId: null,
-        connection: panelConnections[i],
-      }));
-
-      set((s) => ({
-        tabs: s.tabs.map((t) => {
-          if (t.id !== tabId) return t;
-          const label = panelConnections.find((c) => c?.label)?.label ?? t.label;
-          return {
-            ...t,
-            pendingSessionPick: false,
-            layout,
-            panels,
-            label,
-          };
-        }),
-      }));
-    },
-
-    saveAllOpenTabsToBackground: () => {
-      set((s) => {
-        const allNotes = useNoteStore.getState().notes;
-        const newSaved = s.tabs
-          .filter((t) => !t.pendingSessionPick)
-          .flatMap((t) => {
-            const savablePanels = t.panels.filter(
-              (p) => p.ptyId !== null
-            );
-            if (savablePanels.length === 0) return [];
-            const savedTab: SavedTab = {
-              id: genId(),
-              label: t.label,
-              layout: t.layout,
-              panels: savablePanels.map((p) => ({
-                panelId: p.id,
-                ptyId: p.ptyId,
-                connection: p.connection,
-              })),
-              savedAt: Date.now(),
-              notes: allNotes[t.id],
-            };
-            return [savedTab];
-          });
-        if (newSaved.length === 0) return s;
-        const allSaved = [...s.savedTabs, ...newSaved];
-        persistSavedTabs(allSaved);
-        return { savedTabs: allSaved };
-      });
-    },
 
   };
 });

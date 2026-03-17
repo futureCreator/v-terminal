@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { homeDir } from "@tauri-apps/api/path";
 import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
 import { SplitToolbar } from "./components/SplitToolbar/SplitToolbar";
 import { PanelGrid } from "./components/PanelGrid/PanelGrid";
-import { SessionPicker } from "./components/SessionPicker/SessionPicker";
-import type { SessionPickResult } from "./components/SessionPicker/SessionPicker";
 import { SshManagerModal } from "./components/SshManager/SshManagerModal";
 import { SettingsModal } from "./components/SettingsModal/SettingsModal";
-import { DaemonStatusBanner } from "./components/DaemonStatusBanner/DaemonStatusBanner";
 import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
 import { SidePanel } from "./components/SidePanel/SidePanel";
@@ -45,7 +41,7 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 export function App() {
-  const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground, switchPanelConnection } =
+  const { tabs, activeTabId, addTab, removeTab, setLayout, toggleBroadcast, setActiveTab, switchPanelConnection } =
     useTabStore();
   const { themeId } = useThemeStore();
   const { increaseFontSize: fontIncrease, decreaseFontSize: fontDecrease, resetFontSize: fontReset } = useTerminalConfigStore();
@@ -82,11 +78,6 @@ export function App() {
   // Prefetch WSL distros on startup to warm the Rust-side cache
   useEffect(() => {
     ipc.getWslDistros().catch(() => {});
-  }, []);
-
-  // App ready: show main window immediately (no daemon required)
-  useEffect(() => {
-    // No-op: window is shown via Rust side directly on startup
   }, []);
 
   // Alarm tick engine
@@ -201,8 +192,8 @@ export function App() {
   }, [activeTab, toggleBroadcast]);
 
   const handleCloseCurrentTab = useCallback(() => {
-    if (activeTab) saveAndRemoveTab(activeTab.id);
-  }, [activeTab, saveAndRemoveTab]);
+    if (activeTab) removeTab(activeTab.id);
+  }, [activeTab, removeTab]);
 
   const handleTogglePanelZoom = useCallback(() => {
     panelNavRef.current?.toggleZoom();
@@ -256,7 +247,7 @@ export function App() {
       {
         id: "tab:close",
         label: "Close Current Tab",
-        description: "Save session to background and close the active tab",
+        description: "Close the active tab",
         icon: (
           <span className="cp-cmd-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -265,20 +256,6 @@ export function App() {
           </span>
         ),
         action: handleCloseCurrentTab,
-      },
-      {
-        id: "tab:send-to-background",
-        label: "Send Current Tab to Background",
-        description: "Preserve the tab session and move it to background",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 2v8M4 7l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M2 12h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            </svg>
-          </span>
-        ),
-        action: () => { if (activeTab) saveAndRemoveTab(activeTab.id); },
       },
       {
         id: "tab:broadcast",
@@ -422,7 +399,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen, saveAndRemoveTab]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -563,31 +540,6 @@ export function App() {
       })),
     };
   }, [activeTab, handleLayoutChange]);
-
-  const backgroundTabsPaletteSection = useMemo<PaletteSection | null>(() => {
-    if (savedTabs.length === 0) return null;
-
-    return {
-      category: "Background",
-      commands: savedTabs.map((saved) => ({
-        id: `background:${saved.id}`,
-        label: saved.label,
-        description: "Restore this saved tab session",
-        meta: `${saved.panels.length > 1 ? `${saved.panels.length} panels · ` : ""}${formatRelativeTime(saved.savedAt)}`,
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="3" width="12" height="8" rx="1.2" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M1 6h12" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M4.5 4.5V2.5M9.5 4.5V2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M4.5 9l1.5-1.5L7.5 9" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        ),
-        action: () => { restoreSavedTab(saved.id); },
-      })),
-    };
-  }, [savedTabs, restoreSavedTab]);
 
   const clipboardEntries = useClipboardStore((s) => s.entries);
   const clearClipboardHistory = useClipboardStore((s) => s.clearHistory);
@@ -810,33 +762,8 @@ export function App() {
     return { category: "Switch Connection", commands };
   }, [activeTab, activePanelId, activePanel, switchPanelConnection, wslDistros, sshProfiles]);
 
-  // 앱 종료 시 열려있는 탭을 모두 백그라운드로 저장
-  useEffect(() => {
-    let cancelled = false;
-    let unlistenFn: (() => void) | null = null;
-    getCurrentWindow()
-      .onCloseRequested(() => {
-        saveAllOpenTabsToBackground();
-      })
-      .then((fn) => {
-        if (cancelled) {
-          fn();
-        } else {
-          unlistenFn = fn;
-        }
-      });
-    return () => {
-      cancelled = true;
-      unlistenFn?.();
-    };
-  }, [saveAllOpenTabsToBackground]);
-
-  const handleNewSession = (tabId: string, result: SessionPickResult) => {
-    resolveSessionPick(tabId, result.layout, result.panelConnections);
-  };
-
   const handleTabClose = (tabId: string) => {
-    saveAndRemoveTab(tabId);
+    removeTab(tabId);
   };
 
   const handleTabKill = async (tabId: string) => {
@@ -849,23 +776,6 @@ export function App() {
       );
     }
     removeTab(tabId);
-  };
-
-  const handleRestoreTab = (pickerTabId: string, savedTabId: string) => {
-    restoreSavedTab(savedTabId);
-    removeTab(pickerTabId);
-  };
-
-  const handleKillSavedTab = async (savedTabId: string) => {
-    const saved = savedTabs.find((t) => t.id === savedTabId);
-    if (saved) {
-      await Promise.all(
-        saved.panels
-          .filter((p) => p.ptyId !== null)
-          .map((p) => ipc.ptyKill(p.ptyId as string).catch(() => {}))
-      );
-    }
-    removeSavedTab(savedTabId);
   };
 
   return (
@@ -899,21 +809,12 @@ export function App() {
             className="tab-viewport"
             style={{ display: tab.id === activeTabId ? "flex" : "none" }}
           >
-            {tab.pendingSessionPick ? (
-              <SessionPicker
-                onNewSession={(result) => handleNewSession(tab.id, result)}
-                savedTabs={savedTabs}
-                onRestoreTab={(savedTabId) => handleRestoreTab(tab.id, savedTabId)}
-                onKillSavedTab={handleKillSavedTab}
-              />
-            ) : (
-              <PanelGrid
-                tab={tab}
-                isVisible={tab.id === activeTabId && !paletteOpen && !sshModalOpen && !settingsModalOpen}
-                onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
-                navRef={tab.id === activeTabId ? panelNavRef : undefined}
-              />
-            )}
+            <PanelGrid
+              tab={tab}
+              isVisible={tab.id === activeTabId && !paletteOpen && !sshModalOpen && !settingsModalOpen}
+              onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
+              navRef={tab.id === activeTabId ? panelNavRef : undefined}
+            />
           </div>
         ))}
         </div>
@@ -937,7 +838,6 @@ export function App() {
           onClose={() => setSettingsModalOpen(false)}
         />
       )}
-      <DaemonStatusBanner />
       <CommandPalette
         isOpen={paletteOpen}
         onClose={handlePaletteClose}
@@ -946,7 +846,6 @@ export function App() {
           tabPaletteSection,
           tabListPaletteSection,
           ...(switchConnectionPaletteSection ? [switchConnectionPaletteSection] : []),
-          ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
           clipboardPaletteSection,
           cheatsheetPaletteSection,
