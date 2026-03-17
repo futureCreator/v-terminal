@@ -408,7 +408,6 @@ async fn create_session(
     let (exit_tx, _) = broadcast::channel::<()>(1);
 
     let scrollback = Arc::new(Mutex::new(Scrollback::new()));
-    let alive = Arc::new(AtomicBool::new(true));
     let created_at = now_secs();
 
     let session = Arc::new(Session {
@@ -424,51 +423,51 @@ async fn create_session(
         exit_tx: exit_tx.clone(),
     });
 
-    let registry_clone = registry.clone();
-    let id_clone = id.clone();
-    let handle = tokio::runtime::Handle::current();
+    // --- Session lifecycle tasks ---
+    let (done_tx, mut done_rx) = tokio::sync::mpsc::channel::<()>(2);
+    let alive = Arc::new(AtomicBool::new(true));
 
-    // Clone for child watcher before reader task moves them
-    let alive_w = alive.clone();
-    let exit_tx_w = exit_tx.clone();
+    // Cleanup coordinator (async task — no block_on needed)
+    let coord_registry = registry.clone();
+    let coord_id = id.clone();
+    let coord_alive = alive.clone();
+    tokio::spawn(async move {
+        done_rx.recv().await;
+        coord_alive.store(false, Ordering::Relaxed);
+        let _ = exit_tx.send(());
+        coord_registry.write().await.remove(&coord_id);
+    });
 
-    // Reader task: forwards PTY output and detects EOF-based exit
+    // Reader task
+    let reader_done = done_tx.clone();
+    let reader_alive = alive.clone();
+    let reader_scrollback = scrollback.clone();
+    let reader_output_tx = output_tx.clone();
     tokio::task::spawn_blocking(move || {
         use std::io::Read;
         let mut reader = reader;
         let mut buf = vec![0u8; 8192];
         loop {
-            if !alive.load(Ordering::Relaxed) {
+            if !reader_alive.load(Ordering::Relaxed) {
                 break;
             }
             match reader.read(&mut buf) {
                 Ok(0) | Err(_) => break,
                 Ok(n) => {
                     let data = buf[..n].to_vec();
-                    scrollback.lock().unwrap().push(&data);
-                    let _ = output_tx.send(data);
+                    reader_scrollback.lock().unwrap().push(&data);
+                    let _ = reader_output_tx.send(data);
                 }
             }
         }
-        let _ = exit_tx.send(());
-        handle.block_on(async {
-            registry_clone.write().await.remove(&id_clone);
-        });
+        let _ = reader_done.send(());
     });
 
-    // Child watcher task: detects process exit independently of PTY reader.
-    // On Windows, the PTY reader may block even after the shell exits (e.g. after
-    // typing `exit` in PowerShell), so we watch the child process directly.
-    let registry_w = registry.clone();
-    let id_w = id.clone();
-    let handle_w = tokio::runtime::Handle::current();
+    // Child watcher task
+    let watcher_done = done_tx;
     tokio::task::spawn_blocking(move || {
         let _ = child.wait();
-        alive_w.store(false, Ordering::Relaxed);
-        let _ = exit_tx_w.send(());
-        handle_w.block_on(async {
-            registry_w.write().await.remove(&id_w);
-        });
+        let _ = watcher_done.send(());
     });
 
     registry.write().await.insert(id.clone(), session);
