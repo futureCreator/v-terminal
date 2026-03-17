@@ -111,6 +111,7 @@ export function TerminalPane({
     let disposed = false;
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
+    let unlistenResync: (() => void) | undefined;
 
     const init = async () => {
       await ensureFontLoaded();
@@ -257,6 +258,12 @@ export function TerminalPane({
         term.write(data);
       });
 
+      unlistenResync = await ipc.onPtyResync(ptyId, (data) => {
+        if (disposed) return;
+        term.reset();
+        term.write(data);
+      });
+
       unlistenExit = await ipc.onPtyExit(ptyId, () => {
         if (!disposed) {
           setExited(true);
@@ -290,6 +297,7 @@ export function TerminalPane({
     return () => {
       disposed = true;
       unlistenData?.();
+      unlistenResync?.();
       unlistenExit?.();
       observerRef.current?.disconnect();
       observerRef.current = null;

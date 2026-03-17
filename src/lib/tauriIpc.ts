@@ -11,6 +11,11 @@ export interface PtyExitPayload {
   ptyId: string;
 }
 
+export interface PtyResyncPayload {
+  ptyId: string;
+  data: number[];
+}
+
 // Centralized per-pty event dispatchers.
 // Instead of registering N Tauri listeners (one per panel), we maintain a single
 // global listener per event type and dispatch in-process to per-pty handlers.
@@ -22,6 +27,10 @@ let ptyExitUnlisten: UnlistenFn | null = null;
 // In-flight promises prevent duplicate registrations when multiple panels mount concurrently.
 let ptyDataListenerPromise: Promise<void> | null = null;
 let ptyExitListenerPromise: Promise<void> | null = null;
+
+const ptyResyncHandlers = new Map<string, (data: Uint8Array) => void>();
+let ptyResyncUnlisten: UnlistenFn | null = null;
+let ptyResyncListenerPromise: Promise<void> | null = null;
 
 async function ensurePtyDataListener(): Promise<void> {
   if (ptyDataUnlisten) return;
@@ -42,6 +51,17 @@ async function ensurePtyExitListener(): Promise<void> {
     }).then((unlisten) => { ptyExitUnlisten = unlisten; });
   }
   return ptyExitListenerPromise;
+}
+
+async function ensurePtyResyncListener(): Promise<void> {
+  if (ptyResyncUnlisten) return;
+  if (!ptyResyncListenerPromise) {
+    ptyResyncListenerPromise = listen<PtyResyncPayload>("pty-resync", (event) => {
+      const { ptyId, data } = event.payload;
+      ptyResyncHandlers.get(ptyId)?.(new Uint8Array(data));
+    }).then((unlisten) => { ptyResyncUnlisten = unlisten; });
+  }
+  return ptyResyncListenerPromise;
 }
 
 export const ipc = {
@@ -96,6 +116,12 @@ export const ipc = {
     await ensurePtyExitListener();
     ptyExitHandlers.set(ptyId, handler);
     return () => { ptyExitHandlers.delete(ptyId); };
+  },
+
+  async onPtyResync(ptyId: string, handler: (data: Uint8Array) => void): Promise<() => void> {
+    await ensurePtyResyncListener();
+    ptyResyncHandlers.set(ptyId, handler);
+    return () => { ptyResyncHandlers.delete(ptyId); };
   },
 
   async getDaemonStatus(): Promise<"connected" | "reconnecting"> {
