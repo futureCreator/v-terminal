@@ -90,6 +90,23 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.4.0 - 2026-03-17
+
+- **feat**: Clipboard history with command palette integration (`!` prefix) and localStorage persistence
+- **feat**: Cheatsheet panel — Vim, Git, Docker, kubectl quick references with copy-to-clipboard
+- **feat**: Cheatsheet drill-down navigation in command palette (`?` prefix)
+- **feat**: Lightweight toast notification component
+- **perf**: Daemon protocol switched to base64 encoding for binary data transfer
+- **perf**: TCP write backpressure with bounded channel per connection
+- **perf**: Scrollback optimized with bulk drain
+- **feat**: Graceful daemon shutdown with signal handling
+- **feat**: Session limit (64) and increased broadcast capacity to 4096
+- **fix**: KillSession now terminates full child process tree
+- **fix**: Broadcast lag recovery with scrollback resync instead of silent drop
+- **fix**: Idle freeze prevention (heartbeat + WebGL recovery + listener leak fix)
+- **style**: Command palette HIG compliance (44px touch targets, smoother animations)
+- **refactor**: Command palette prefixes reassigned (`!` clipboard, `?` cheatsheet, `%` layout)
+
 ### v0.3.0 - 2026-03-17
 
 - **feat**: Splash screen with startup progress indicator and 15s daemon timeout
