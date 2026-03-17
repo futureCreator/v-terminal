@@ -112,7 +112,7 @@ enum Cmd {
         session_id: String,
     },
     Detach { session_id: String },
-    Write { session_id: String, data: Vec<u8> },
+    Write { session_id: String, data_b64: String },
     Resize { session_id: String, cols: u16, rows: u16 },
     KillSession {
         request_id: Option<String>,
@@ -282,7 +282,7 @@ async fn dispatch(
         Cmd::Attach { request_id, session_id } => {
             let reg = registry.read().await;
             if let Some(session) = reg.get(session_id) {
-                let scrollback = session.scrollback.lock().unwrap().snapshot();
+                let scrollback_b64 = session.scrollback.lock().unwrap().snapshot_b64();
                 let mut output_rx = session.output_tx.subscribe();
                 let mut exit_rx = session.exit_tx.subscribe();
                 drop(reg);
@@ -290,7 +290,7 @@ async fn dispatch(
                 let mut resp = serde_json::json!({
                     "event": "attached",
                     "session_id": session_id,
-                    "scrollback": scrollback,
+                    "scrollback_b64": scrollback_b64,
                 });
                 if let Some(rid) = request_id {
                     resp["request_id"] = rid.clone().into();
@@ -308,7 +308,7 @@ async fn dispatch(
                                         let val = serde_json::json!({
                                             "event": "output",
                                             "session_id": sid,
-                                            "data": data,
+                                            "data_b64": base64::engine::general_purpose::STANDARD.encode(&data),
                                         });
                                         try_send_json(&sub_out_tx, val);
                                     }
@@ -351,12 +351,19 @@ async fn dispatch(
             }
         }
 
-        Cmd::Write { session_id, data } => {
+        Cmd::Write { session_id, data_b64 } => {
             let reg = registry.read().await;
             if let Some(session) = reg.get(session_id) {
-                if let Ok(mut w) = session.writer.lock() {
-                    let _ = w.write_all(data);
-                    session.last_active.store(now_secs(), Ordering::Relaxed);
+                match base64::engine::general_purpose::STANDARD.decode(data_b64) {
+                    Ok(data) => {
+                        if let Ok(mut w) = session.writer.lock() {
+                            let _ = w.write_all(&data);
+                            session.last_active.store(now_secs(), Ordering::Relaxed);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("daemon: base64 decode error in write: {e}");
+                    }
                 }
             }
         }
