@@ -2,6 +2,7 @@ use serde::Serialize;
 use tauri::State;
 use crate::state::app_state::AppState;
 use crate::daemon::client::DaemonClient;
+use base64::Engine;
 
 #[tauri::command]
 pub fn get_wsl_distros(state: State<AppState>) -> Result<Vec<String>, String> {
@@ -133,13 +134,9 @@ pub async fn daemon_attach(
     if resp["event"] == "error" {
         return Err(resp["message"].as_str().unwrap_or("attach failed").to_string());
     }
-    let scrollback = resp["scrollback"]
-        .as_array()
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_u64().map(|n| n as u8))
-                .collect()
-        })
+    let scrollback = resp["scrollback_b64"]
+        .as_str()
+        .and_then(|s| base64::engine::general_purpose::STANDARD.decode(s).ok())
         .unwrap_or_default();
     Ok(scrollback)
 }
@@ -161,7 +158,8 @@ pub async fn daemon_write(
     data: Vec<u8>,
 ) -> Result<(), String> {
     let c = client(&state).await?;
-    c.fire(serde_json::json!({"cmd": "write", "session_id": session_id, "data": data}));
+    let data_b64 = base64::engine::general_purpose::STANDARD.encode(&data);
+    c.fire(serde_json::json!({"cmd": "write", "session_id": session_id, "data_b64": data_b64}));
     Ok(())
 }
 
