@@ -4,7 +4,7 @@
   "identifier": "com.v-terminal.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://127.0.0.1:1420",
+    "devUrl": "http://127.0.0.1:5173",
     "beforeDevCommand": "node scripts/build-daemon-dev.mjs && pnpm dev",
     "beforeBuildCommand": "node scripts/build-daemon-release.mjs && pnpm build",
     "beforeBundleCommand": ""
