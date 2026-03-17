@@ -13,12 +13,17 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin({
+            use tauri_plugin_window_state::StateFlags;
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
+                .build()
+        })
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(pty_manager)
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::Destroyed = event {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
                 if window.label() == "main" {
                     let manager = window.state::<PtyManager>();
                     manager.kill_all();
