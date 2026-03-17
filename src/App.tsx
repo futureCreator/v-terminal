@@ -32,6 +32,18 @@ import "./styles/theme.css";
 import "./styles/globals.css";
 import "./App.css";
 
+function formatRelativeTime(timestamp: number): string {
+  const diff = Date.now() - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (seconds < 60) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}
+
 export function App() {
   const { tabs, activeTabId, savedTabs, addTab, removeTab, saveAndRemoveTab, removeSavedTab, restoreSavedTab, setLayout, toggleBroadcast, resolveSessionPick, setActiveTab, saveAllOpenTabsToBackground, switchPanelConnection } =
     useTabStore();
@@ -573,18 +585,6 @@ export function App() {
   const backgroundTabsPaletteSection = useMemo<PaletteSection | null>(() => {
     if (savedTabs.length === 0) return null;
 
-    const formatRelativeTime = (timestamp: number): string => {
-      const diff = Date.now() - timestamp;
-      const seconds = Math.floor(diff / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
-      if (seconds < 60) return "just now";
-      if (minutes < 60) return `${minutes}m ago`;
-      if (hours < 24) return `${hours}h ago`;
-      return `${days}d ago`;
-    };
-
     return {
       category: "Background",
       commands: savedTabs.map((saved) => ({
@@ -611,18 +611,6 @@ export function App() {
   const clearClipboardHistory = useClipboardStore((s) => s.clearHistory);
 
   const clipboardPaletteSection = useMemo<PaletteSection>(() => {
-    const formatRelativeTime = (timestamp: number): string => {
-      const diff = Date.now() - timestamp;
-      const seconds = Math.floor(diff / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
-      if (seconds < 60) return "just now";
-      if (minutes < 60) return `${minutes}m ago`;
-      if (hours < 24) return `${hours}h ago`;
-      return `${days}d ago`;
-    };
-
     const commands = clipboardEntries.map((entry) => {
       const preview = entry.text.split("\n")[0].slice(0, 80);
       return {
@@ -660,7 +648,7 @@ export function App() {
             </svg>
           </span>
         ),
-        action: () => { clearClipboardHistory(); },
+        action: async () => { clearClipboardHistory(); },
       });
     }
 
