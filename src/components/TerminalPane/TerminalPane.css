@@ -94,3 +94,33 @@
   font-size: 12px;
   letter-spacing: 0.02em;
 }
+
+.terminal-password-dialog {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-terminal); z-index: 10;
+}
+.terminal-password-content {
+  display: flex; flex-direction: column; gap: 12px; padding: 24px; max-width: 320px; width: 100%;
+}
+.terminal-password-title { font-size: 14px; font-weight: 600; color: var(--label-primary, #e0e0e0); }
+.terminal-password-subtitle { font-size: 12px; color: var(--label-tertiary, #888); font-family: "JetBrains Mono", monospace; }
+.terminal-password-input {
+  padding: 8px 12px; border: 1px solid var(--separator, #444); border-radius: 6px;
+  background: var(--bg-secondary, #2a2a2a); color: var(--label-primary, #e0e0e0);
+  font-size: 13px; outline: none;
+}
+.terminal-password-input:focus { border-color: var(--accent, #007aff); }
+.terminal-password-error { font-size: 12px; color: #ff6b6b; }
+.terminal-password-submit {
+  padding: 8px 16px; border: none; border-radius: 6px;
+  background: var(--accent, #007aff); color: white;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.terminal-password-submit:hover { opacity: 0.9; }
+.terminal-connection-lost {
+  position: absolute; top: 0; left: 0; right: 0; display: flex;
+  align-items: center; justify-content: center; gap: 8px; padding: 8px;
+  background: rgba(255, 59, 48, 0.15); cursor: pointer; z-index: 5;
+}
+.terminal-connection-lost-text { font-size: 12px; color: #ff3b30; font-weight: 500; }
+.terminal-connection-lost-action { font-size: 11px; color: var(--label-tertiary, #888); }
