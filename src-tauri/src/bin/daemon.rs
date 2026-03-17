@@ -16,6 +16,24 @@ use uuid::Uuid;
 const PORT: u16 = 57320;
 const MAX_SCROLLBACK: usize = 4 * 1024 * 1024; // 4MB
 
+/// Kill a process and its children.
+fn kill_process_tree(pid: u32) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        let _ = std::process::Command::new("taskkill")
+            .args(["/F", "/T", "/PID", &pid.to_string()])
+            .creation_flags(0x08000000)
+            .output();
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = std::process::Command::new("kill")
+            .args(["-9", &pid.to_string()])
+            .output();
+    }
+}
+
 fn now_secs() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -62,6 +80,7 @@ struct Session {
     scrollback: Arc<Mutex<Scrollback>>,
     output_tx: broadcast::Sender<Vec<u8>>,
     exit_tx: broadcast::Sender<()>,
+    child_pid: Option<u32>,
 }
 
 // SAFETY: All non-Send/Sync fields (writer, master) are wrapped in Arc<Mutex<>>,
@@ -319,20 +338,23 @@ async fn dispatch(
         Cmd::KillSession { request_id, session_id } => {
             let removed = {
                 let mut reg = registry.write().await;
-                reg.remove(session_id).is_some()
+                reg.remove(session_id)
             };
-            if removed {
+            if let Some(session) = removed {
                 if let Some(task) = sub_tasks.remove(session_id) {
                     task.abort();
                 }
+                if let Some(pid) = session.child_pid {
+                    kill_process_tree(pid);
+                }
+                let _ = session.exit_tx.send(());
                 let mut resp = serde_json::json!({"event": "ok"});
                 if let Some(rid) = request_id {
                     resp["request_id"] = rid.clone().into();
                 }
                 send_json(writer, resp).await;
             } else {
-                let mut resp =
-                    serde_json::json!({"event": "error", "message": "session not found"});
+                let mut resp = serde_json::json!({"event": "error", "message": "session not found"});
                 if let Some(rid) = request_id {
                     resp["request_id"] = rid.clone().into();
                 }
@@ -397,6 +419,7 @@ async fn create_session(
     cmd.cwd(&cwd);
 
     let mut child = pair.slave.spawn_command(cmd).map_err(|e| format!("spawn: {e}"))?;
+    let child_pid = child.process_id();
 
     let writer_box = pair.master.take_writer().map_err(|e| format!("take_writer: {e}"))?;
     let reader = pair
@@ -421,6 +444,7 @@ async fn create_session(
         scrollback: scrollback.clone(),
         output_tx: output_tx.clone(),
         exit_tx: exit_tx.clone(),
+        child_pid,
     });
 
     // --- Session lifecycle tasks ---
