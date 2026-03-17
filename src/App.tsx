@@ -17,6 +17,8 @@ import type { SidebarTab } from "./components/SidePanel/SidePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useClipboardPolling } from "./hooks/useClipboardPolling";
+import { useClipboardStore } from "./store/clipboardStore";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useTabStore } from "./store/tabStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useTerminalConfigStore } from "./store/terminalConfigStore";
@@ -603,6 +605,66 @@ export function App() {
     };
   }, [savedTabs, restoreSavedTab]);
 
+  const clipboardEntries = useClipboardStore((s) => s.entries);
+  const clearClipboardHistory = useClipboardStore((s) => s.clearHistory);
+
+  const clipboardPaletteSection = useMemo<PaletteSection>(() => {
+    const formatRelativeTime = (timestamp: number): string => {
+      const diff = Date.now() - timestamp;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      if (seconds < 60) return "just now";
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      return `${days}d ago`;
+    };
+
+    const commands = clipboardEntries.map((entry) => {
+      const preview = entry.text.split("\n")[0].slice(0, 80);
+      return {
+        id: `clip:${entry.id}`,
+        label: preview,
+        meta: formatRelativeTime(entry.copiedAt),
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="3" y="1" width="8" height="2" rx="1" stroke="currentColor" strokeWidth="1.1" />
+              <rect x="2" y="2.5" width="10" height="10.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+            </svg>
+          </span>
+        ),
+        action: async () => {
+          try {
+            await writeText(entry.text);
+          } catch {
+            // write failed — silently ignore
+          }
+        },
+      };
+    });
+
+    // Add "Clear History" action at the end if there are entries
+    if (clipboardEntries.length > 0) {
+      commands.push({
+        id: "clip:clear",
+        label: "Clear Clipboard History",
+        meta: "",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 4h8M5.5 4V3h3v1M4 4v7.5a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        ),
+        action: () => { clearClipboardHistory(); },
+      });
+    }
+
+    return { category: "Clipboard", commands };
+  }, [clipboardEntries, clearClipboardHistory]);
+
   const activePanel = useMemo(() => {
     if (!activeTab || !activePanelId) return null;
     return activeTab.panels.find((p) => p.id === activePanelId) ?? null;
@@ -845,6 +907,7 @@ export function App() {
           ...(switchConnectionPaletteSection ? [switchConnectionPaletteSection] : []),
           ...(backgroundTabsPaletteSection ? [backgroundTabsPaletteSection] : []),
           layoutPaletteSection,
+          clipboardPaletteSection,
         ]}
       />
     </div>
