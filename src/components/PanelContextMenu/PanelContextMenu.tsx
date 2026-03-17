@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { PanelConnection, SshProfile } from "../../types/terminal";
-import { buildSshCommand } from "../../lib/sshUtils";
 import "./PanelContextMenu.css";
 
 interface PanelContextMenuProps {
@@ -131,15 +130,14 @@ export function PanelContextMenu({
       {/* SSH profiles */}
       {sshProfiles.length > 0 && <div className="panel-ctx-divider" />}
       {sshProfiles.map((profile) => {
-        const sshCmd = buildSshCommand(profile);
-        const isActiveSsh = connType === "ssh" && currentConnection?.sshCommand === sshCmd;
+        const isActiveSsh = connType === "ssh" && currentConnection?.sshProfileId === profile.id;
         return (
           <button
             key={`ssh:${profile.id}`}
             className={`panel-ctx-item${isActiveSsh ? " panel-ctx-item--active" : ""}`}
             onClick={() => !isActiveSsh && handleClick({
               type: "ssh",
-              sshCommand: sshCmd,
+              sshProfileId: profile.id,
             })}
             role="menuitem"
           >

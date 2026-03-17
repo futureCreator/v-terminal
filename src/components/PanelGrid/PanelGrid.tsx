@@ -17,12 +17,12 @@ export interface PanelNavHandle {
 interface PanelGridProps {
   tab: Tab;
   isVisible: boolean;
-  onActivePanelChanged?: (ptyId: string | null, panelId?: string) => void;
+  onActivePanelChanged?: (sessionId: string | null, panelId?: string) => void;
   navRef?: React.MutableRefObject<PanelNavHandle | null>;
 }
 
 export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: PanelGridProps) {
-  const { setPtyId, clearPtyId, switchPanelConnection } = useTabStore();
+  const { setSessionId, clearSessionId, switchPanelConnection } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
   const [zoomedPanelId, setZoomedPanelId] = useState<string | null>(null);
 
@@ -61,7 +61,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
     [ctxMenu, tab.id, switchPanelConnection]
   );
 
-  // 레이아웃이 바뀌면 줌 해제
+  // Reset zoom when layout changes
   useEffect(() => {
     setZoomedPanelId(null);
   }, [tab.layout]);
@@ -97,7 +97,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
   useEffect(() => {
     if (!onActivePanelChanged) return;
     const activePanel = tab.panels.find((p) => p.id === activePanelId);
-    onActivePanelChanged(activePanel?.ptyId ?? null, activePanelId);
+    onActivePanelChanged(activePanel?.sessionId ?? null, activePanelId);
   }, [activePanelId, tab.panels, onActivePanelChanged]);
 
   useEffect(() => {
@@ -112,24 +112,31 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
     ? { gridTemplateColumns: "1fr", gridTemplateRows: "1fr" }
     : { gridTemplateColumns: gridConfig.gridTemplateColumns, gridTemplateRows: gridConfig.gridTemplateRows };
 
-  const siblingPtyIds = useMemo(
-    () => tab.panels.filter((p) => p.ptyId !== null).map((p) => p.ptyId as string),
+  const siblingSessionIds = useMemo(
+    () => tab.panels.filter((p) => p.sessionId !== null).map((p) => p.sessionId as string),
     [tab.panels]
   );
 
-  const handlePtyCreated = useCallback(
-    (panelId: string, ptyId: string) => {
-      setPtyId(tab.id, panelId, ptyId);
+  const handleSessionCreated = useCallback(
+    (panelId: string, sessionId: string, connectionId?: string) => {
+      setSessionId(tab.id, panelId, sessionId, connectionId);
     },
-    [tab.id, setPtyId]
+    [tab.id, setSessionId]
   );
 
-  const handlePtyKilled = useCallback(
+  const handleSessionKilled = useCallback(
     (panelId: string) => {
-      clearPtyId(tab.id, panelId);
+      clearSessionId(tab.id, panelId);
     },
-    [tab.id, clearPtyId]
+    [tab.id, clearSessionId]
   );
+
+  // Resolve SSH profile data for TerminalPane props
+  const sshProfileMap = useMemo(() => {
+    const map = new Map<string, typeof sshProfiles[0]>();
+    for (const p of sshProfiles) map.set(p.id, p);
+    return map;
+  }, [sshProfiles]);
 
   return (
     <div
@@ -142,8 +149,14 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
       {tab.panels.map((panel, index) => {
         const hidden = isZoomed && panel.id !== zoomedPanelId;
         const connKey = panel.connection
-          ? `${panel.connection.type}-${panel.connection.sshCommand ?? ""}-${panel.connection.shellProgram ?? ""}`
+          ? `${panel.connection.type}-${panel.connection.sshProfileId ?? ""}-${panel.connection.shellProgram ?? ""}`
           : "local";
+
+        // Resolve SSH profile for this panel
+        const sshProfile = panel.connection?.sshProfileId
+          ? sshProfileMap.get(panel.connection.sshProfileId)
+          : undefined;
+
         return (
           <div
             key={`${panel.id}-${connKey}`}
@@ -158,12 +171,16 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
               cwd={tab.cwd}
               isActive={panel.id === activePanelId}
               broadcastEnabled={tab.broadcastEnabled}
-              siblingPtyIds={siblingPtyIds}
-              sshCommand={panel.connection?.sshCommand}
+              siblingSessionIds={siblingSessionIds}
+              connectionType={panel.connection?.type}
+              sshHost={sshProfile?.host}
+              sshPort={sshProfile?.port}
+              sshUsername={sshProfile?.username}
+              sshIdentityFile={sshProfile?.identityFile}
               shellProgram={panel.connection?.shellProgram}
               shellArgs={panel.connection?.shellArgs}
-              onPtyCreated={(ptyId) => handlePtyCreated(panel.id, ptyId)}
-              onPtyKilled={() => handlePtyKilled(panel.id)}
+              onSessionCreated={(sessionId, connectionId) => handleSessionCreated(panel.id, sessionId, connectionId)}
+              onSessionKilled={() => handleSessionKilled(panel.id)}
               onFocus={() => setActivePanelId(panel.id)}
               onNextPanel={handleNextPanel}
               onPrevPanel={handlePrevPanel}

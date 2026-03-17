@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { ipc } from "../../lib/tauriIpc";
-import { buildSshCommand } from "../../lib/sshUtils";
 import { useSshStore } from "../../store/sshStore";
 import { panelCount, getGridConfig } from "../../lib/layoutMath";
 import type { Layout, PanelConnection } from "../../types/terminal";
@@ -24,7 +23,7 @@ interface ConnectionOption {
   type: "local" | "ssh" | "wsl";
   name: string;
   subtitle: string;
-  sshCommand?: string;
+  sshProfileId?: string;
   shellProgram?: string;
   shellArgs?: string[];
 }
@@ -32,7 +31,7 @@ interface ConnectionOption {
 function optionToConnection(opt: ConnectionOption): PanelConnection {
   return {
     type: opt.type,
-    sshCommand: opt.sshCommand,
+    sshProfileId: opt.sshProfileId,
     shellProgram: opt.shellProgram,
     shellArgs: opt.shellArgs,
     label: opt.type === "local" ? undefined : opt.name,
@@ -318,7 +317,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
         type: "ssh",
         name: profile.name,
         subtitle: `${profile.username}@${profile.host}`,
-        sshCommand: buildSshCommand(profile),
+        sshProfileId: profile.id,
       });
     }
     return opts;
