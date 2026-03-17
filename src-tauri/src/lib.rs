@@ -1,5 +1,6 @@
 mod commands;
 mod daemon;
+mod pty;
 mod state;
 
 use commands::{daemon_commands, session_commands};
@@ -223,7 +224,7 @@ pub fn run() {
             daemon_commands::daemon_write,
             daemon_commands::daemon_resize,
             daemon_commands::daemon_kill_session,
-            daemon_commands::get_wsl_distros,
+            daemon_commands::get_wsl_distros_daemon,
             session_commands::save_session,
             session_commands::load_session,
         ])

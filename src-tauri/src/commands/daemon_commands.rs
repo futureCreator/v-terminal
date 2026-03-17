@@ -5,7 +5,7 @@ use crate::daemon::client::DaemonClient;
 use base64::Engine;
 
 #[tauri::command]
-pub fn get_wsl_distros(state: State<AppState>) -> Result<Vec<String>, String> {
+pub fn get_wsl_distros_daemon(state: State<AppState>) -> Result<Vec<String>, String> {
     #[cfg(windows)]
     {
         let cached = state.wsl_distros_cache.get_or_init(|| {
