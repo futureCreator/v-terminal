@@ -6,6 +6,7 @@ use tokio::sync::{Mutex, oneshot, watch};
 use serde_json::Value;
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
+use base64::Engine;
 
 #[derive(Clone)]
 pub struct DaemonClient {
@@ -54,6 +55,8 @@ impl DaemonClient {
                     }
                 }
             }
+            // Clean up pending requests — waiters will get RecvError
+            pending_clone.lock().await.clear();
             // Signal disconnect; lib.rs watchdog handles reconnection and event emission
             let _ = alive_tx.send(false);
         });
@@ -119,22 +122,32 @@ async fn route_event(
 
     match val.get("event").and_then(|v| v.as_str()) {
         Some("output") => {
-            if let (Some(session_id), Some(data)) =
-                (val["session_id"].as_str(), val["data"].as_array())
+            if let (Some(session_id), Some(data_b64)) =
+                (val["session_id"].as_str(), val["data_b64"].as_str())
             {
-                let data: Vec<u8> = data
-                    .iter()
-                    .filter_map(|v| v.as_u64().map(|n| n as u8))
-                    .collect();
-                let _ = app.emit(
-                    "pty-data",
-                    serde_json::json!({"ptyId": session_id, "data": data}),
-                );
+                if let Ok(data) = base64::engine::general_purpose::STANDARD.decode(data_b64) {
+                    let _ = app.emit(
+                        "pty-data",
+                        serde_json::json!({"ptyId": session_id, "data": data}),
+                    );
+                }
             }
         }
         Some("session_exit") => {
             if let Some(session_id) = val["session_id"].as_str() {
                 let _ = app.emit("pty-exit", serde_json::json!({"ptyId": session_id}));
+            }
+        }
+        Some("resync") => {
+            if let (Some(session_id), Some(scrollback_b64)) =
+                (val["session_id"].as_str(), val["scrollback_b64"].as_str())
+            {
+                if let Ok(data) = base64::engine::general_purpose::STANDARD.decode(scrollback_b64) {
+                    let _ = app.emit(
+                        "pty-resync",
+                        serde_json::json!({"ptyId": session_id, "data": data}),
+                    );
+                }
             }
         }
         _ => {}
