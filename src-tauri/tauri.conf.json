@@ -5,8 +5,8 @@
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://127.0.0.1:5173",
-    "beforeDevCommand": "node scripts/build-daemon-dev.mjs && pnpm dev",
-    "beforeBuildCommand": "node scripts/build-daemon-release.mjs && pnpm build",
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
     "beforeBundleCommand": ""
   },
   "app": {
@@ -23,19 +23,7 @@
         "transparent": false,
         "resizable": true,
         "center": true,
-        "visible": false
-      },
-      {
-        "label": "splash",
-        "title": "v-terminal",
-        "url": "/splash.html",
-        "width": 300,
-        "height": 120,
-        "decorations": false,
-        "transparent": false,
-        "resizable": false,
-        "center": true,
-        "alwaysOnTop": true
+        "visible": true
       }
     ],
     "security": {
@@ -53,7 +41,7 @@
       "icons/icon.ico"
     ],
     "resources": [],
-    "externalBin": ["binaries/v-terminal-daemon"],
+    "externalBin": [],
     "windows": {
       "wix": {},
       "nsis": {

@@ -7,9 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri",
-    "daemon:start": "node scripts/daemon-start.mjs",
-    "daemon:stop": "node scripts/daemon-stop.mjs"
+    "tauri": "tauri"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.3",
