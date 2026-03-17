@@ -3,7 +3,7 @@ mod daemon;
 mod pty;
 mod state;
 
-use commands::{daemon_commands, session_commands};
+use commands::{daemon_commands, pty_commands, session_commands, wsl_commands};
 use daemon::client::DaemonClient;
 use state::app_state::AppState;
 use tauri::{Emitter, Manager};
@@ -196,6 +196,7 @@ async fn app_ready(app: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app_state = AppState::new();
+    let pty_manager = pty::manager::PtyManager::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -210,9 +211,18 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(app_state)
+        .manage(pty_manager)
         .setup(|app| {
             start_daemon_watchdog(app.handle().clone());
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Destroyed = event {
+                if window.label() == "main" {
+                    let manager = window.state::<pty::manager::PtyManager>();
+                    manager.kill_all();
+                }
+            }
         })
         .invoke_handler(tauri::generate_handler![
             app_ready,
@@ -224,9 +234,13 @@ pub fn run() {
             daemon_commands::daemon_write,
             daemon_commands::daemon_resize,
             daemon_commands::daemon_kill_session,
-            daemon_commands::get_wsl_distros_daemon,
             session_commands::save_session,
             session_commands::load_session,
+            pty_commands::pty_create,
+            pty_commands::pty_write,
+            pty_commands::pty_resize,
+            pty_commands::pty_kill,
+            wsl_commands::get_wsl_distros,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
