@@ -41,14 +41,6 @@ function optionToConnection(opt: ConnectionOption): PanelConnection {
 
 /* ── Icons ──────────────────────────────────────────────────────── */
 
-const IconTerminalHero = () => (
-  <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-    <rect x="2" y="3" width="26" height="24" rx="5.5" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M8 12l6 5.5L8 23" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M17 23h7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-  </svg>
-);
-
 const IconTerminal = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <rect x="1.5" y="2.5" width="13" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.25" />
@@ -388,17 +380,6 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
   return (
     <div className="sp-root">
       <div className="sp-container">
-        {/* ── Hero ── */}
-        <div className="sp-hero">
-          <div className="sp-hero-icon">
-            <IconTerminalHero />
-          </div>
-          <span className="sp-hero-title">New Tab</span>
-          <span className="sp-hero-subtitle">
-            Choose layout and connection
-          </span>
-        </div>
-
         {/* ── Layout Picker ── */}
         <div className="sp-group">
           <div className="sp-group-label">Layout</div>

@@ -17,41 +17,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-top: 8px;
-}
-
-/* ─── Hero ───────────────────────────────────────────────────── */
-.sp-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 20px 0 4px;
-  text-align: center;
-}
-
-.sp-hero-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 6px;
-}
-
-.sp-hero-title {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-  color: var(--label-primary);
-}
-
-.sp-hero-subtitle {
-  font-size: 13px;
-  color: var(--label-secondary);
+  padding-top: 16px;
 }
 
 /* ─── Groups ─────────────────────────────────────────────────── */
