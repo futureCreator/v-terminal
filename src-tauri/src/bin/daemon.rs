@@ -283,6 +283,7 @@ async fn dispatch(
             let reg = registry.read().await;
             if let Some(session) = reg.get(session_id) {
                 let scrollback_b64 = session.scrollback.lock().unwrap().snapshot_b64();
+                let sub_scrollback = session.scrollback.clone();
                 let mut output_rx = session.output_tx.subscribe();
                 let mut exit_rx = session.exit_tx.subscribe();
                 drop(reg);
@@ -313,7 +314,17 @@ async fn dispatch(
                                         try_send_json(&sub_out_tx, val);
                                     }
                                     Err(broadcast::error::RecvError::Closed) => break,
-                                    Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                                    Err(broadcast::error::RecvError::Lagged(n)) => {
+                                        eprintln!("subscriber lagged by {n} messages, resyncing");
+                                        let snapshot_b64 = sub_scrollback.lock().unwrap().snapshot_b64();
+                                        let val = serde_json::json!({
+                                            "event": "resync",
+                                            "session_id": sid,
+                                            "scrollback_b64": snapshot_b64,
+                                        });
+                                        try_send_json(&sub_out_tx, val);
+                                        continue;
+                                    }
                                 }
                             }
                             _ = exit_rx.recv() => {
