@@ -4,6 +4,7 @@ use std::sync::{
     Arc, Mutex,
     atomic::{AtomicBool, Ordering},
 };
+use base64::Engine;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::{TcpListener, TcpStream};
@@ -31,15 +32,21 @@ impl Scrollback {
         Self { data: std::collections::VecDeque::new() }
     }
     fn push(&mut self, bytes: &[u8]) {
-        for &b in bytes {
-            if self.data.len() >= MAX_SCROLLBACK {
-                self.data.pop_front();
-            }
-            self.data.push_back(b);
+        let overflow = (self.data.len() + bytes.len()).saturating_sub(MAX_SCROLLBACK);
+        if overflow > 0 {
+            self.data.drain(..overflow);
         }
+        self.data.extend(bytes);
     }
     fn snapshot(&self) -> Vec<u8> {
         self.data.iter().cloned().collect()
+    }
+    fn snapshot_b64(&self) -> String {
+        let (a, b) = self.data.as_slices();
+        let mut combined = Vec::with_capacity(a.len() + b.len());
+        combined.extend_from_slice(a);
+        combined.extend_from_slice(b);
+        base64::engine::general_purpose::STANDARD.encode(&combined)
     }
 }
 
