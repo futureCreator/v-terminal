@@ -90,7 +90,15 @@ fn start_daemon_watchdog(app: tauri::AppHandle) {
 
         // --- Ongoing reconnection loop (no timeout, infinite retry) ---
         loop {
-            client.wait_for_disconnect().await;
+            // Race: either the TCP reader detects a clean disconnect, or the
+            // heartbeat detects a stale (half-open) connection first.
+            let hb = client.clone();
+            tokio::select! {
+                _ = client.wait_for_disconnect() => {}
+                _ = heartbeat_loop(&hb) => {
+                    eprintln!("daemon heartbeat failed — connection stale");
+                }
+            }
 
             {
                 let state = app.state::<AppState>();
@@ -134,6 +142,24 @@ async fn first_connect_loop(app: &tauri::AppHandle) -> Result<DaemonClient, Stri
                 tokio::time::sleep(std::time::Duration::from_millis(backoff_ms)).await;
                 backoff_ms = (backoff_ms * 2).min(10_000);
             }
+        }
+    }
+}
+
+/// Sends periodic pings to the daemon; returns (completing the future) when
+/// a ping fails, indicating the connection is stale.
+async fn heartbeat_loop(client: &DaemonClient) {
+    // Give the connection a moment to stabilise after (re)connect.
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+    loop {
+        interval.tick().await;
+        if client
+            .send(serde_json::json!({"cmd": "ping"}))
+            .await
+            .is_err()
+        {
+            return;
         }
     }
 }

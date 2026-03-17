@@ -115,6 +115,9 @@ enum Cmd {
         request_id: Option<String>,
         session_id: String,
     },
+    Ping {
+        request_id: Option<String>,
+    },
 }
 
 #[derive(Serialize, Clone)]
@@ -388,6 +391,14 @@ async fn dispatch(
                     });
                 }
             }
+        }
+
+        Cmd::Ping { request_id } => {
+            let mut resp = serde_json::json!({"event": "pong"});
+            if let Some(rid) = request_id {
+                resp["request_id"] = rid.clone().into();
+            }
+            send_json(out_tx, resp).await;
         }
 
         Cmd::KillSession { request_id, session_id } => {

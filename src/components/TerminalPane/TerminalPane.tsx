@@ -112,6 +112,8 @@ export function TerminalPane({
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
     let unlistenResync: (() => void) | undefined;
+    let visibilityHandler: (() => void) | null = null;
+    let focusHandler: (() => void) | null = null;
 
     const init = async () => {
       await ensureFontLoaded();
@@ -249,8 +251,9 @@ export function TerminalPane({
         }
       });
 
-      // Focus tracking
-      term.textarea?.addEventListener("focus", () => onFocus());
+      // Focus tracking (store reference for cleanup)
+      focusHandler = () => onFocus();
+      term.textarea?.addEventListener("focus", focusHandler);
 
       // Output: PTY → terminal
       unlistenData = await ipc.onPtyData(ptyId, (data) => {
@@ -290,6 +293,20 @@ export function TerminalPane({
         observer.observe(containerRef.current);
         observerRef.current = observer;
       }
+
+      // Recovery after system sleep/idle: force re-render when page becomes visible.
+      // Windows GPU drivers may evict WebGL resources during prolonged idle, leaving
+      // the terminal canvas blank even after onContextLoss recovery.
+      visibilityHandler = () => {
+        if (document.visibilityState === "visible" && !disposed) {
+          setTimeout(() => {
+            if (disposed || !termRef.current) return;
+            termRef.current.clearTextureAtlas();
+            termRef.current.refresh(0, termRef.current.rows - 1);
+          }, 150);
+        }
+      };
+      document.addEventListener("visibilitychange", visibilityHandler);
     };
 
     init();
@@ -299,8 +316,15 @@ export function TerminalPane({
       unlistenData?.();
       unlistenResync?.();
       unlistenExit?.();
+      if (visibilityHandler) {
+        document.removeEventListener("visibilitychange", visibilityHandler);
+      }
       observerRef.current?.disconnect();
       observerRef.current = null;
+      const term = termRef.current;
+      if (term && focusHandler) {
+        term.textarea?.removeEventListener("focus", focusHandler);
+      }
       const ptyId = ptyIdRef.current;
       if (ptyId) {
         terminalRegistry.delete(ptyId);
