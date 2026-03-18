@@ -15,6 +15,8 @@ import type { SidebarTab } from "./components/SidePanel/SidePanel";
 import { ClaudeCodePanel } from "./components/ClaudeCodePanel/ClaudeCodePanel";
 import { DiffViewer } from "./components/GitPanel/DiffViewer";
 import { UsageBar } from "./components/UsageBar/UsageBar";
+import { WelcomePage } from "./components/WelcomePage/WelcomePage";
+import { useOnboardingStore } from "./store/onboardingStore";
 import type { ClaudeCodeTab } from "./components/ClaudeCodePanel/ClaudeCodePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
@@ -51,6 +53,7 @@ export function App() {
   const { themeId } = useThemeStore();
   const { increaseFontSize: fontIncrease, decreaseFontSize: fontDecrease, resetFontSize: fontReset } = useTerminalConfigStore();
   const { profiles: sshProfiles } = useSshStore();
+  const { isDone: onboardingDone, markDone: markOnboardingDone } = useOnboardingStore();
   const activeTab = useMemo(
     () => tabs.find((t) => t.id === activeTabId) ?? tabs[0],
     [tabs, activeTabId]
@@ -87,6 +90,14 @@ export function App() {
     return "claude-md";
   });
   const panelNavRef = useRef<PanelNavHandle | null>(null);
+
+  const showWelcome = !onboardingDone && tabs.some((t) => t.pendingSessionPick);
+  const showWelcomeRef = useRef(showWelcome);
+  useEffect(() => { showWelcomeRef.current = showWelcome; }, [showWelcome]);
+
+  const handleWelcomeDone = useCallback(() => {
+    markOnboardingDone();
+  }, [markOnboardingDone]);
 
   // Prefetch WSL distros on startup to warm the Rust-side cache
   useEffect(() => {
@@ -138,6 +149,9 @@ export function App() {
   // Global keyboard shortcuts — intercept before xterm sees the event
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Skip all global shortcuts while onboarding welcome overlay is active
+      if (showWelcomeRef.current) return;
+
       if (e.ctrlKey && e.key === "k") {
         e.preventDefault();
         e.stopPropagation();
@@ -960,12 +974,10 @@ export function App() {
           onClose={() => setSshModalOpen(false)}
         />
       )}
-      {settingsModalOpen && (
-        <SettingsModal
-          isOpen={settingsModalOpen}
-          onClose={() => setSettingsModalOpen(false)}
-        />
-      )}
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+      />
       <CommandPalette
         isOpen={paletteOpen}
         onClose={handlePaletteClose}
@@ -980,6 +992,7 @@ export function App() {
         ]}
       />
       <DiffViewer />
+      {showWelcome && <WelcomePage onDone={handleWelcomeDone} />}
     </div>
   );
 }

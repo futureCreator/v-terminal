@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTerminalConfigStore, MIN_FONT_SIZE, MAX_FONT_SIZE, DEFAULT_FONT_SIZE } from "../../store/terminalConfigStore";
 import type { CursorStyle } from "../../store/terminalConfigStore";
 import { useThemeStore } from "../../store/themeStore";
 import { THEME_GROUPS } from "../../themes/definitions";
 import { ensureSpecificFontLoaded } from "../../lib/fontLoader";
+import { useOnboardingStore } from "../../store/onboardingStore";
+import { Toast } from "../Toast/Toast";
 import "./SettingsModal.css";
 
 type Tab = "appearance" | "terminal";
@@ -44,6 +46,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   } = useTerminalConfigStore();
 
   const { themeId, setThemeId } = useThemeStore();
+  const resetOnboarding = useOnboardingStore((s) => s.reset);
+  const [toastVisible, setToastVisible] = useState(false);
 
   // ESC to close
   useEffect(() => {
@@ -68,9 +72,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (e.target === e.currentTarget) handleClose();
   };
 
-  if (!isOpen) return null;
+  const handleResetOnboarding = useCallback(() => {
+    resetOnboarding();
+    setToastVisible(true);
+    handleClose();
+  }, [resetOnboarding]);
 
-  return createPortal(
+  const toastPortal = toastVisible
+    ? createPortal(
+        <Toast
+          message="Welcome page will show on next new tab"
+          visible={toastVisible}
+          onHide={() => setToastVisible(false)}
+        />,
+        document.body
+      )
+    : null;
+
+  if (!isOpen) return toastPortal;
+
+  return (<>
+    {toastPortal}
+    {createPortal(
     <div
       className={`settings-overlay${closing ? " settings-overlay--closing" : ""}`}
       onClick={handleOverlayClick}
@@ -133,6 +156,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onFontSizeDecrease={decreaseFontSize}
                 onFontSizeReset={resetFontSize}
                 onThemeChange={setThemeId}
+                onResetOnboarding={handleResetOnboarding}
               />
             )}
             {activeTab === "terminal" && (
@@ -154,7 +178,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       </div>
     </div>,
     document.body
-  );
+  )}
+  </>);
 }
 
 /* ── Appearance Tab ────────────────────────────────────────────── */
@@ -168,6 +193,7 @@ interface AppearanceTabProps {
   onFontSizeDecrease: () => void;
   onFontSizeReset: () => void;
   onThemeChange: (id: string) => void;
+  onResetOnboarding: () => void;
 }
 
 function AppearanceTab({
@@ -179,6 +205,7 @@ function AppearanceTab({
   onFontSizeDecrease,
   onFontSizeReset,
   onThemeChange,
+  onResetOnboarding,
 }: AppearanceTabProps) {
   const [fontLoaded, setFontLoaded] = useState<boolean | null>(null);
 
@@ -319,6 +346,22 @@ function AppearanceTab({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="settings-divider" />
+
+      {/* Onboarding Section */}
+      <div className="settings-section">
+        <div className="settings-section-label">Onboarding</div>
+        <button
+          className="settings-reset-welcome-btn"
+          onClick={onResetOnboarding}
+        >
+          Show Welcome Page
+        </button>
+        <span className="settings-field-sublabel">
+          Show the welcome page again on next new tab
+        </span>
       </div>
     </>
   );

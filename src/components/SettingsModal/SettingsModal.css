@@ -528,3 +528,23 @@
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
 }
+
+/* ── Onboarding Reset Button ─────────────────────────────────── */
+
+.settings-reset-welcome-btn {
+  font-family: "Pretendard", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--label-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--separator-strong);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 120ms;
+  width: fit-content;
+}
+
+.settings-reset-welcome-btn:hover {
+  background: var(--bg-tertiary);
+}
