@@ -78,7 +78,7 @@ export function SshManagerModal({ onClose }: Props) {
       host: form.host.trim(),
       port,
       username: form.username.trim(),
-      ...(form.identityFile.trim() ? { identityFile: form.identityFile.trim() } : {}),
+      identityFile: form.identityFile.trim() || undefined,
     };
   };
 

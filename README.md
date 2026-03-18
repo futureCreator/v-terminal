@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.10.5 - 2026-03-18
+
+- **fix**: SSH profile identity file can now be cleared — clearing the field and saving properly removes the stored key path instead of retaining the old value
+
 ### v0.10.4 - 2026-03-18
 
 - **fix**: SSH known_hosts now reads from standard `~/.ssh/known_hosts` instead of custom `~/.vterminal/known_hosts` — shares host keys with OpenSSH, eliminating false "Unknown Server key" warnings
