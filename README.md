@@ -93,6 +93,24 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.7.0 - 2026-03-18
+
+- **feat**: Claude Code Panel (left sidebar) — auto-discovers and edits CLAUDE.md files based on active terminal session's working directory
+- **feat**: CLAUDE.md discovery walks from CWD to root, detecting project root via `.git`, with user/project/directory/parent level classification
+- **feat**: SFTP CLAUDE.md operations — read, write, and discover CLAUDE.md files on remote SSH hosts via `russh-sftp` high-level API
+- **feat**: Windows CWD detection — reads process working directory via `NtQueryInformationProcess` PEB reading with PTY injection fallback
+- **feat**: OSC 7337 CWD protocol — PTY-injected `pwd` command with custom escape sequence, intercepted in session readers before reaching xterm.js
+- **feat**: Usage Bar (bottom status bar) — displays Claude Code usage stats parsed from `~/.claude/stats-cache.json` (per-model tokens, costs)
+- **feat**: CodeMirror 6 markdown editor for CLAUDE.md with syntax highlighting, auto-save (500ms debounce), and read-only mode
+- **feat**: Context indicator showing active session type (Local/WSL/SSH) and current working directory
+- **feat**: File change detection via `notify` crate for local CLAUDE.md files
+- **feat**: Session trait extended with `session_type()`, `connection_id()`, and `process_id()` for CWD resolution routing
+- **feat**: Command palette integration — "Show/Hide Claude Code Panel" with `Ctrl+Shift+L` shortcut
+- **fix**: Cheatsheet icon changed from document+lines to `</>` code bracket to resolve visual conflict with Notes icon
+- **fix**: Path validation on `write_claude_md` prevents arbitrary file writes (security)
+- **refactor**: Shared CodeMirror 6 setup extracted to `codemirrorSetup.ts` for reuse across NoteEditor and ClaudeMdEditor
+- **deps**: Added `notify` 7, `windows-sys` 0.59 (Windows-only)
+
 ### v0.6.0 - 2026-03-18
 
 - **feat**: Rust-native SSH via `russh` — replaces shell-based `ssh` command execution with programmatic SSH connection management
