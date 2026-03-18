@@ -1,0 +1,120 @@
+.git-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.git-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.git-panel__title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #999);
+}
+
+.git-panel__refresh {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #999);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.git-panel__refresh:hover {
+  background: var(--hover-bg, #ffffff10);
+  color: var(--text-primary, #fff);
+}
+
+.git-panel__content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.git-panel__empty,
+.git-panel__loading,
+.git-panel__error {
+  padding: 16px 12px;
+  color: var(--text-secondary, #999);
+  font-size: 13px;
+  text-align: center;
+}
+
+.git-panel__error {
+  color: var(--git-deleted, #f85149);
+}
+
+/* File list */
+.git-file-list__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: var(--text-secondary, #999);
+}
+
+.git-file-list__header:hover {
+  background: var(--hover-bg, #ffffff08);
+}
+
+.git-file-list__arrow {
+  font-size: 10px;
+  width: 12px;
+}
+
+.git-file-list__title {
+  flex: 1;
+  font-weight: 500;
+}
+
+.git-file-list__count {
+  background: var(--badge-bg, #ffffff15);
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+/* File entry */
+.git-file-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 30px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.git-file-entry:hover {
+  background: var(--hover-bg, #ffffff08);
+}
+
+.git-file-entry--selected {
+  background: var(--selected-bg, #ffffff15);
+}
+
+.git-file-status {
+  font-weight: 600;
+  width: 14px;
+  text-align: center;
+}
+
+.git-file-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary, #e0e0e0);
+}
