@@ -191,13 +191,20 @@ fn ensure_wsl_host_keys(distro: &str) -> Result<(), String> {
 fn start_sshd(
     distro: &str,
     port: u16,
+    sudo_password: Option<&str>,
 ) -> Result<Option<u32>, String> {
     // Ensure user-owned host keys exist
     ensure_wsl_host_keys(distro)?;
 
+    // Get the absolute home directory path (HostKey doesn't support %h)
+    let (home_dir, _, hcode) = wsl_exec(distro, "echo $HOME")?;
+    if hcode != 0 || home_dir.is_empty() {
+        return Err("failed to determine WSL home directory".to_string());
+    }
+
     let config_path = format!("/tmp/vterminal_sshd_{port}.conf");
     let config_content = format!(
-        "ListenAddress 127.0.0.1\nPort {port}\nPubkeyAuthentication yes\nPasswordAuthentication no\nAuthorizedKeysFile .ssh/authorized_keys\nHostKey %h/.vterminal/ssh_host_ed25519_key\nHostKey %h/.vterminal/ssh_host_rsa_key"
+        "ListenAddress 127.0.0.1\nPort {port}\nPubkeyAuthentication yes\nPasswordAuthentication no\nAuthorizedKeysFile .ssh/authorized_keys\nHostKey {home_dir}/.vterminal/ssh_host_ed25519_key\nHostKey {home_dir}/.vterminal/ssh_host_rsa_key"
     );
 
     // Write config file
@@ -207,14 +214,26 @@ fn start_sshd(
         return Err(format!("failed to write sshd config to {config_path}"));
     }
 
-    // Start sshd as current user (no sudo needed)
+    // Try starting sshd as current user first (no sudo needed for port > 1024)
     let (_, stderr, code) = wsl_exec(
         distro,
         &format!("/usr/sbin/sshd -f {config_path}"),
     )?;
 
     if code != 0 {
-        return Err(format!("failed to start sshd: {stderr}"));
+        // Some distros restrict non-root sshd — fall back to sudo
+        let (_, sudo_stderr, sudo_code) = wsl_sudo_exec(
+            distro,
+            &format!("/usr/sbin/sshd -f {config_path}"),
+            sudo_password,
+        )?;
+        if sudo_code != 0 {
+            if sudo_stderr.contains("password is required") || sudo_stderr.contains("sudo:") {
+                return Err(format!("{{\"code\":\"WSL_SUDO_REQUIRED\",\"distro\":\"{distro}\"}}"));
+            }
+            // Report both errors for debugging
+            return Err(format!("failed to start sshd: {stderr} | sudo attempt: {sudo_stderr}"));
+        }
     }
 
     // Get sshd PID
@@ -297,7 +316,7 @@ pub fn ensure_sshd(
         )?;
         pid_out.trim_start_matches("pid=").parse::<u32>().ok()
     } else {
-        start_sshd(distro, port)?
+        start_sshd(distro, port, sudo_password)?
     };
 
     Ok(WslSshInfo {

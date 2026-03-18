@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.12.2 - 2026-03-19
+
+- **fix**: WSL sshd failed to start — `HostKey %h/...` token is not supported in sshd_config's HostKey directive; now resolves absolute home path via `$HOME` before writing config
+- **fix**: Added sudo fallback for sshd start — if non-root sshd is restricted by the distro, automatically retries with sudo
+
 ### v0.12.1 - 2026-03-19
 
 - **fix**: WSL sshd now runs as normal user — uses user-owned host keys (`~/.vterminal/ssh_host_*` inside WSL) instead of system `/etc/ssh/` keys, eliminating the need for sudo on every app restart
