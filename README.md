@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.10.4 - 2026-03-18
+
+- **fix**: SSH known_hosts now reads from standard `~/.ssh/known_hosts` instead of custom `~/.vterminal/known_hosts` — shares host keys with OpenSSH, eliminating false "Unknown Server key" warnings
+
 ### v0.10.3 - 2026-03-18
 
 - **fix**: SSH default key search uses Windows-native paths (`%USERPROFILE%\.ssh\`) and additionally checks `%ProgramData%\ssh\` for system-wide OpenSSH keys

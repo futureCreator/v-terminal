@@ -285,7 +285,7 @@ impl client::Handler for SshClientHandler {
 fn known_hosts_path() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join(".vterminal")
+        .join(".ssh")
         .join("known_hosts")
 }
 
