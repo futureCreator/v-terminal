@@ -97,7 +97,7 @@ fn parse_stats_cache(json_str: &str) -> Result<UsageData, String> {
 }
 
 /// Get today's date in YYYY-MM-DD format without chrono dependency.
-fn chrono_today() -> String {
+pub fn chrono_today() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let secs = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -135,7 +135,7 @@ fn chrono_today() -> String {
     format!("{:04}-{:02}-{:02}", y, m + 1, remaining_days + 1)
 }
 
-fn is_leap(year: i64) -> bool {
+pub fn is_leap(year: i64) -> bool {
     (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 }
 

@@ -1,5 +1,6 @@
 pub mod cwd_resolver;
 pub mod claude_md;
+pub mod dashboard;
 pub mod file_watcher;
 pub mod usage;
 
