@@ -81,7 +81,11 @@ export function App() {
   const [claudePanelOpen, setClaudePanelOpen] = useState(() => {
     return localStorage.getItem("v-terminal:claude-panel-open") === "true";
   });
-  const [claudePanelTab, setClaudePanelTab] = useState<ClaudeCodeTab>("claude-md");
+  const [claudePanelTab, setClaudePanelTab] = useState<ClaudeCodeTab>(() => {
+    const stored = localStorage.getItem("v-terminal:claude-panel-tab");
+    if (stored === "claude-md" || stored === "git" || stored === "dashboard") return stored;
+    return "claude-md";
+  });
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
   // Prefetch WSL distros on startup to warm the Rust-side cache
@@ -159,6 +163,17 @@ export function App() {
           localStorage.setItem("v-terminal:claude-panel-open", "true");
         }
         setClaudePanelTab("git");
+        return;
+      }
+      // Ctrl+Shift+D → open Claude panel on Dashboard tab
+      if (e.ctrlKey && e.shiftKey && e.key === "D") {
+        e.preventDefault();
+        if (!claudePanelOpenRef.current) {
+          setClaudePanelOpen(true);
+          localStorage.setItem("v-terminal:claude-panel-open", "true");
+        }
+        setClaudePanelTab("dashboard");
+        localStorage.setItem("v-terminal:claude-panel-tab", "dashboard");
         return;
       }
       if (e.ctrlKey && e.shiftKey && e.key === "L") {
@@ -929,7 +944,17 @@ export function App() {
           />
         )}
       </div>{/* end app-content */}
-      <UsageBar claudePanelOpen={claudePanelOpen} />
+      <UsageBar
+        claudePanelOpen={claudePanelOpen}
+        onOpenDashboard={() => {
+          if (!claudePanelOpen) {
+            setClaudePanelOpen(true);
+            localStorage.setItem("v-terminal:claude-panel-open", "true");
+          }
+          setClaudePanelTab("dashboard");
+          localStorage.setItem("v-terminal:claude-panel-tab", "dashboard");
+        }}
+      />
       {sshModalOpen && (
         <SshManagerModal
           onClose={() => setSshModalOpen(false)}

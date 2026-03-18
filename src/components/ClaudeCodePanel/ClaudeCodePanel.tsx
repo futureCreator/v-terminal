@@ -6,9 +6,10 @@ import { useSessionCwd } from "../../hooks/useSessionCwd";
 import { ContextIndicator } from "./ContextIndicator";
 import { ClaudeMdTab } from "./ClaudeMdTab";
 import { GitPanel } from "../GitPanel/GitPanel";
+import { DashboardTab } from "./DashboardTab";
 import "./ClaudeCodePanel.css";
 
-export type ClaudeCodeTab = "claude-md" | "git";
+export type ClaudeCodeTab = "claude-md" | "git" | "dashboard";
 
 interface ClaudeCodePanelProps {
   activeTab: ClaudeCodeTab;
@@ -77,6 +78,17 @@ export function ClaudeCodePanel({
           >
             Git
           </button>
+          <button
+            className={`claude-panel-tab${activeTab === "dashboard" ? " claude-panel-tab--active" : ""}`}
+            onClick={() => onTabChange("dashboard")}
+            title="Dashboard"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="1" y="8" width="3" height="7" rx="0.5" />
+              <rect x="6.5" y="4" width="3" height="11" rx="0.5" />
+              <rect x="12" y="1" width="3" height="14" rx="0.5" />
+            </svg>
+          </button>
         </div>
         <button
           className="claude-panel-close"
@@ -95,6 +107,9 @@ export function ClaudeCodePanel({
         {activeTab === "claude-md" && <ClaudeMdTab />}
         {activeTab === "git" && (
           <GitPanel focusedSessionId={focusedSessionId ?? undefined} />
+        )}
+        {activeTab === "dashboard" && (
+          <DashboardTab sessionId={focusedSessionId} />
         )}
       </div>
     </div>
