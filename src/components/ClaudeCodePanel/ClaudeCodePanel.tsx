@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useClaudeCodeStore } from "../../store/claudeCodeStore";
 import { useTabStore } from "../../store/tabStore";
 import { ipc } from "../../lib/tauriIpc";
+import { useSessionCwd } from "../../hooks/useSessionCwd";
 import { ContextIndicator } from "./ContextIndicator";
 import { ClaudeMdTab } from "./ClaudeMdTab";
 import "./ClaudeCodePanel.css";
@@ -26,6 +27,7 @@ export function ClaudeCodePanel({
   const { setTrackedSession, setCwd, trackedCwd } = useClaudeCodeStore();
   const tabs = useTabStore((s) => s.tabs);
   const activeTabId = useTabStore((s) => s.activeTabId);
+  const cwd = useSessionCwd(focusedSessionId ?? null);
 
   const focusedPanel = useMemo(() => {
     const tab = tabs.find((t) => t.id === activeTabId);
@@ -34,22 +36,16 @@ export function ClaudeCodePanel({
   }, [tabs, activeTabId, focusedPanelId]);
 
   useEffect(() => {
-    setTrackedSession(focusedSessionId);
-    if (!focusedSessionId) return;
+    if (focusedSessionId) {
+      setTrackedSession(focusedSessionId);
+    }
+  }, [focusedSessionId, setTrackedSession]);
 
-    ipc.getSessionCwd(focusedSessionId).then((result) => {
-      if ("value" in result) {
-        setCwd(result.value);
-      }
-    }).catch(() => {});
-
-    let cleanup: (() => void) | null = null;
-    ipc.onSessionCwd(focusedSessionId, (cwd) => {
+  useEffect(() => {
+    if (cwd) {
       setCwd(cwd);
-    }).then((unsub) => { cleanup = unsub; });
-
-    return () => { cleanup?.(); };
-  }, [focusedSessionId, setTrackedSession, setCwd]);
+    }
+  }, [cwd, setCwd]);
 
   useEffect(() => {
     let cleanup: (() => void) | null = null;
