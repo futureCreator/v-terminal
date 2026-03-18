@@ -2,6 +2,7 @@ use crate::session::manager::SessionManager;
 use crate::session::SessionType;
 use crate::claude::claude_md;
 use crate::claude::cwd_resolver::{self, CwdResult};
+use crate::claude::dashboard;
 use crate::claude::ClaudeMdFile;
 use crate::claude::usage;
 use crate::claude::UsageData;
@@ -74,6 +75,26 @@ pub async fn get_usage(
             let sftp = state.open_sftp(&conn_id).await?;
             let home = sftp.canonicalize(".").await.unwrap_or_else(|_| "/root".to_string());
             usage::read_sftp_usage(&sftp, &home).await
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn get_dashboard_stats(
+    state: tauri::State<'_, SessionManager>,
+    session_id: String,
+) -> Result<dashboard::DashboardStats, String> {
+    let (session_type, connection_id) = state.get_session_info(&session_id).await?;
+
+    match session_type {
+        SessionType::Local | SessionType::Wsl => {
+            dashboard::read_local_dashboard()
+        }
+        SessionType::Ssh => {
+            let conn_id = connection_id.ok_or("no connection_id for SSH session")?;
+            let sftp = state.open_sftp(&conn_id).await?;
+            let home = sftp.canonicalize(".").await.unwrap_or_else(|_| "/root".to_string());
+            dashboard::read_sftp_dashboard(&sftp, &home).await
         }
     }
 }

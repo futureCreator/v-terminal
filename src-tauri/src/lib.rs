@@ -49,6 +49,7 @@ pub fn run() {
             commands::claude_commands::read_claude_md,
             commands::claude_commands::write_claude_md,
             commands::claude_commands::get_usage,
+            commands::claude_commands::get_dashboard_stats,
             commands::git_commands::git_status,
             commands::git_commands::git_diff,
         ])
