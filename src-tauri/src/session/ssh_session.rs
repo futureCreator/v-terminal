@@ -15,6 +15,7 @@ enum ChannelCommand {
 pub struct SshSession {
     cmd_tx: mpsc::UnboundedSender<ChannelCommand>,
     pub connection_id: String,
+    session_kind: super::SessionType,
     _task: JoinHandle<()>,
 }
 
@@ -26,6 +27,7 @@ impl SshSession {
         handle: &russh::client::Handle<super::ssh_pool::SshClientHandler>,
         cols: u16,
         rows: u16,
+        session_type: super::SessionType,
     ) -> Result<Self, String> {
         let mut channel = handle
             .channel_open_session()
@@ -108,6 +110,7 @@ impl SshSession {
         Ok(Self {
             cmd_tx,
             connection_id,
+            session_kind: session_type,
             _task: task,
         })
     }
@@ -133,7 +136,7 @@ impl Session for SshSession {
     }
 
     fn session_type(&self) -> super::SessionType {
-        super::SessionType::Ssh
+        self.session_kind
     }
 
     fn connection_id(&self) -> Option<String> {

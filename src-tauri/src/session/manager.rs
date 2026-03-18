@@ -97,7 +97,7 @@ impl SessionManager {
         };
 
         let session =
-            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows)
+            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows, super::SessionType::Ssh)
                 .await?;
 
         {
@@ -147,7 +147,7 @@ impl SessionManager {
         };
 
         let session =
-            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows)
+            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows, super::SessionType::Ssh)
                 .await?;
 
         {
