@@ -1,6 +1,7 @@
 mod commands;
 mod session;
 mod claude;
+mod git;
 
 use session::manager::SessionManager;
 use commands::{session_commands, wsl_commands};
