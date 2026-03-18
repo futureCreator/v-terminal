@@ -12,6 +12,8 @@ import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import type { SidebarTab } from "./components/SidePanel/SidePanel";
+import { ClaudeCodePanel } from "./components/ClaudeCodePanel/ClaudeCodePanel";
+import type { ClaudeCodeTab } from "./components/ClaudeCodePanel/ClaudeCodePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useClipboardPolling } from "./hooks/useClipboardPolling";
@@ -74,6 +76,10 @@ export function App() {
   const activePanelIdRef = useRef<string | null>(null);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
   const [cheatsheetTopic, setCheatsheetTopic] = useState<string | null>(null);
+  const [claudePanelOpen, setClaudePanelOpen] = useState(() => {
+    return localStorage.getItem("v-terminal:claude-panel-open") === "true";
+  });
+  const [claudePanelTab, setClaudePanelTab] = useState<ClaudeCodeTab>("claude-md");
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
   // Prefetch WSL distros on startup to warm the Rust-side cache
@@ -88,6 +94,8 @@ export function App() {
   const sidebarOpenRef = useRef(sidebarOpen);
   useEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
 
+  const claudePanelOpenRef = useRef(claudePanelOpen);
+  useEffect(() => { claudePanelOpenRef.current = claudePanelOpen; }, [claudePanelOpen]);
 
   const handleToggleToolkit = useCallback(() => {
     const next = !sidebarOpen;
@@ -103,6 +111,22 @@ export function App() {
   const handleSidebarTabChange = useCallback((tab: SidebarTab) => {
     setSidebarTab(tab);
     localStorage.setItem("v-terminal:sidebar-tab", tab);
+  }, []);
+
+  const handleToggleClaudePanel = useCallback(() => {
+    const next = !claudePanelOpen;
+    setClaudePanelOpen(next);
+    localStorage.setItem("v-terminal:claude-panel-open", String(next));
+  }, [claudePanelOpen]);
+
+  const handleCloseClaudePanel = useCallback(() => {
+    setClaudePanelOpen(false);
+    localStorage.setItem("v-terminal:claude-panel-open", "false");
+  }, []);
+
+  const handleClaudePanelTabChange = useCallback((tab: ClaudeCodeTab) => {
+    setClaudePanelTab(tab);
+    localStorage.setItem("v-terminal:claude-panel-tab", tab);
   }, []);
 
   // Global keyboard shortcuts — intercept before xterm sees the event
@@ -124,6 +148,13 @@ export function App() {
         const next = !sidebarOpenRef.current;
         setSidebarOpen(next);
         localStorage.setItem("v-terminal:sidebar-open", String(next));
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === "L") {
+        e.preventDefault();
+        e.stopPropagation();
+        const next = !claudePanelOpenRef.current;
+        setClaudePanelOpen(next);
+        localStorage.setItem("v-terminal:claude-panel-open", String(next));
       }
       // Terminal font size: Ctrl+= / Ctrl+- / Ctrl+0
       if (e.ctrlKey && !e.shiftKey && (e.key === "=" || e.key === "+")) {
@@ -327,6 +358,22 @@ export function App() {
         action: handleToggleToolkit,
       },
       {
+        id: "view:claude-panel",
+        label: claudePanelOpen ? "Hide Claude Code Panel" : "Show Claude Code Panel",
+        description: "Toggle the Claude Code panel with CLAUDE.md editor",
+        meta: "Ctrl+Shift+L",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+              <path d="M3 2h9a1 1 0 011 1v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M5 5.5h5M5 7.5h5M5 9.5h3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        isActive: claudePanelOpen,
+        action: handleToggleClaudePanel,
+      },
+      {
         id: "ssh:profiles",
         label: "SSH Profiles",
         description: "Manage and connect to saved SSH servers",
@@ -404,7 +451,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, handleToggleClaudePanel, activeTab, tabs, sidebarOpen, claudePanelOpen]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -806,6 +853,15 @@ export function App() {
         />
       </div>
       <div className="app-content">
+        {claudePanelOpen && (
+          <ClaudeCodePanel
+            activeTab={claudePanelTab}
+            onTabChange={handleClaudePanelTabChange}
+            onClose={handleCloseClaudePanel}
+            focusedPanelId={activePanelId}
+            focusedSessionId={activePanelSessionIdRef.current}
+          />
+        )}
         <div className="app-terminal-area">
         {tabs.map((tab) => (
           <div
