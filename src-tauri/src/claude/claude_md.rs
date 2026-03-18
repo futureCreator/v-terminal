@@ -88,8 +88,21 @@ pub fn read_local(path: &str) -> Result<ClaudeMdFile, String> {
         .ok_or_else(|| format!("failed to read: {path}"))
 }
 
+/// Validate that a path points to a CLAUDE.md file (security: prevent arbitrary file writes).
+fn validate_claude_md_path(path: &str) -> Result<(), String> {
+    let p = Path::new(path);
+    let filename = p.file_name()
+        .and_then(|f| f.to_str())
+        .unwrap_or("");
+    if filename != "CLAUDE.md" {
+        return Err(format!("write denied: path must end with CLAUDE.md, got: {path}"));
+    }
+    Ok(())
+}
+
 /// Write content to a CLAUDE.md file (local).
 pub fn write_local(path: &str, content: &str, expected_mtime: Option<u64>) -> Result<(), String> {
+    validate_claude_md_path(path)?;
     let p = Path::new(path);
 
     if let Some(expected) = expected_mtime {
@@ -136,6 +149,7 @@ pub async fn write_sftp(
     _content: &str,
     _expected_mtime: Option<u64>,
 ) -> Result<(), String> {
+    validate_claude_md_path(path)?;
     // TODO: Implement SFTP write once russh-sftp 2.0 API is verified.
     Err(format!("SFTP write not yet implemented for: {path}"))
 }

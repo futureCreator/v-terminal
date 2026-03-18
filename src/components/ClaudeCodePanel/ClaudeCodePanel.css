@@ -216,3 +216,14 @@
   display: flex;
   flex-direction: column;
 }
+
+/* ── Chevron (self-contained, no dependency on SidePanel.css) ── */
+.claude-md-section .collapsible-chevron {
+  color: var(--label-tertiary);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.claude-md-section .collapsible-chevron--open {
+  transform: rotate(90deg);
+}
