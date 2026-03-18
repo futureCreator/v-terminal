@@ -217,4 +217,13 @@ impl SessionManager {
         let mut pool = self.ssh_pool.lock().await;
         pool.open_sftp(connection_id).await
     }
+
+    pub async fn exec_command(
+        &self,
+        connection_id: &str,
+        command: &str,
+    ) -> Result<(String, String, u32), String> {
+        let mut pool = self.ssh_pool.lock().await;
+        pool.exec_command(connection_id, command).await
+    }
 }
