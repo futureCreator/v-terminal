@@ -40,6 +40,10 @@ pub fn run() {
             session_commands::session_resize,
             session_commands::session_kill,
             wsl_commands::get_wsl_distros,
+            commands::claude_commands::get_session_cwd,
+            commands::claude_commands::discover_claude_md,
+            commands::claude_commands::read_claude_md,
+            commands::claude_commands::write_claude_md,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
