@@ -57,8 +57,8 @@ export function SidePanel({ tabId, activeTab, onTabChange, onClose }: SidePanelP
             title="Cheatsheet"
           >
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <rect x="2.5" y="1" width="10" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-              <path d="M5 4.5h5M5 7h5M5 9.5h3" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              <path d="M5.5 3.5L2.5 7.5l3 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9.5 3.5l3 4-3 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
         </div>

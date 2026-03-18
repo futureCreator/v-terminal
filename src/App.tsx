@@ -597,9 +597,9 @@ export function App() {
   const cheatsheetPaletteSection = useMemo<PaletteSection>(() => {
     const cheatsheetIcon = (
       <span className="cp-cmd-icon">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-          <path d="M5 4.5h4M5 7h4M5 9.5h2.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+          <path d="M5.5 3.5L2.5 7.5l3 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M9.5 3.5l3 4-3 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </span>
     );
