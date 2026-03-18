@@ -9,8 +9,7 @@ interface UsageBarProps {
 export function UsageBar({ claudePanelOpen }: UsageBarProps) {
   const entries = useUsageStore((s) => s.entries);
 
-  const hasWarning = entries.some((e) => e.usedPercent >= 60);
-  if (!claudePanelOpen && !hasWarning) return null;
+  if (!claudePanelOpen) return null;
   if (entries.length === 0) return null;
 
   return (

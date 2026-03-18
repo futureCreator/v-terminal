@@ -26,13 +26,30 @@ pub struct ClaudeMdFile {
     pub readonly: bool,
 }
 
-/// Claude Code usage data for an account.
+/// Claude Code usage data parsed from stats-cache.json.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UsageData {
-    pub plan: String,
-    pub used_percent: f64,
-    pub reset_at: Option<u64>,
+    pub total_cost_usd: f64,
+    pub total_input_tokens: u64,
+    pub total_output_tokens: u64,
+    pub today_cost_usd: f64,
+    pub today_input_tokens: u64,
+    pub today_output_tokens: u64,
+    pub total_sessions: u64,
+    pub total_messages: u64,
+    pub models: Vec<ModelUsage>,
+}
+
+/// Per-model usage breakdown.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelUsage {
+    pub model: String,
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub cache_read_tokens: u64,
+    pub cost_usd: f64,
 }
 
 /// Scan a byte buffer for the OSC 7337 CWD marker sequence.

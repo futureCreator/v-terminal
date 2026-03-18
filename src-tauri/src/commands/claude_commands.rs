@@ -49,8 +49,11 @@ pub async fn read_claude_md(
             Ok(file.content)
         }
         SessionType::Ssh => {
-            // TODO: Implement SFTP read
-            Err(format!("SFTP read not yet implemented for: {path}"))
+            let conn_id = _connection_id.ok_or("no connection_id for SSH session")?;
+            let sftp = state.open_sftp(&conn_id).await?;
+            let data = sftp.read(&path).await
+                .map_err(|e| format!("sftp read failed: {e}"))?;
+            String::from_utf8(data).map_err(|e| format!("invalid utf8: {e}"))
         }
     }
 }
@@ -69,7 +72,7 @@ pub async fn get_usage(
         SessionType::Ssh => {
             let conn_id = connection_id.ok_or("no connection_id for SSH session")?;
             let sftp = state.open_sftp(&conn_id).await?;
-            let home = ".".to_string();
+            let home = sftp.canonicalize(".").await.unwrap_or_else(|_| "/root".to_string());
             usage::read_sftp_usage(&sftp, &home).await
         }
     }

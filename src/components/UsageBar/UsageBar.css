@@ -13,44 +13,40 @@
 .usage-gauge {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-size: 10px;
   font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
   color: var(--label-secondary);
   white-space: nowrap;
 }
 
-.usage-gauge-plan {
-  font-weight: 600;
-  text-transform: capitalize;
-  color: var(--label-primary);
-}
-
-.usage-gauge-bar {
-  width: 60px;
-  height: 4px;
-  background: var(--bg-tertiary);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.usage-gauge-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-
-.usage-gauge-pct {
-  min-width: 28px;
-}
-
-.usage-gauge-timer {
-  opacity: 0.6;
-}
-
 .usage-gauge-env {
-  opacity: 0.5;
-  max-width: 120px;
+  font-weight: 600;
+  color: var(--label-primary);
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.usage-gauge-cost {
+  color: var(--system-green);
+  font-weight: 600;
+}
+
+.usage-gauge-cost-total {
+  color: var(--label-secondary);
+  font-weight: 600;
+}
+
+.usage-gauge-sep {
+  opacity: 0.4;
+  font-size: 9px;
+}
+
+.usage-gauge-tokens {
+  opacity: 0.7;
+}
+
+.usage-gauge-divider {
+  opacity: 0.3;
 }

@@ -33,6 +33,26 @@ export type CwdResult =
   | { type: "resolved"; value: string }
   | { type: "pending" };
 
+export interface ModelUsageData {
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  costUsd: number;
+}
+
+export interface UsageData {
+  totalCostUsd: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  todayCostUsd: number;
+  todayInputTokens: number;
+  todayOutputTokens: number;
+  totalSessions: number;
+  totalMessages: number;
+  models: ModelUsageData[];
+}
+
 const sessionDataHandlers = new Map<string, (data: Uint8Array) => void>();
 const sessionExitHandlers = new Map<string, (code?: number) => void>();
 const sshStatusHandlers = new Map<string, (status: string, error?: string) => void>();
@@ -165,7 +185,7 @@ export const ipc = {
       if (idx >= 0) claudeMdChangedHandlers.splice(idx, 1);
     };
   },
-  async getUsage(sessionId: string): Promise<{ plan: string; usedPercent: number; resetAt: number | null }> {
-    return invoke("get_usage", { sessionId });
+  async getUsage(sessionId: string): Promise<UsageData> {
+    return invoke<UsageData>("get_usage", { sessionId });
   },
 };

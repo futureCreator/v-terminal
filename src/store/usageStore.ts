@@ -1,12 +1,10 @@
 import { create } from "zustand";
-import { ipc } from "../lib/tauriIpc";
+import { ipc, type UsageData } from "../lib/tauriIpc";
 
 export interface UsageEntry {
   sessionId: string;
   environment: string;
-  plan: string;
-  usedPercent: number;
-  resetAt: number | null;
+  data: UsageData;
 }
 
 interface UsageState {
@@ -25,7 +23,7 @@ export const useUsageStore = create<UsageState>((set) => ({
       set((state) => {
         const filtered = state.entries.filter((e) => e.sessionId !== sessionId);
         return {
-          entries: [...filtered, { sessionId, environment, plan: data.plan, usedPercent: data.usedPercent, resetAt: data.resetAt }],
+          entries: [...filtered, { sessionId, environment, data }],
         };
       });
     } catch {

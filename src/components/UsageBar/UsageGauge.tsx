@@ -1,36 +1,30 @@
 import type { UsageEntry } from "../../store/usageStore";
 
-function formatCountdown(resetAt: number | null): string {
-  if (!resetAt) return "";
-  const remaining = resetAt * 1000 - Date.now();
-  if (remaining <= 0) return "resetting...";
-  const hours = Math.floor(remaining / 3600000);
-  const minutes = Math.floor((remaining % 3600000) / 60000);
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
 }
 
-function gaugeColor(percent: number): string {
-  if (percent >= 85) return "var(--system-red)";
-  if (percent >= 60) return "var(--system-yellow)";
-  return "var(--system-green)";
+function formatCost(usd: number): string {
+  if (usd < 0.01 && usd > 0) return "<$0.01";
+  return `$${usd.toFixed(2)}`;
 }
 
 export function UsageGauge({ entry }: { entry: UsageEntry }) {
-  const color = gaugeColor(entry.usedPercent);
-  const countdown = formatCountdown(entry.resetAt);
+  const { data } = entry;
 
   return (
     <div className="usage-gauge">
-      <span className="usage-gauge-plan">{entry.plan}</span>
-      <div className="usage-gauge-bar">
-        <div
-          className="usage-gauge-fill"
-          style={{ width: `${Math.min(entry.usedPercent, 100)}%`, backgroundColor: color }}
-        />
-      </div>
-      <span className="usage-gauge-pct">{Math.round(entry.usedPercent)}%</span>
-      {countdown && <span className="usage-gauge-timer">{countdown}</span>}
       <span className="usage-gauge-env">{entry.environment}</span>
+      <span className="usage-gauge-cost">{formatCost(data.todayCostUsd)}</span>
+      <span className="usage-gauge-sep">today</span>
+      <span className="usage-gauge-tokens">
+        {formatTokens(data.todayInputTokens)} in
+      </span>
+      <span className="usage-gauge-divider">/</span>
+      <span className="usage-gauge-cost-total">{formatCost(data.totalCostUsd)}</span>
+      <span className="usage-gauge-sep">total</span>
     </div>
   );
 }
