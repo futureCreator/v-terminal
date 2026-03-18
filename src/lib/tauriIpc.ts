@@ -14,6 +14,7 @@ export interface SessionCreateParams {
   shellProgram?: string;
   shellArgs?: string[];
   ssh?: { host: string; port: number; username: string; identityFile?: string; };
+  wslDistro?: string;
 }
 
 export interface SessionCreateWithPasswordParams {
@@ -70,6 +71,9 @@ export const ipc = {
   },
   async sessionCreateWithPassword(params: SessionCreateWithPasswordParams): Promise<SessionCreateResult> {
     return invoke<SessionCreateResult>("session_create_with_password", params as unknown as Record<string, unknown>);
+  },
+  async sessionCreateWslWithSudo(distro: string, password: string, cols: number, rows: number): Promise<SessionCreateResult> {
+    return invoke<SessionCreateResult>("session_create_wsl_with_sudo", { distro, password, cols, rows });
   },
   async sessionWrite(sessionId: string, data: Uint8Array): Promise<void> {
     return invoke("session_write", { sessionId, data: Array.from(data) });
