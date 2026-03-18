@@ -86,7 +86,7 @@ impl SessionManager {
 
         let connection_id = {
             let mut pool = self.ssh_pool.lock().await;
-            pool.connect_with_key(&host, port, &username, &resolved_key).await?
+            pool.connect_with_key(&host, port, &username, &resolved_key, None).await?
         };
 
         // Clone Arc<Handle> and release pool lock BEFORE network I/O in SshSession::create.
