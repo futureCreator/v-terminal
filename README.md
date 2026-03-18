@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.10.3 - 2026-03-18
+
+- **fix**: SSH default key search uses Windows-native paths (`%USERPROFILE%\.ssh\`) and additionally checks `%ProgramData%\ssh\` for system-wide OpenSSH keys
+
 ### v0.10.2 - 2026-03-18
 
 - **fix**: SSH auto-discovers default keys (`~/.ssh/id_ed25519`, `id_rsa`, `id_ecdsa`, `id_dsa`) when no key file is specified in the profile — no longer prompts for password unnecessarily

@@ -229,19 +229,36 @@ impl SessionManager {
 }
 
 /// Scan standard SSH key locations and return the first one that exists.
+/// On Windows: checks %USERPROFILE%\.ssh\ (e.g. C:\Users\user\.ssh\id_ed25519)
 fn find_default_ssh_key() -> Option<String> {
-    let ssh_dir = dirs::home_dir()?.join(".ssh");
+    let home = dirs::home_dir()?;
+    let ssh_dir = home.join(".ssh");
+
     const DEFAULT_KEYS: &[&str] = &[
         "id_ed25519",
         "id_rsa",
         "id_ecdsa",
         "id_dsa",
     ];
+
     for name in DEFAULT_KEYS {
         let path = ssh_dir.join(name);
         if path.is_file() {
             return Some(path.to_string_lossy().into_owned());
         }
     }
+
+    // Windows: also check ProgramData\ssh\ (system-wide OpenSSH keys)
+    #[cfg(target_os = "windows")]
+    if let Ok(program_data) = std::env::var("ProgramData") {
+        let sys_ssh_dir = std::path::PathBuf::from(program_data).join("ssh");
+        for name in DEFAULT_KEYS {
+            let path = sys_ssh_dir.join(name);
+            if path.is_file() {
+                return Some(path.to_string_lossy().into_owned());
+            }
+        }
+    }
+
     None
 }
