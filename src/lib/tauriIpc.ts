@@ -165,4 +165,7 @@ export const ipc = {
       if (idx >= 0) claudeMdChangedHandlers.splice(idx, 1);
     };
   },
+  async getUsage(sessionId: string): Promise<{ plan: string; usedPercent: number; resetAt: number | null }> {
+    return invoke("get_usage", { sessionId });
+  },
 };

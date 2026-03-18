@@ -13,6 +13,7 @@ import type { PaletteSection } from "./components/CommandPalette/CommandPalette"
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import type { SidebarTab } from "./components/SidePanel/SidePanel";
 import { ClaudeCodePanel } from "./components/ClaudeCodePanel/ClaudeCodePanel";
+import { UsageBar } from "./components/UsageBar/UsageBar";
 import type { ClaudeCodeTab } from "./components/ClaudeCodePanel/ClaudeCodePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
@@ -892,7 +893,8 @@ export function App() {
             onClose={handleCloseSidebar}
           />
         )}
-      </div>
+      </div>{/* end app-content */}
+      <UsageBar claudePanelOpen={claudePanelOpen} />
       {sshModalOpen && (
         <SshManagerModal
           onClose={() => setSshModalOpen(false)}

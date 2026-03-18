@@ -1,0 +1,56 @@
+.usage-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 24px;
+  padding: 0 12px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--separator);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.usage-gauge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  color: var(--label-secondary);
+  white-space: nowrap;
+}
+
+.usage-gauge-plan {
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--label-primary);
+}
+
+.usage-gauge-bar {
+  width: 60px;
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.usage-gauge-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.usage-gauge-pct {
+  min-width: 28px;
+}
+
+.usage-gauge-timer {
+  opacity: 0.6;
+}
+
+.usage-gauge-env {
+  opacity: 0.5;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
