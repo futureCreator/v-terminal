@@ -5,9 +5,10 @@ import { ipc } from "../../lib/tauriIpc";
 import { useSessionCwd } from "../../hooks/useSessionCwd";
 import { ContextIndicator } from "./ContextIndicator";
 import { ClaudeMdTab } from "./ClaudeMdTab";
+import { GitPanel } from "../GitPanel/GitPanel";
 import "./ClaudeCodePanel.css";
 
-export type ClaudeCodeTab = "claude-md";
+export type ClaudeCodeTab = "claude-md" | "git";
 
 interface ClaudeCodePanelProps {
   activeTab: ClaudeCodeTab;
@@ -70,6 +71,12 @@ export function ClaudeCodePanel({
               <path d="M5 5.5h5M5 7.5h5M5 9.5h3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
             </svg>
           </button>
+          <button
+            className={`claude-panel-tab${activeTab === "git" ? " claude-panel-tab--active" : ""}`}
+            onClick={() => onTabChange("git")}
+          >
+            Git
+          </button>
         </div>
         <button
           className="claude-panel-close"
@@ -86,6 +93,9 @@ export function ClaudeCodePanel({
       <div className="claude-panel-body">
         <ContextIndicator connection={focusedPanel?.connection} cwd={trackedCwd} />
         {activeTab === "claude-md" && <ClaudeMdTab />}
+        {activeTab === "git" && (
+          <GitPanel focusedSessionId={focusedSessionId ?? undefined} />
+        )}
       </div>
     </div>
   );

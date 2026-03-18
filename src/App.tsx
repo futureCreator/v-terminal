@@ -13,6 +13,7 @@ import type { PaletteSection } from "./components/CommandPalette/CommandPalette"
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import type { SidebarTab } from "./components/SidePanel/SidePanel";
 import { ClaudeCodePanel } from "./components/ClaudeCodePanel/ClaudeCodePanel";
+import { DiffViewer } from "./components/GitPanel/DiffViewer";
 import { UsageBar } from "./components/UsageBar/UsageBar";
 import type { ClaudeCodeTab } from "./components/ClaudeCodePanel/ClaudeCodePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
@@ -149,6 +150,16 @@ export function App() {
         const next = !sidebarOpenRef.current;
         setSidebarOpen(next);
         localStorage.setItem("v-terminal:sidebar-open", String(next));
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === "G") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!claudePanelOpenRef.current) {
+          setClaudePanelOpen(true);
+          localStorage.setItem("v-terminal:claude-panel-open", "true");
+        }
+        setClaudePanelTab("git");
+        return;
       }
       if (e.ctrlKey && e.shiftKey && e.key === "L") {
         e.preventDefault();
@@ -375,6 +386,30 @@ export function App() {
         action: handleToggleClaudePanel,
       },
       {
+        id: "view:git-panel",
+        label: "Show Git Panel",
+        description: "Toggle the Git diff viewer panel",
+        meta: "Ctrl+Shift+G",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="4" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.2" />
+              <circle cx="10" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.2" />
+              <circle cx="4" cy="11" r="1.5" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M4 4.5v5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M10 4.5v1.5a2 2 0 01-2 2H4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        ),
+        action: () => {
+          if (!claudePanelOpen) {
+            setClaudePanelOpen(true);
+            localStorage.setItem("v-terminal:claude-panel-open", "true");
+          }
+          setClaudePanelTab("git");
+        },
+      },
+      {
         id: "ssh:profiles",
         label: "SSH Profiles",
         description: "Manage and connect to saved SSH servers",
@@ -452,7 +487,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, handleToggleClaudePanel, activeTab, tabs, sidebarOpen, claudePanelOpen]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, handleToggleClaudePanel, activeTab, tabs, sidebarOpen, claudePanelOpen, setClaudePanelTab, setClaudePanelOpen]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -919,6 +954,7 @@ export function App() {
           cheatsheetPaletteSection,
         ]}
       />
+      <DiffViewer />
     </div>
   );
 }
