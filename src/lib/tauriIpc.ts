@@ -41,6 +41,41 @@ export interface ModelUsageData {
   costUsd: number;
 }
 
+export interface DashboardStats {
+  today: DaySummary;
+  yesterday: DaySummary;
+  modelUsage: ModelUsageEntry[];
+  cacheHitRate: number;
+  dailyTokens: DailyTokenEntry[];
+  totalSessions: number;
+  totalMessages: number;
+}
+
+export interface DaySummary {
+  date: string;
+  sessionCount: number;
+  messageCount: number;
+  totalTokens: number;
+  toolCallCount: number;
+}
+
+export interface ModelUsageEntry {
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  totalTokens: number;
+  percentage: number;
+}
+
+export interface DailyTokenEntry {
+  date: string;
+  dayLabel: string;
+  totalTokens: number;
+  isToday: boolean;
+}
+
 // ── Git types ──
 
 export type GitFileStatus = "modified" | "added" | "deleted" | "renamed" | "untracked";
@@ -224,6 +259,9 @@ export const ipc = {
   },
   async getUsage(sessionId: string): Promise<UsageData> {
     return invoke<UsageData>("get_usage", { sessionId });
+  },
+  async getDashboardStats(sessionId: string): Promise<DashboardStats> {
+    return invoke<DashboardStats>("get_dashboard_stats", { sessionId });
   },
   async getGitStatus(sessionId: string, cwd: string): Promise<GitStatusResult> {
     return invoke<GitStatusResult>("git_status", { sessionId, cwd });
