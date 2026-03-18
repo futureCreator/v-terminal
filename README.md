@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.10.2 - 2026-03-18
+
+- **fix**: SSH auto-discovers default keys (`~/.ssh/id_ed25519`, `id_rsa`, `id_ecdsa`, `id_dsa`) when no key file is specified in the profile — no longer prompts for password unnecessarily
+- **fix**: Suppressed Rust compiler warnings — `#[allow(dead_code)]` for reserved `ConnectionStatus` variants, `mark_disconnected`, `ClaudeMdWatcher`, and `is_binary_diff`; `#[allow(non_snake_case)]` for Windows API function type signature
+
 ### v0.10.1 - 2026-03-18
 
 - **fix**: Rust build errors — `HANDLE` null checks changed from `== 0` to `.is_null()` in `cwd_resolver.rs` (Windows API type mismatch)

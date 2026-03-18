@@ -9,6 +9,7 @@ use russh_keys::PublicKey;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum ConnectionStatus {
     Connecting,
     Connected,
@@ -100,6 +101,7 @@ impl SshConnectionPool {
         self.connections.get(id)
     }
 
+    #[allow(dead_code)]
     pub fn mark_disconnected(&mut self, id: &str, reason: String) {
         if let Some(conn) = self.connections.get_mut(id) {
             conn.status = ConnectionStatus::Disconnected(reason);

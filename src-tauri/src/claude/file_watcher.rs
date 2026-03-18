@@ -6,6 +6,7 @@ use tauri::{AppHandle, Emitter};
 use tokio::task::JoinHandle;
 
 /// Manages file watchers for CLAUDE.md files.
+#[allow(dead_code)]
 pub struct ClaudeMdWatcher {
     app: AppHandle,
     local_watcher: Option<RecommendedWatcher>,
@@ -13,6 +14,7 @@ pub struct ClaudeMdWatcher {
     ssh_poll_tasks: HashMap<String, JoinHandle<()>>,
 }
 
+#[allow(dead_code)]
 impl ClaudeMdWatcher {
     pub fn new(app: AppHandle) -> Self {
         Self {

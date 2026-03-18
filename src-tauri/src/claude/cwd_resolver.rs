@@ -82,6 +82,7 @@ fn get_process_cwd_windows(pid: u32) -> Result<String, String> {
     };
 
     // NtQueryInformationProcess signature (loaded dynamically from ntdll.dll)
+    #[allow(non_snake_case)]
     type NtQueryInformationProcessFn = unsafe extern "system" fn(
         ProcessHandle: HANDLE,
         ProcessInformationClass: u32,

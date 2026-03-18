@@ -80,13 +80,13 @@ impl SessionManager {
                 return Err(format!("session limit reached ({MAX_SESSIONS})"));
             }
         }
-        let identity_file =
-            identity_file.ok_or_else(|| "{\"code\":\"PASSWORD_REQUIRED\"}".to_string())?;
+        let resolved_key = identity_file.or_else(find_default_ssh_key)
+            .ok_or_else(|| "{\"code\":\"PASSWORD_REQUIRED\"}".to_string())?;
         let session_id = Uuid::new_v4().to_string();
 
         let connection_id = {
             let mut pool = self.ssh_pool.lock().await;
-            pool.connect_with_key(&host, port, &username, &identity_file).await?
+            pool.connect_with_key(&host, port, &username, &resolved_key).await?
         };
 
         // Clone Arc<Handle> and release pool lock BEFORE network I/O in SshSession::create.
@@ -226,4 +226,22 @@ impl SessionManager {
         let mut pool = self.ssh_pool.lock().await;
         pool.exec_command(connection_id, command).await
     }
+}
+
+/// Scan standard SSH key locations and return the first one that exists.
+fn find_default_ssh_key() -> Option<String> {
+    let ssh_dir = dirs::home_dir()?.join(".ssh");
+    const DEFAULT_KEYS: &[&str] = &[
+        "id_ed25519",
+        "id_rsa",
+        "id_ecdsa",
+        "id_dsa",
+    ];
+    for name in DEFAULT_KEYS {
+        let path = ssh_dir.join(name);
+        if path.is_file() {
+            return Some(path.to_string_lossy().into_owned());
+        }
+    }
+    None
 }

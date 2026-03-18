@@ -65,6 +65,7 @@ fn char_to_status(c: u8) -> FileStatus {
 }
 
 /// Check if a diff output indicates a binary file
+#[allow(dead_code)]
 pub fn is_binary_diff(diff_output: &str) -> bool {
     diff_output.contains("Binary files") && diff_output.contains("differ")
 }
