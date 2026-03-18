@@ -718,8 +718,7 @@ export function App() {
       // WSL distros
       ...wslDistros.map((distro) => {
         const isActiveWsl = connType === "wsl"
-          && conn?.shellArgs?.[0] === "-d"
-          && conn?.shellArgs?.[1] === distro;
+          && conn?.wslDistro === distro;
         return {
           id: `conn:wsl:${distro}`,
           label: distro,
@@ -738,8 +737,7 @@ export function App() {
             if (isActiveWsl) return;
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "wsl",
-              shellProgram: "wsl.exe",
-              shellArgs: ["-d", distro],
+              wslDistro: distro,
             });
           },
         };

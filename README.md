@@ -93,6 +93,18 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.12.0 - 2026-03-19
+
+- **feat**: WSL SSH-based connection — WSL sessions now connect via SSH to sshd inside the WSL distro instead of ConPTY + wsl.exe, dramatically improving I/O performance
+- **feat**: Automatic sshd provisioning — first WSL connection auto-installs openssh-server, generates a dedicated SSH key pair (`~/.vterminal/wsl_id_ed25519`), registers the key, and starts sshd with a localhost-only config
+- **feat**: WSL sudo password dialog — if sshd setup requires sudo, an interactive password prompt appears (reuses existing SSH password dialog pattern)
+- **feat**: Connection-refused retry — if sshd dies between sessions, v-terminal automatically re-provisions and retries once
+- **feat**: Separate WSL known_hosts file (`~/.vterminal/wsl_known_hosts`) to avoid conflicts with user's SSH known_hosts
+- **feat**: sshd lifecycle management — sshd processes are cleaned up on app exit; orphaned sshd from crashes are detected and reused on next launch
+- **refactor**: `SshSession` parameterized with `SessionType` — WSL SSH sessions report as `SessionType::Wsl` while regular SSH sessions remain `SessionType::Ssh`
+- **refactor**: SSH connection pool supports `known_hosts_override` for per-connection known_hosts file selection
+- **refactor**: Frontend WSL connections use `wslDistro` field instead of `shellProgram`/`shellArgs`, simplifying the data flow through SessionPicker, PanelContextMenu, PanelGrid, TerminalPane, and App command palette
+
 ### v0.11.0 - 2026-03-19
 
 - **breaking**: Removed Claude Code Panel (CLAUDE.md editor, Dashboard, Git diff viewer) — PTY injection for CWD detection interfered with TUI applications (e.g. Claude Code) in WSL/SSH sessions; will be redesigned in a future release

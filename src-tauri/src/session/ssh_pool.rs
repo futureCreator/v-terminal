@@ -51,12 +51,13 @@ impl SshConnectionPool {
         port: u16,
         username: &str,
         identity_file: &str,
+        known_hosts_override: Option<&std::path::Path>,
     ) -> Result<String, String> {
         if let Some(id) = self.find_connection(host, port, username) {
             return Ok(id.to_string());
         }
         let connection_id = Uuid::new_v4().to_string();
-        let handle = do_ssh_connect(host, port, username, Some(identity_file), None).await?;
+        let handle = do_ssh_connect(host, port, username, Some(identity_file), None, known_hosts_override).await?;
         self.connections.insert(
             connection_id.clone(),
             SshConnection {
@@ -80,7 +81,7 @@ impl SshConnectionPool {
             return Ok(id.to_string());
         }
         let connection_id = Uuid::new_v4().to_string();
-        let handle = do_ssh_connect(host, port, username, None, Some(password)).await?;
+        let handle = do_ssh_connect(host, port, username, None, Some(password), None).await?;
         self.connections.insert(
             connection_id.clone(),
             SshConnection {
@@ -191,6 +192,7 @@ async fn do_ssh_connect(
     username: &str,
     identity_file: Option<&str>,
     password: Option<&str>,
+    known_hosts_override: Option<&std::path::Path>,
 ) -> Result<client::Handle<SshClientHandler>, String> {
     let config = Arc::new(client::Config {
         inactivity_timeout: Some(std::time::Duration::from_secs(30)),
@@ -199,7 +201,9 @@ async fn do_ssh_connect(
         ..Default::default()
     });
     let handler = SshClientHandler {
-        known_hosts_path: known_hosts_path(),
+        known_hosts_path: known_hosts_override
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(known_hosts_path),
         host: host.to_string(),
         port,
     };

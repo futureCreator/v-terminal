@@ -35,6 +35,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             session_commands::session_create,
             session_commands::session_create_with_password,
+            session_commands::session_create_wsl_with_sudo,
             session_commands::session_write,
             session_commands::session_resize,
             session_commands::session_kill,

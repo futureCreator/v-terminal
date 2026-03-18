@@ -149,7 +149,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
       {tab.panels.map((panel, index) => {
         const hidden = isZoomed && panel.id !== zoomedPanelId;
         const connKey = panel.connection
-          ? `${panel.connection.type}-${panel.connection.sshProfileId ?? ""}-${panel.connection.shellProgram ?? ""}`
+          ? `${panel.connection.type}-${panel.connection.sshProfileId ?? ""}-${panel.connection.wslDistro ?? ""}-${panel.connection.shellProgram ?? ""}`
           : "local";
 
         // Resolve SSH profile for this panel
@@ -179,6 +179,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
               sshIdentityFile={sshProfile?.identityFile}
               shellProgram={panel.connection?.shellProgram}
               shellArgs={panel.connection?.shellArgs}
+              wslDistro={panel.connection?.wslDistro}
               onSessionCreated={(sessionId, connectionId) => handleSessionCreated(panel.id, sessionId, connectionId)}
               onSessionKilled={() => handleSessionKilled(panel.id)}
               onFocus={() => setActivePanelId(panel.id)}

@@ -26,6 +26,7 @@ interface ConnectionOption {
   sshProfileId?: string;
   shellProgram?: string;
   shellArgs?: string[];
+  wslDistro?: string;
 }
 
 function optionToConnection(opt: ConnectionOption): PanelConnection {
@@ -34,6 +35,7 @@ function optionToConnection(opt: ConnectionOption): PanelConnection {
     sshProfileId: opt.sshProfileId,
     shellProgram: opt.shellProgram,
     shellArgs: opt.shellArgs,
+    wslDistro: opt.wslDistro,
     label: opt.type === "local" ? undefined : opt.name,
   };
 }
@@ -307,8 +309,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
         type: "wsl",
         name: distro,
         subtitle: "WSL",
-        shellProgram: "wsl.exe",
-        shellArgs: ["-d", distro],
+        wslDistro: distro,
       });
     }
     for (const profile of sshProfiles) {

@@ -8,6 +8,7 @@ use uuid::Uuid;
 use super::local_session::LocalSession;
 use super::ssh_pool::SshConnectionPool;
 use super::ssh_session::SshSession;
+use super::wsl_ssh_setup::{self, WslSshInfo};
 use super::Session;
 
 const MAX_SESSIONS: usize = 64;
@@ -16,6 +17,7 @@ pub struct SessionManager {
     sessions: Mutex<HashMap<String, Box<dyn Session>>>,
     ssh_pool: Mutex<SshConnectionPool>,
     pub wsl_distros_cache: std::sync::OnceLock<Vec<String>>,
+    wsl_ssh_cache: Mutex<HashMap<String, WslSshInfo>>,
 }
 
 #[derive(serde::Serialize)]
@@ -32,6 +34,7 @@ impl SessionManager {
             sessions: Mutex::new(HashMap::new()),
             ssh_pool: Mutex::new(SshConnectionPool::new()),
             wsl_distros_cache: std::sync::OnceLock::new(),
+            wsl_ssh_cache: Mutex::new(HashMap::new()),
         }
     }
 
@@ -86,7 +89,7 @@ impl SessionManager {
 
         let connection_id = {
             let mut pool = self.ssh_pool.lock().await;
-            pool.connect_with_key(&host, port, &username, &resolved_key).await?
+            pool.connect_with_key(&host, port, &username, &resolved_key, None).await?
         };
 
         // Clone Arc<Handle> and release pool lock BEFORE network I/O in SshSession::create.
@@ -97,7 +100,7 @@ impl SessionManager {
         };
 
         let session =
-            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows)
+            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows, super::SessionType::Ssh)
                 .await?;
 
         {
@@ -147,7 +150,7 @@ impl SessionManager {
         };
 
         let session =
-            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows)
+            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows, super::SessionType::Ssh)
                 .await?;
 
         {
@@ -160,6 +163,107 @@ impl SessionManager {
             .lock()
             .await
             .insert(session_id.clone(), Box::new(session));
+        Ok(SessionCreateResult {
+            session_id,
+            connection_id: Some(connection_id),
+        })
+    }
+
+    pub async fn create_wsl_ssh(
+        &self,
+        app: AppHandle,
+        distro: String,
+        cols: u16,
+        rows: u16,
+        sudo_password: Option<String>,
+    ) -> Result<SessionCreateResult, String> {
+        {
+            let sessions = self.sessions.lock().await;
+            if sessions.len() >= MAX_SESSIONS {
+                return Err(format!("session limit reached ({MAX_SESSIONS})"));
+            }
+        }
+
+        // Setup sshd — check cache first (fast path), then release lock for blocking setup
+        let info = {
+            let cached = {
+                let cache = self.wsl_ssh_cache.lock().await;
+                cache.get(&distro).cloned()
+            };
+            if let Some(info) = cached {
+                info
+            } else {
+                let info = tokio::task::spawn_blocking({
+                    let distro = distro.clone();
+                    move || wsl_ssh_setup::ensure_sshd(&distro, sudo_password.as_deref())
+                })
+                .await
+                .map_err(|e| format!("wsl setup task failed: {e}"))??;
+                let mut cache = self.wsl_ssh_cache.lock().await;
+                cache.insert(distro.clone(), info.clone());
+                info
+            }
+        };
+
+        let known_hosts = wsl_ssh_setup::wsl_known_hosts_path()?;
+        let session_id = Uuid::new_v4().to_string();
+
+        // Connect via SSH — retry once on connection refused (sshd may have died)
+        let connection_id = {
+            let mut pool = self.ssh_pool.lock().await;
+            match pool.connect_with_key(
+                "127.0.0.1", info.port, &info.username, &info.key_path,
+                Some(known_hosts.as_path()),
+            ).await {
+                Ok(id) => id,
+                Err(e) if e.contains("connection") || e.contains("refused") => {
+                    drop(pool);
+                    // Invalidate cache and retry setup
+                    self.wsl_ssh_cache.lock().await.remove(&distro);
+                    let retry_info = tokio::task::spawn_blocking({
+                        let distro = distro.clone();
+                        move || wsl_ssh_setup::ensure_sshd(&distro, None)
+                    })
+                    .await
+                    .map_err(|e| format!("wsl setup retry failed: {e}"))??;
+                    self.wsl_ssh_cache.lock().await.insert(distro.clone(), retry_info.clone());
+                    let mut pool = self.ssh_pool.lock().await;
+                    pool.connect_with_key(
+                        "127.0.0.1", retry_info.port, &retry_info.username, &retry_info.key_path,
+                        Some(known_hosts.as_path()),
+                    ).await?
+                }
+                Err(e) => return Err(e),
+            }
+        };
+
+        let handle = {
+            let pool = self.ssh_pool.lock().await;
+            let conn = pool.get(&connection_id).ok_or("connection lost")?;
+            Arc::clone(&conn.handle)
+        };
+
+        let session = SshSession::create(
+            app,
+            session_id.clone(),
+            connection_id.clone(),
+            &*handle,
+            cols,
+            rows,
+            super::SessionType::Wsl,
+        ).await?;
+
+        {
+            let mut pool = self.ssh_pool.lock().await;
+            if let Some(conn) = pool.get_mut(&connection_id) {
+                conn.session_ids.push(session_id.clone());
+            }
+        }
+        self.sessions
+            .lock()
+            .await
+            .insert(session_id.clone(), Box::new(session));
+
         Ok(SessionCreateResult {
             session_id,
             connection_id: Some(connection_id),
@@ -195,6 +299,13 @@ impl SessionManager {
         let mut sessions = self.sessions.lock().await;
         for (_, session) in sessions.drain() {
             let _ = session.kill().await;
+        }
+        // Clean up WSL sshd processes
+        let mut wsl_cache = self.wsl_ssh_cache.lock().await;
+        for (distro, info) in wsl_cache.drain() {
+            if let Some(pid) = info.sshd_pid {
+                wsl_ssh_setup::kill_sshd(&distro, pid);
+            }
         }
         let mut pool = self.ssh_pool.lock().await;
         pool.disconnect_all().await;

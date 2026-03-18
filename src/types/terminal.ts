@@ -31,5 +31,6 @@ export interface PanelConnection {
   sshProfileId?: string;
   shellProgram?: string;
   shellArgs?: string[];
+  wslDistro?: string;
   label?: string;
 }

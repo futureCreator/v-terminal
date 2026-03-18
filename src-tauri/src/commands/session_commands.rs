@@ -23,17 +23,33 @@ pub async fn session_create(
     shell_program: Option<String>,
     shell_args: Option<Vec<String>>,
     ssh: Option<SshParams>,
+    wsl_distro: Option<String>,
 ) -> Result<SessionCreateResult, String> {
     let cwd = cwd.unwrap_or_else(|| "~".to_string());
     match r#type.as_str() {
         "local" => state.create_local(app, cwd, cols, rows, shell_program, shell_args, SessionType::Local).await,
-        "wsl" => state.create_local(app, cwd, cols, rows, shell_program, shell_args, SessionType::Wsl).await,
+        "wsl" => {
+            let distro = wsl_distro.ok_or("wsl_distro is required for type 'wsl'")?;
+            state.create_wsl_ssh(app, distro, cols, rows, None).await
+        }
         "ssh" => {
             let ssh = ssh.ok_or("ssh params required for type 'ssh'")?;
             state.create_ssh(app, ssh.host, ssh.port, ssh.username, ssh.identity_file, cols, rows).await
         }
         other => Err(format!("unknown session type: {other}")),
     }
+}
+
+#[tauri::command]
+pub async fn session_create_wsl_with_sudo(
+    state: tauri::State<'_, SessionManager>,
+    app: AppHandle,
+    distro: String,
+    password: String,
+    cols: u16,
+    rows: u16,
+) -> Result<SessionCreateResult, String> {
+    state.create_wsl_ssh(app, distro, cols, rows, Some(password)).await
 }
 
 #[tauri::command]
