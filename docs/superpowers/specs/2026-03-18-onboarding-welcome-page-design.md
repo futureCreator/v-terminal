@@ -56,19 +56,21 @@ Re-access: Settings modal → "Show Welcome Page" button → resets flag → nex
 
 ### Navigation
 
-- **Bottom center:** Dot indicator (3 dots), active dot highlighted
+- **Bottom center:** Dot indicator (3 dots), active dot highlighted, each dot is clickable to jump to that slide
 - **Bottom right:** "Next" button → changes to "Get Started" on last slide
-- **Bottom left:** "Skip" text button (hidden on last slide)
-- **Keyboard:** Left/Right arrows to navigate, Enter for Next/Get Started
+- **Bottom left:** "Skip" text button (hidden on last slide, but Escape key still works)
+- **Keyboard:** Left/Right arrows to navigate, Enter for Next/Get Started, Escape to skip (always active)
 
 ### Transitions
 
 - Horizontal slide animation between slides (300ms ease-out)
 - Visual elements: fade-in + subtle upward motion (Apple style)
+- **Dismiss animation:** 200ms opacity fade-out; SessionPicker appears after fade completes
+- All transitions respect `prefers-reduced-motion` (instant switch, no animation)
 
 ### Visual Style
 
-- CSS-only UI illustrations (no screenshots — maintainable, theme-adaptive)
+- CSS-only simplified, schematic UI illustrations using basic shapes (not pixel-accurate recreations — maintainable, theme-adaptive)
 - Shortcut keys displayed as keycap-style badges (rounded rect with subtle shadow, like physical keyboard keys)
 - Pretendard font for UI text, JetBrains Mono for shortcut badges
 - Consistent with existing app design language (frosted glass, rounded corners)
@@ -81,16 +83,40 @@ Re-access: Settings modal → "Show Welcome Page" button → resets flag → nex
 - `src/components/WelcomePage/WelcomePage.css` — Styles including slide animations, illustrations, theme variants
 - `src/components/WelcomePage/slides.ts` — Slide content data (headline, description, shortcut)
 
+### New Store
+
+- `src/store/onboardingStore.ts` — Small Zustand store for onboarding state
+
 ### Modified Files
 
-- `src/App.tsx` — Conditional rendering: WelcomePage when `pendingSessionPick && !onboardingDone`
-- `src/components/SettingsModal/SettingsModal.tsx` — Add "Show Welcome Page" button
+- `src/App.tsx` — Render WelcomePage as a full-page overlay above `app-content` when `showWelcome` is true
+- `src/components/SettingsModal/SettingsModal.tsx` — Add "Show Welcome Page" button at the bottom of the Appearance tab
 
 ### State Management
 
-- `localStorage` key: `v-terminal:onboarding-done` (string `"true"`)
-- No Zustand store needed — simple flag read/write via localStorage
-- `App.tsx` reads flag on mount with `useState(() => localStorage.getItem(...))`
+- `src/store/onboardingStore.ts` — Zustand store with localStorage persistence (key: `v-terminal:onboarding-done`)
+- Exposes: `isDone: boolean`, `markDone(): void`, `reset(): void`
+- Using a Zustand store (instead of raw localStorage) ensures reactive re-rendering when Settings resets the flag
+- Follows existing codebase pattern (themeStore, terminalConfigStore, etc.)
+
+### Rendering Strategy
+
+WelcomePage renders as a **full-page overlay** on top of the entire `app-content` area (above TabBar, sidebars, terminal panels). This is similar to how CommandPalette and modals work. It is NOT rendered inside the per-tab viewport loop.
+
+```tsx
+// In App.tsx (simplified)
+return (
+  <div className="app">
+    <TitleBar />
+    <div className="app-content">
+      {/* ... TabBar, panels, sidebars ... */}
+    </div>
+    {showWelcome && <WelcomePage onDone={handleWelcomeDone} />}
+  </div>
+);
+```
+
+Condition: `showWelcome` is true when any tab has `pendingSessionPick: true` AND `onboardingStore.isDone` is `false`.
 
 ## Interaction Details
 
@@ -106,11 +132,12 @@ Re-access: Settings modal → "Show Welcome Page" button → resets flag → nex
 
 ### Re-access from Settings
 
-1. User opens Settings modal
-2. Clicks "Show Welcome Page" button
-3. `localStorage.removeItem("v-terminal:onboarding-done")`
-4. Toast notification: "Welcome page will show on next new tab"
-5. Next tab with `pendingSessionPick` will show WelcomePage instead of SessionPicker
+1. User opens Settings modal → Appearance tab
+2. Clicks "Show Welcome Page" button (at bottom of tab)
+3. Calls `onboardingStore.reset()` which clears the flag from both Zustand state and localStorage
+4. Settings modal closes automatically
+5. Toast notification (using existing `Toast` component): "Welcome page will show on next new tab"
+6. Next new tab with `pendingSessionPick` will show WelcomePage overlay
 
 ### Keyboard Navigation
 
@@ -120,6 +147,12 @@ Re-access: Settings modal → "Show Welcome Page" button → resets flag → nex
 | `←` or `ArrowLeft` | Previous slide |
 | `Enter` | Next / Get Started |
 | `Escape` | Skip (same as clicking Skip) |
+
+## Keyboard Handling
+
+- WelcomePage registers its own `keydown` listener on mount and removes it on unmount
+- Handler calls `stopPropagation()` to prevent conflicts with App.tsx global shortcuts
+- Since WelcomePage is a full-page overlay, no terminal panels are receiving input while it is visible
 
 ## Accessibility
 
