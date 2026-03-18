@@ -236,6 +236,18 @@ fn start_sshd(
         }
     }
 
+    // Wait for sshd to start listening (up to 3 seconds)
+    for _ in 0..30 {
+        let (probe, _, _) = wsl_exec(
+            distro,
+            &format!("ss -tln 2>/dev/null | grep -q ':{port} ' && echo ready || echo waiting"),
+        )?;
+        if probe.contains("ready") {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+
     // Get sshd PID
     let (pid_out, _, _) = wsl_exec(
         distro,

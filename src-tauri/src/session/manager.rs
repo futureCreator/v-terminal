@@ -207,32 +207,34 @@ impl SessionManager {
         let known_hosts = wsl_ssh_setup::wsl_known_hosts_path()?;
         let session_id = Uuid::new_v4().to_string();
 
-        // Connect via SSH — retry once on connection refused (sshd may have died)
+        // Connect via SSH — retry up to 3 times on connection refused (sshd may still be starting)
         let connection_id = {
-            let mut pool = self.ssh_pool.lock().await;
-            match pool.connect_with_key(
-                "127.0.0.1", info.port, &info.username, &info.key_path,
-                Some(known_hosts.as_path()),
-            ).await {
-                Ok(id) => id,
-                Err(e) if e.contains("connection") || e.contains("refused") => {
-                    drop(pool);
-                    // Invalidate cache and retry setup
-                    self.wsl_ssh_cache.lock().await.remove(&distro);
-                    let retry_info = tokio::task::spawn_blocking({
-                        let distro = distro.clone();
-                        move || wsl_ssh_setup::ensure_sshd(&distro, None)
-                    })
-                    .await
-                    .map_err(|e| format!("wsl setup retry failed: {e}"))??;
-                    self.wsl_ssh_cache.lock().await.insert(distro.clone(), retry_info.clone());
-                    let mut pool = self.ssh_pool.lock().await;
-                    pool.connect_with_key(
-                        "127.0.0.1", retry_info.port, &retry_info.username, &retry_info.key_path,
-                        Some(known_hosts.as_path()),
-                    ).await?
+            let mut last_err = String::new();
+            let mut connected = None;
+            for attempt in 0..3 {
+                if attempt > 0 {
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 }
-                Err(e) => return Err(e),
+                let mut pool = self.ssh_pool.lock().await;
+                match pool.connect_with_key(
+                    "127.0.0.1", info.port, &info.username, &info.key_path,
+                    Some(known_hosts.as_path()),
+                ).await {
+                    Ok(id) => { connected = Some(id); break; }
+                    Err(e) if e.contains("connection") || e.contains("refused") => {
+                        last_err = e;
+                        continue;
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
+            match connected {
+                Some(id) => id,
+                None => {
+                    // All retries failed — invalidate cache so next attempt re-runs ensure_sshd
+                    self.wsl_ssh_cache.lock().await.remove(&distro);
+                    return Err(last_err);
+                }
             }
         };
 

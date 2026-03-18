@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.12.3 - 2026-03-19
+
+- **fix**: WSL sshd race condition — waits up to 3 seconds for sshd to start listening before attempting SSH connection (100ms polling interval)
+- **fix**: WSL SSH connection retry simplified — retries SSH connect up to 3 times (1s interval) on connection refused instead of re-running full sshd setup; cache invalidated only after all retries exhausted
+
 ### v0.12.2 - 2026-03-19
 
 - **fix**: WSL sshd failed to start — `HostKey %h/...` token is not supported in sshd_config's HostKey directive; now resolves absolute home path via `$HOME` before writing config
