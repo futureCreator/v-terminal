@@ -1,0 +1,100 @@
+.diff-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diff-viewer {
+  background: var(--panel-bg, #1e1e1e);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  width: 80vw;
+  max-width: 1000px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.diff-viewer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color, #333);
+  background: var(--header-bg, #252525);
+}
+
+.diff-viewer__filename {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  color: var(--text-primary, #e0e0e0);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diff-viewer__stage-label {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--badge-bg, #ffffff15);
+  color: var(--text-secondary, #999);
+}
+
+.diff-viewer__close {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #999);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.diff-viewer__close:hover {
+  background: var(--hover-bg, #ffffff10);
+  color: var(--text-primary, #fff);
+}
+
+.diff-viewer__content {
+  flex: 1;
+  overflow: auto;
+}
+
+.diff-viewer__editor {
+  height: 100%;
+}
+
+.diff-viewer__editor .cm-editor {
+  height: 100%;
+}
+
+.diff-viewer__loading,
+.diff-viewer__message {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary, #999);
+  font-size: 13px;
+}
+
+/* Diff line decorations */
+.diff-line-added {
+  background-color: rgba(46, 160, 67, 0.15);
+}
+
+.diff-line-deleted {
+  background-color: rgba(248, 81, 73, 0.15);
+}
+
+.diff-line-hunk {
+  background-color: rgba(88, 166, 255, 0.1);
+  color: var(--git-renamed, #58a6ff);
+}
