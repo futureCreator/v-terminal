@@ -1,17 +1,21 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 use russh::ChannelMsg;
 use tauri::{AppHandle, Emitter};
-use tokio::sync::Mutex;
+use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 use super::Session;
 
+enum ChannelCommand {
+    Data(Vec<u8>),
+    Resize(u32, u32),
+    Kill,
+}
+
 pub struct SshSession {
-    channel: Arc<Mutex<russh::Channel<russh::client::Msg>>>,
+    cmd_tx: mpsc::UnboundedSender<ChannelCommand>,
     pub connection_id: String,
-    _reader_task: JoinHandle<()>,
+    _task: JoinHandle<()>,
 }
 
 impl SshSession {
@@ -23,7 +27,7 @@ impl SshSession {
         cols: u16,
         rows: u16,
     ) -> Result<Self, String> {
-        let channel = handle
+        let mut channel = handle
             .channel_open_session()
             .await
             .map_err(|e| format!("channel open failed: {e}"))?;
@@ -44,67 +48,85 @@ impl SshSession {
             .await
             .map_err(|e| format!("request_shell failed: {e}"))?;
 
-        let channel = Arc::new(Mutex::new(channel));
-        let reader_channel = channel.clone();
+        let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<ChannelCommand>();
         let task_app = app.clone();
         let task_session_id = session_id.clone();
 
-        let reader_task = tokio::spawn(async move {
+        let task = tokio::spawn(async move {
             let mut exit_code: Option<u32> = None;
             loop {
-                let msg = { reader_channel.lock().await.wait().await };
-                match msg {
-                    Some(ChannelMsg::Data { ref data }) => {
-                        let bytes: Vec<u8> = data.to_vec();
-                        let (filtered, cwd) = crate::claude::extract_osc_cwd(&bytes);
-                        if let Some(cwd_path) = cwd {
-                            let _ = task_app.emit(
-                                "session-cwd",
-                                serde_json::json!({"sessionId": task_session_id, "cwd": cwd_path}),
-                            );
-                        }
-                        if !filtered.is_empty() {
-                            let _ = task_app.emit(
-                                "session-data",
-                                serde_json::json!({"sessionId": task_session_id, "data": filtered}),
-                            );
+                tokio::select! {
+                    msg = channel.wait() => {
+                        match msg {
+                            Some(ChannelMsg::Data { ref data }) => {
+                                let bytes: Vec<u8> = data.to_vec();
+                                let (filtered, cwd) = crate::claude::extract_osc_cwd(&bytes);
+                                if let Some(cwd_path) = cwd {
+                                    let _ = task_app.emit(
+                                        "session-cwd",
+                                        serde_json::json!({"sessionId": task_session_id, "cwd": cwd_path}),
+                                    );
+                                }
+                                if !filtered.is_empty() {
+                                    let _ = task_app.emit(
+                                        "session-data",
+                                        serde_json::json!({"sessionId": task_session_id, "data": filtered}),
+                                    );
+                                }
+                            }
+                            Some(ChannelMsg::ExtendedData { ref data, .. }) => {
+                                let bytes: Vec<u8> = data.to_vec();
+                                let (filtered, cwd) = crate::claude::extract_osc_cwd(&bytes);
+                                if let Some(cwd_path) = cwd {
+                                    let _ = task_app.emit(
+                                        "session-cwd",
+                                        serde_json::json!({"sessionId": task_session_id, "cwd": cwd_path}),
+                                    );
+                                }
+                                if !filtered.is_empty() {
+                                    let _ = task_app.emit(
+                                        "session-data",
+                                        serde_json::json!({"sessionId": task_session_id, "data": filtered}),
+                                    );
+                                }
+                            }
+                            Some(ChannelMsg::ExitStatus { exit_status }) => {
+                                exit_code = Some(exit_status);
+                            }
+                            Some(ChannelMsg::Eof) | None => {
+                                let _ = task_app.emit(
+                                    "session-exit",
+                                    serde_json::json!({"sessionId": task_session_id, "code": exit_code}),
+                                );
+                                break;
+                            }
+                            _ => {}
                         }
                     }
-                    Some(ChannelMsg::ExtendedData { ref data, .. }) => {
-                        let bytes: Vec<u8> = data.to_vec();
-                        let (filtered, cwd) = crate::claude::extract_osc_cwd(&bytes);
-                        if let Some(cwd_path) = cwd {
-                            let _ = task_app.emit(
-                                "session-cwd",
-                                serde_json::json!({"sessionId": task_session_id, "cwd": cwd_path}),
-                            );
+                    cmd = cmd_rx.recv() => {
+                        match cmd {
+                            Some(ChannelCommand::Data(data)) => {
+                                let _ = channel.data(&data[..]).await;
+                            }
+                            Some(ChannelCommand::Resize(cols, rows)) => {
+                                let _ = channel.window_change(cols, rows, 0, 0).await;
+                            }
+                            Some(ChannelCommand::Kill) => {
+                                let _ = channel.eof().await;
+                                let _ = channel.close().await;
+                                break;
+                            }
+                            None => break,
                         }
-                        if !filtered.is_empty() {
-                            let _ = task_app.emit(
-                                "session-data",
-                                serde_json::json!({"sessionId": task_session_id, "data": filtered}),
-                            );
-                        }
                     }
-                    Some(ChannelMsg::ExitStatus { exit_status }) => {
-                        exit_code = Some(exit_status);
-                    }
-                    Some(ChannelMsg::Eof) | None => {
-                        let _ = task_app.emit(
-                            "session-exit",
-                            serde_json::json!({"sessionId": task_session_id, "code": exit_code}),
-                        );
-                        break;
-                    }
-                    _ => {}
                 }
             }
         });
 
         Ok(Self {
-            channel,
+            cmd_tx,
             connection_id,
-            _reader_task: reader_task,
+            _task: task,
         })
     }
 }
@@ -112,27 +134,19 @@ impl SshSession {
 #[async_trait]
 impl Session for SshSession {
     async fn write(&self, data: &[u8]) -> Result<(), String> {
-        self.channel
-            .lock()
-            .await
-            .data(&data[..])
-            .await
-            .map_err(|e| format!("ssh write failed: {e}"))
+        self.cmd_tx
+            .send(ChannelCommand::Data(data.to_vec()))
+            .map_err(|_| "ssh session closed".to_string())
     }
 
     async fn resize(&self, cols: u16, rows: u16) -> Result<(), String> {
-        self.channel
-            .lock()
-            .await
-            .window_change(cols as u32, rows as u32, 0, 0)
-            .await
-            .map_err(|e| format!("ssh resize failed: {e}"))
+        self.cmd_tx
+            .send(ChannelCommand::Resize(cols as u32, rows as u32))
+            .map_err(|_| "ssh session closed".to_string())
     }
 
     async fn kill(&self) -> Result<(), String> {
-        let channel = self.channel.lock().await;
-        let _ = channel.eof().await;
-        let _ = channel.close().await;
+        let _ = self.cmd_tx.send(ChannelCommand::Kill);
         Ok(())
     }
 

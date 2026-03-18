@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.10.6 - 2026-03-18
+
+- **fix**: SSH session deadlock — replaced `Arc<Mutex<Channel>>` with mpsc command channel pattern to prevent reader task from holding the Mutex across `channel.wait().await`, which blocked all writes/resizes indefinitely
+
 ### v0.10.5 - 2026-03-18
 
 - **fix**: SSH profile identity file can now be cleared — clearing the field and saving properly removes the stored key path instead of retaining the old value
