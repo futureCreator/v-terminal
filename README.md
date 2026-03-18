@@ -93,6 +93,21 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.10.0 - 2026-03-18
+
+- **feat**: Onboarding Welcome Page — full-screen welcome experience for first-time users with 3 slides introducing key features
+- **feat**: Slide 1: Command Palette (`Ctrl+K`) — tabs, layouts, clipboard history, cheatsheets
+- **feat**: Slide 2: Claude Code Panel (`Ctrl+Shift+L`) — CLAUDE.md editor, Git diffs, token dashboard
+- **feat**: Slide 3: Productivity Tools (`Ctrl+Shift+N`) — notes, Pomodoro timers, cheatsheets
+- **feat**: CSS-only schematic illustrations for each slide, theme-adaptive (light/dark)
+- **feat**: Keycap-style shortcut badges with JetBrains Mono font
+- **feat**: Slide navigation — dot indicators, Next/Skip buttons, keyboard arrows, Enter, Escape
+- **feat**: `onboardingStore` (Zustand) with localStorage persistence for first-run detection
+- **feat**: "Show Welcome Page" button in Settings → Appearance tab with Toast notification
+- **feat**: Keyboard guard in App.tsx — global shortcuts disabled while welcome overlay is active
+- **feat**: `prefers-reduced-motion` support — all animations disabled for accessibility
+- **feat**: 200ms fade-out dismiss animation, 300ms horizontal slide transitions
+
 ### v0.9.0 - 2026-03-18
 
 - **feat**: Claude Code Dashboard tab — usage metrics dashboard integrated into the left sidebar as a third tab alongside CLAUDE.md and Git
