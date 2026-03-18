@@ -93,6 +93,20 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.9.0 - 2026-03-18
+
+- **feat**: Claude Code Dashboard tab — usage metrics dashboard integrated into the left sidebar as a third tab alongside CLAUDE.md and Git
+- **feat**: Today's Summary cards (2x2 grid) showing session count, message count, total tokens, and vs-yesterday percentage change
+- **feat**: Model Distribution — horizontal stacked bar with color-coded legend showing per-model token usage (Opus, Sonnet, etc.)
+- **feat**: Cache Efficiency — cache hit rate progress bar with percentage display
+- **feat**: 7-Day Trend — CSS-only vertical bar chart with daily token usage and average line
+- **feat**: Dashboard data parsed from `~/.claude/stats-cache.json` including `dailyActivity`, `dailyModelTokens`, and `modelUsage` fields
+- **feat**: SSH/WSL support — dashboard reads remote `stats-cache.json` via SFTP for SSH sessions
+- **feat**: Auto-refresh every 60 seconds, paused when browser tab is hidden
+- **feat**: `Ctrl+Shift+D` keyboard shortcut to open Dashboard tab
+- **feat**: UsageBar click handler opens Dashboard tab in left panel
+- **feat**: Empty and loading skeleton states for dashboard
+
 ### v0.8.0 - 2026-03-18
 
 - **feat**: Git Diff Viewer — read-only git status and unified diff viewer integrated into the left sidebar
