@@ -93,6 +93,20 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.8.0 - 2026-03-18
+
+- **feat**: Git Diff Viewer — read-only git status and unified diff viewer integrated into the left sidebar
+- **feat**: Git file list showing unstaged and staged changes with status indicators (M/A/D/R/?) in collapsible accordion sections
+- **feat**: DiffViewer overlay — CodeMirror 6-based unified diff rendering with syntax-highlighted added/deleted/hunk lines
+- **feat**: Git command execution across all session types — Local (`std::process::Command`), WSL (`wsl -e git`), and SSH (russh exec channel)
+- **feat**: SSH exec channel — new `exec_command` method on `SshConnectionPool` for running arbitrary commands via SSH without PTY interference
+- **feat**: `.git/index` and `.git/HEAD` file watching via `notify` crate with 500ms debounce for auto-refresh on local sessions
+- **feat**: Git panel accessible via `Ctrl+Shift+G` shortcut and "Show Git Panel" command palette entry
+- **feat**: Large diff protection — diffs exceeding 10,000 lines are truncated with a warning
+- **feat**: Binary file detection — shows "Binary file — diff not available" message instead of garbled output
+- **refactor**: Extracted `useSessionCwd` shared hook from `ClaudeCodePanel` for reuse by both Claude and Git panels
+- **deps**: SSH exec channel leverages existing `russh` 0.48 dependency (no new crates)
+
 ### v0.7.0 - 2026-03-18
 
 - **feat**: Claude Code Panel (left sidebar) — auto-discovers and edits CLAUDE.md files based on active terminal session's working directory

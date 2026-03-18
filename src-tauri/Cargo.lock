@@ -5829,7 +5829,7 @@ dependencies = [
 
 [[package]]
 name = "v-terminal"
-version = "0.1.8"
+version = "0.7.0"
 dependencies = [
  "async-trait",
  "dirs 5.0.1",
