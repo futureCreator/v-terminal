@@ -41,6 +41,21 @@ export interface ModelUsageData {
   costUsd: number;
 }
 
+// ── Git types ──
+
+export type GitFileStatus = "modified" | "added" | "deleted" | "renamed" | "untracked";
+
+export interface GitFileEntry {
+  path: string;
+  status: GitFileStatus;
+}
+
+export interface GitStatusResult {
+  unstaged: GitFileEntry[];
+  staged: GitFileEntry[];
+  isGitRepo: boolean;
+}
+
 export interface UsageData {
   totalCostUsd: number;
   totalInputTokens: number;
@@ -126,6 +141,28 @@ async function ensureClaudeMdChangedListener(): Promise<void> {
   return claudeMdChangedListenerPromise;
 }
 
+type GitStatusChangedHandler = (payload: { cwd: string }) => void;
+const gitStatusChangedHandlers: Set<GitStatusChangedHandler> = new Set();
+let gitStatusChangedUnlisten: UnlistenFn | null = null;
+let gitStatusChangedListenerPromise: Promise<void> | null = null;
+
+async function ensureGitStatusChangedListener(): Promise<void> {
+  if (gitStatusChangedUnlisten) return;
+  if (!gitStatusChangedListenerPromise) {
+    gitStatusChangedListenerPromise = listen<{ cwd: string }>(
+      "git-status-changed",
+      (event) => {
+        for (const handler of gitStatusChangedHandlers) {
+          handler(event.payload);
+        }
+      }
+    ).then((unlisten) => {
+      gitStatusChangedUnlisten = unlisten;
+    });
+  }
+  return gitStatusChangedListenerPromise;
+}
+
 export const ipc = {
   async sessionCreate(params: SessionCreateParams): Promise<SessionCreateResult> {
     return invoke<SessionCreateResult>("session_create", params as unknown as Record<string, unknown>);
@@ -187,5 +224,18 @@ export const ipc = {
   },
   async getUsage(sessionId: string): Promise<UsageData> {
     return invoke<UsageData>("get_usage", { sessionId });
+  },
+  async getGitStatus(sessionId: string, cwd: string): Promise<GitStatusResult> {
+    return invoke<GitStatusResult>("git_status", { sessionId, cwd });
+  },
+  async getGitDiff(sessionId: string, cwd: string, file: string, staged: boolean): Promise<string> {
+    return invoke<string>("git_diff", { sessionId, cwd, file, staged });
+  },
+  async onGitStatusChanged(handler: GitStatusChangedHandler): Promise<() => void> {
+    await ensureGitStatusChangedListener();
+    gitStatusChangedHandlers.add(handler);
+    return () => {
+      gitStatusChangedHandlers.delete(handler);
+    };
   },
 };
