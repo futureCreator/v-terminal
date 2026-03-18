@@ -30,6 +30,7 @@ interface TerminalPaneProps {
   sshIdentityFile?: string;
   shellProgram?: string;
   shellArgs?: string[];
+  wslDistro?: string;
   onSessionCreated: (sessionId: string, connectionId?: string) => void;
   onSessionKilled: () => void;
   onFocus: () => void;
@@ -50,6 +51,7 @@ export function TerminalPane({
   sshIdentityFile,
   shellProgram,
   shellArgs,
+  wslDistro,
   onSessionCreated,
   onSessionKilled,
   onFocus,
@@ -90,6 +92,8 @@ export function TerminalPane({
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordDialogTitle, setPasswordDialogTitle] = useState("SSH Authentication");
+  const [passwordDialogSubtitle, setPasswordDialogSubtitle] = useState("");
   const passwordResolverRef = useRef<((password: string | null) => void) | null>(null);
 
   const promptPassword = (): Promise<string | null> => {
@@ -206,6 +210,7 @@ export function TerminalPane({
           rows,
           shellProgram,
           shellArgs,
+          wslDistro,
           ...(sessType === 'ssh' && sshHost && sshUsername ? {
             ssh: {
               host: sshHost,
@@ -222,6 +227,8 @@ export function TerminalPane({
 
         // Handle password-required flow for SSH
         if (errStr.includes("PASSWORD_REQUIRED") && sshHost && sshUsername) {
+          setPasswordDialogTitle("SSH Authentication");
+          setPasswordDialogSubtitle(`${sshUsername}@${sshHost}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`);
           setLoading(false);
           let authenticated = false;
           while (!authenticated) {
@@ -242,6 +249,34 @@ export function TerminalPane({
               authenticated = true;
             } catch (retryErr) {
               if (String(retryErr).includes("AUTH_FAILED")) {
+                setPasswordError("Authentication failed. Please try again.");
+                continue;
+              }
+              setShowPasswordDialog(false);
+              term.write(`\r\n\x1b[31mFailed to connect: ${retryErr}\x1b[0m\r\n`);
+              setExited(true);
+              return;
+            }
+          }
+          setLoading(true);
+        } else if (errStr.includes("WSL_SUDO_REQUIRED") && wslDistro) {
+          setPasswordDialogTitle("WSL Authentication");
+          setPasswordDialogSubtitle(`sudo password for ${wslDistro}`);
+          setLoading(false);
+          let authenticated = false;
+          while (!authenticated) {
+            const password = await promptPassword();
+            if (password === null || disposed) return;
+            try {
+              const result = await ipc.sessionCreateWslWithSudo(
+                wslDistro, password, term.cols, term.rows
+              );
+              sessionId = result.sessionId;
+              connectionId = result.connectionId;
+              setShowPasswordDialog(false);
+              authenticated = true;
+            } catch (retryErr) {
+              if (String(retryErr).includes("WSL_SUDO_REQUIRED") || String(retryErr).includes("AUTH_FAILED")) {
                 setPasswordError("Authentication failed. Please try again.");
                 continue;
               }
@@ -478,9 +513,9 @@ export function TerminalPane({
       {showPasswordDialog && (
         <div className="terminal-password-dialog">
           <div className="terminal-password-content">
-            <div className="terminal-password-title">SSH Authentication</div>
+            <div className="terminal-password-title">{passwordDialogTitle}</div>
             <div className="terminal-password-subtitle">
-              {sshUsername}@{sshHost}{sshPort && sshPort !== 22 ? `:${sshPort}` : ""}
+              {passwordDialogSubtitle || `${sshUsername ?? ""}@${sshHost ?? ""}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`}
             </div>
             {passwordError && (
               <div className="terminal-password-error">{passwordError}</div>
