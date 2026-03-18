@@ -14,13 +14,6 @@ export const slides: SlideData[] = [
     shortcutKeys: ["Ctrl", "K"],
   },
   {
-    id: "claude-code",
-    headline: "Built for Claude Code users",
-    description:
-      "Edit CLAUDE.md files, view git diffs, and track your token usage — all without leaving the terminal.",
-    shortcutKeys: ["Ctrl", "Shift", "L"],
-  },
-  {
     id: "productivity",
     headline: "Stay focused, stay in flow",
     description:

@@ -93,6 +93,15 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.11.0 - 2026-03-19
+
+- **breaking**: Removed Claude Code Panel (CLAUDE.md editor, Dashboard, Git diff viewer) — PTY injection for CWD detection interfered with TUI applications (e.g. Claude Code) in WSL/SSH sessions; will be redesigned in a future release
+- **removed**: ClaudeCodePanel, GitPanel, UsageBar components and all supporting stores (`claudeCodeStore`, `gitStore`, `dashboardStore`, `usageStore`)
+- **removed**: Backend `claude` module (CWD resolver, CLAUDE.md discovery, dashboard stats, file watcher, usage parser) and `git` module (status, diff, parser, watcher)
+- **removed**: OSC 7337 CWD sequence injection and parsing from session readers
+- **removed**: Keyboard shortcuts `Ctrl+Shift+L` (Claude panel), `Ctrl+Shift+G` (Git panel), `Ctrl+Shift+D` (Dashboard)
+- **cleanup**: Simplified session data flow — local and SSH readers now forward PTY output directly without escape sequence filtering
+
 ### v0.10.6 - 2026-03-18
 
 - **fix**: SSH session deadlock — replaced `Arc<Mutex<Channel>>` with mpsc command channel pattern to prevent reader task from holding the Mutex across `channel.wait().await`, which blocked all writes/resizes indefinitely

@@ -1,12 +1,8 @@
 mod commands;
 mod session;
-mod claude;
-mod git;
 
 use session::manager::SessionManager;
 use commands::{session_commands, wsl_commands};
-use git::watcher::GitWatcher;
-use std::sync::Mutex;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -26,7 +22,6 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(session_manager)
-        .manage(Mutex::new(GitWatcher::new()))
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 if window.label() == "main" {
@@ -44,14 +39,6 @@ pub fn run() {
             session_commands::session_resize,
             session_commands::session_kill,
             wsl_commands::get_wsl_distros,
-            commands::claude_commands::get_session_cwd,
-            commands::claude_commands::discover_claude_md,
-            commands::claude_commands::read_claude_md,
-            commands::claude_commands::write_claude_md,
-            commands::claude_commands::get_usage,
-            commands::claude_commands::get_dashboard_stats,
-            commands::git_commands::git_status,
-            commands::git_commands::git_diff,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

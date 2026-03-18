@@ -12,12 +12,8 @@ import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import type { SidebarTab } from "./components/SidePanel/SidePanel";
-import { ClaudeCodePanel } from "./components/ClaudeCodePanel/ClaudeCodePanel";
-import { DiffViewer } from "./components/GitPanel/DiffViewer";
-import { UsageBar } from "./components/UsageBar/UsageBar";
 import { WelcomePage } from "./components/WelcomePage/WelcomePage";
 import { useOnboardingStore } from "./store/onboardingStore";
-import type { ClaudeCodeTab } from "./components/ClaudeCodePanel/ClaudeCodePanel";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
 import { useAlarmTick } from "./hooks/useAlarmTick";
 import { useClipboardPolling } from "./hooks/useClipboardPolling";
@@ -81,14 +77,6 @@ export function App() {
   const activePanelIdRef = useRef<string | null>(null);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
   const [cheatsheetTopic, setCheatsheetTopic] = useState<string | null>(null);
-  const [claudePanelOpen, setClaudePanelOpen] = useState(() => {
-    return localStorage.getItem("v-terminal:claude-panel-open") === "true";
-  });
-  const [claudePanelTab, setClaudePanelTab] = useState<ClaudeCodeTab>(() => {
-    const stored = localStorage.getItem("v-terminal:claude-panel-tab");
-    if (stored === "claude-md" || stored === "git" || stored === "dashboard") return stored;
-    return "claude-md";
-  });
   const panelNavRef = useRef<PanelNavHandle | null>(null);
 
   const showWelcome = !onboardingDone && tabs.some((t) => t.pendingSessionPick);
@@ -111,9 +99,6 @@ export function App() {
   const sidebarOpenRef = useRef(sidebarOpen);
   useEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
 
-  const claudePanelOpenRef = useRef(claudePanelOpen);
-  useEffect(() => { claudePanelOpenRef.current = claudePanelOpen; }, [claudePanelOpen]);
-
   const handleToggleToolkit = useCallback(() => {
     const next = !sidebarOpen;
     setSidebarOpen(next);
@@ -128,22 +113,6 @@ export function App() {
   const handleSidebarTabChange = useCallback((tab: SidebarTab) => {
     setSidebarTab(tab);
     localStorage.setItem("v-terminal:sidebar-tab", tab);
-  }, []);
-
-  const handleToggleClaudePanel = useCallback(() => {
-    const next = !claudePanelOpen;
-    setClaudePanelOpen(next);
-    localStorage.setItem("v-terminal:claude-panel-open", String(next));
-  }, [claudePanelOpen]);
-
-  const handleCloseClaudePanel = useCallback(() => {
-    setClaudePanelOpen(false);
-    localStorage.setItem("v-terminal:claude-panel-open", "false");
-  }, []);
-
-  const handleClaudePanelTabChange = useCallback((tab: ClaudeCodeTab) => {
-    setClaudePanelTab(tab);
-    localStorage.setItem("v-terminal:claude-panel-tab", tab);
   }, []);
 
   // Global keyboard shortcuts — intercept before xterm sees the event
@@ -168,34 +137,6 @@ export function App() {
         const next = !sidebarOpenRef.current;
         setSidebarOpen(next);
         localStorage.setItem("v-terminal:sidebar-open", String(next));
-      }
-      if (e.ctrlKey && e.shiftKey && e.key === "G") {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!claudePanelOpenRef.current) {
-          setClaudePanelOpen(true);
-          localStorage.setItem("v-terminal:claude-panel-open", "true");
-        }
-        setClaudePanelTab("git");
-        return;
-      }
-      // Ctrl+Shift+D → open Claude panel on Dashboard tab
-      if (e.ctrlKey && e.shiftKey && e.key === "D") {
-        e.preventDefault();
-        if (!claudePanelOpenRef.current) {
-          setClaudePanelOpen(true);
-          localStorage.setItem("v-terminal:claude-panel-open", "true");
-        }
-        setClaudePanelTab("dashboard");
-        localStorage.setItem("v-terminal:claude-panel-tab", "dashboard");
-        return;
-      }
-      if (e.ctrlKey && e.shiftKey && e.key === "L") {
-        e.preventDefault();
-        e.stopPropagation();
-        const next = !claudePanelOpenRef.current;
-        setClaudePanelOpen(next);
-        localStorage.setItem("v-terminal:claude-panel-open", String(next));
       }
       // Terminal font size: Ctrl+= / Ctrl+- / Ctrl+0
       if (e.ctrlKey && !e.shiftKey && (e.key === "=" || e.key === "+")) {
@@ -399,46 +340,6 @@ export function App() {
         action: handleToggleToolkit,
       },
       {
-        id: "view:claude-panel",
-        label: claudePanelOpen ? "Hide Claude Code Panel" : "Show Claude Code Panel",
-        description: "Toggle the Claude Code panel with CLAUDE.md editor",
-        meta: "Ctrl+Shift+L",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-              <path d="M3 2h9a1 1 0 011 1v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M5 5.5h5M5 7.5h5M5 9.5h3" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
-            </svg>
-          </span>
-        ),
-        isActive: claudePanelOpen,
-        action: handleToggleClaudePanel,
-      },
-      {
-        id: "view:git-panel",
-        label: "Show Git Panel",
-        description: "Toggle the Git diff viewer panel",
-        meta: "Ctrl+Shift+G",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <circle cx="4" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-              <circle cx="10" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-              <circle cx="4" cy="11" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M4 4.5v5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-              <path d="M10 4.5v1.5a2 2 0 01-2 2H4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        ),
-        action: () => {
-          if (!claudePanelOpen) {
-            setClaudePanelOpen(true);
-            localStorage.setItem("v-terminal:claude-panel-open", "true");
-          }
-          setClaudePanelTab("git");
-        },
-      },
-      {
         id: "ssh:profiles",
         label: "SSH Profiles",
         description: "Manage and connect to saved SSH servers",
@@ -516,7 +417,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, handleToggleClaudePanel, activeTab, tabs, sidebarOpen, claudePanelOpen, setClaudePanelTab, setClaudePanelOpen]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -918,15 +819,6 @@ export function App() {
         />
       </div>
       <div className="app-content">
-        {claudePanelOpen && (
-          <ClaudeCodePanel
-            activeTab={claudePanelTab}
-            onTabChange={handleClaudePanelTabChange}
-            onClose={handleCloseClaudePanel}
-            focusedPanelId={activePanelId}
-            focusedSessionId={activePanelSessionIdRef.current}
-          />
-        )}
         <div className="app-terminal-area">
         {tabs.map((tab) => (
           <div
@@ -958,17 +850,6 @@ export function App() {
           />
         )}
       </div>{/* end app-content */}
-      <UsageBar
-        claudePanelOpen={claudePanelOpen}
-        onOpenDashboard={() => {
-          if (!claudePanelOpen) {
-            setClaudePanelOpen(true);
-            localStorage.setItem("v-terminal:claude-panel-open", "true");
-          }
-          setClaudePanelTab("dashboard");
-          localStorage.setItem("v-terminal:claude-panel-tab", "dashboard");
-        }}
-      />
       {sshModalOpen && (
         <SshManagerModal
           onClose={() => setSshModalOpen(false)}
@@ -991,7 +872,6 @@ export function App() {
           cheatsheetPaletteSection,
         ]}
       />
-      <DiffViewer />
       {showWelcome && <WelcomePage onDone={handleWelcomeDone} />}
     </div>
   );

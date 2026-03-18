@@ -21,88 +21,6 @@ export interface SessionCreateWithPasswordParams {
   cols: number; rows: number;
 }
 
-export interface ClaudeMdFile {
-  path: string;
-  level: "user" | "project" | "directory" | "parent";
-  content: string;
-  lastModified: number;
-  readonly: boolean;
-}
-
-export type CwdResult =
-  | { type: "resolved"; value: string }
-  | { type: "pending" };
-
-export interface ModelUsageData {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  costUsd: number;
-}
-
-export interface DashboardStats {
-  today: DaySummary;
-  yesterday: DaySummary;
-  modelUsage: ModelUsageEntry[];
-  cacheHitRate: number;
-  dailyTokens: DailyTokenEntry[];
-  totalSessions: number;
-  totalMessages: number;
-}
-
-export interface DaySummary {
-  date: string;
-  sessionCount: number;
-  messageCount: number;
-  totalTokens: number;
-  toolCallCount: number;
-}
-
-export interface ModelUsageEntry {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  cacheCreationTokens: number;
-  totalTokens: number;
-  percentage: number;
-}
-
-export interface DailyTokenEntry {
-  date: string;
-  dayLabel: string;
-  totalTokens: number;
-  isToday: boolean;
-}
-
-// ── Git types ──
-
-export type GitFileStatus = "modified" | "added" | "deleted" | "renamed" | "untracked";
-
-export interface GitFileEntry {
-  path: string;
-  status: GitFileStatus;
-}
-
-export interface GitStatusResult {
-  unstaged: GitFileEntry[];
-  staged: GitFileEntry[];
-  isGitRepo: boolean;
-}
-
-export interface UsageData {
-  totalCostUsd: number;
-  totalInputTokens: number;
-  totalOutputTokens: number;
-  todayCostUsd: number;
-  todayInputTokens: number;
-  todayOutputTokens: number;
-  totalSessions: number;
-  totalMessages: number;
-  models: ModelUsageData[];
-}
-
 const sessionDataHandlers = new Map<string, (data: Uint8Array) => void>();
 const sessionExitHandlers = new Map<string, (code?: number) => void>();
 const sshStatusHandlers = new Map<string, (status: string, error?: string) => void>();
@@ -146,58 +64,6 @@ async function ensureSshStatusListener(): Promise<void> {
   return sshStatusListenerPromise;
 }
 
-const sessionCwdHandlers = new Map<string, (cwd: string) => void>();
-let sessionCwdUnlisten: UnlistenFn | null = null;
-let sessionCwdListenerPromise: Promise<void> | null = null;
-
-async function ensureSessionCwdListener(): Promise<void> {
-  if (sessionCwdUnlisten) return;
-  if (!sessionCwdListenerPromise) {
-    sessionCwdListenerPromise = listen<{ sessionId: string; cwd: string }>("session-cwd", (event) => {
-      const { sessionId, cwd } = event.payload;
-      sessionCwdHandlers.get(sessionId)?.(cwd);
-    }).then((unlisten) => { sessionCwdUnlisten = unlisten; });
-  }
-  return sessionCwdListenerPromise;
-}
-
-const claudeMdChangedHandlers: Array<(path: string) => void> = [];
-let claudeMdChangedUnlisten: UnlistenFn | null = null;
-let claudeMdChangedListenerPromise: Promise<void> | null = null;
-
-async function ensureClaudeMdChangedListener(): Promise<void> {
-  if (claudeMdChangedUnlisten) return;
-  if (!claudeMdChangedListenerPromise) {
-    claudeMdChangedListenerPromise = listen<{ path: string }>("claude-md-changed", (event) => {
-      const { path } = event.payload;
-      for (const handler of claudeMdChangedHandlers) handler(path);
-    }).then((unlisten) => { claudeMdChangedUnlisten = unlisten; });
-  }
-  return claudeMdChangedListenerPromise;
-}
-
-type GitStatusChangedHandler = (payload: { cwd: string }) => void;
-const gitStatusChangedHandlers: Set<GitStatusChangedHandler> = new Set();
-let gitStatusChangedUnlisten: UnlistenFn | null = null;
-let gitStatusChangedListenerPromise: Promise<void> | null = null;
-
-async function ensureGitStatusChangedListener(): Promise<void> {
-  if (gitStatusChangedUnlisten) return;
-  if (!gitStatusChangedListenerPromise) {
-    gitStatusChangedListenerPromise = listen<{ cwd: string }>(
-      "git-status-changed",
-      (event) => {
-        for (const handler of gitStatusChangedHandlers) {
-          handler(event.payload);
-        }
-      }
-    ).then((unlisten) => {
-      gitStatusChangedUnlisten = unlisten;
-    });
-  }
-  return gitStatusChangedListenerPromise;
-}
-
 export const ipc = {
   async sessionCreate(params: SessionCreateParams): Promise<SessionCreateResult> {
     return invoke<SessionCreateResult>("session_create", params as unknown as Record<string, unknown>);
@@ -231,49 +97,5 @@ export const ipc = {
     await ensureSshStatusListener();
     sshStatusHandlers.set(connectionId, handler);
     return () => { sshStatusHandlers.delete(connectionId); };
-  },
-  async getSessionCwd(sessionId: string): Promise<CwdResult> {
-    return invoke<CwdResult>("get_session_cwd", { sessionId });
-  },
-  async discoverClaudeMd(sessionId: string, cwd: string): Promise<ClaudeMdFile[]> {
-    return invoke<ClaudeMdFile[]>("discover_claude_md", { sessionId, cwd });
-  },
-  async readClaudeMd(sessionId: string, path: string): Promise<string> {
-    return invoke<string>("read_claude_md", { sessionId, path });
-  },
-  async writeClaudeMd(sessionId: string, path: string, content: string, expectedMtime?: number): Promise<void> {
-    return invoke("write_claude_md", { sessionId, path, content, expectedMtime: expectedMtime ?? null });
-  },
-  async onSessionCwd(sessionId: string, handler: (cwd: string) => void): Promise<() => void> {
-    await ensureSessionCwdListener();
-    sessionCwdHandlers.set(sessionId, handler);
-    return () => { sessionCwdHandlers.delete(sessionId); };
-  },
-  async onClaudeMdChanged(handler: (path: string) => void): Promise<() => void> {
-    await ensureClaudeMdChangedListener();
-    claudeMdChangedHandlers.push(handler);
-    return () => {
-      const idx = claudeMdChangedHandlers.indexOf(handler);
-      if (idx >= 0) claudeMdChangedHandlers.splice(idx, 1);
-    };
-  },
-  async getUsage(sessionId: string): Promise<UsageData> {
-    return invoke<UsageData>("get_usage", { sessionId });
-  },
-  async getDashboardStats(sessionId: string): Promise<DashboardStats> {
-    return invoke<DashboardStats>("get_dashboard_stats", { sessionId });
-  },
-  async getGitStatus(sessionId: string, cwd: string): Promise<GitStatusResult> {
-    return invoke<GitStatusResult>("git_status", { sessionId, cwd });
-  },
-  async getGitDiff(sessionId: string, cwd: string, file: string, staged: boolean): Promise<string> {
-    return invoke<string>("git_diff", { sessionId, cwd, file, staged });
-  },
-  async onGitStatusChanged(handler: GitStatusChangedHandler): Promise<() => void> {
-    await ensureGitStatusChangedListener();
-    gitStatusChangedHandlers.add(handler);
-    return () => {
-      gitStatusChangedHandlers.delete(handler);
-    };
   },
 };
