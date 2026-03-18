@@ -117,4 +117,12 @@ impl Session for SshSession {
         let _ = channel.close().await;
         Ok(())
     }
+
+    fn session_type(&self) -> super::SessionType {
+        super::SessionType::Ssh
+    }
+
+    fn connection_id(&self) -> Option<String> {
+        Some(self.connection_id.clone())
+    }
 }

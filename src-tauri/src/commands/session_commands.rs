@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use tauri::AppHandle;
 use crate::session::manager::{SessionCreateResult, SessionManager};
+use crate::session::SessionType;
 
 #[derive(Deserialize)]
 pub struct SshParams {
@@ -25,7 +26,8 @@ pub async fn session_create(
 ) -> Result<SessionCreateResult, String> {
     let cwd = cwd.unwrap_or_else(|| "~".to_string());
     match r#type.as_str() {
-        "local" | "wsl" => state.create_local(app, cwd, cols, rows, shell_program, shell_args).await,
+        "local" => state.create_local(app, cwd, cols, rows, shell_program, shell_args, SessionType::Local).await,
+        "wsl" => state.create_local(app, cwd, cols, rows, shell_program, shell_args, SessionType::Wsl).await,
         "ssh" => {
             let ssh = ssh.ok_or("ssh params required for type 'ssh'")?;
             state.create_ssh(app, ssh.host, ssh.port, ssh.username, ssh.identity_file, cols, rows).await
