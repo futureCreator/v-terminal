@@ -1,0 +1,218 @@
+.claude-panel {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--separator);
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.claude-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  height: 36px;
+  border-bottom: 1px solid var(--separator);
+  flex-shrink: 0;
+}
+
+.claude-panel-tabs {
+  display: flex;
+  flex: 1;
+  gap: 1px;
+  min-width: 0;
+}
+
+.claude-panel-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--label-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+  user-select: none;
+}
+
+.claude-panel-tab:hover {
+  color: var(--label-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.claude-panel-tab--active {
+  color: var(--label-primary);
+  background: var(--bg-tertiary);
+}
+
+.claude-panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  color: var(--label-tertiary);
+  padding: 0;
+  transition: color 0.12s, background 0.12s;
+  flex-shrink: 0;
+}
+
+.claude-panel-close:hover {
+  color: var(--label-primary);
+  background: var(--bg-tertiary);
+}
+
+.claude-panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 6px;
+  gap: 6px;
+}
+
+.claude-context {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-terminal);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  color: var(--label-secondary);
+  overflow: hidden;
+}
+
+.claude-context-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--system-green);
+  flex-shrink: 0;
+}
+
+.claude-context-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.claude-context-label {
+  font-weight: 600;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.claude-context-cwd {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+}
+
+.claude-md-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+.claude-md-list::-webkit-scrollbar { width: 4px; }
+.claude-md-list::-webkit-scrollbar-track { background: transparent; }
+.claude-md-list::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+}
+
+.claude-md-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 8px;
+  color: var(--label-tertiary);
+  font-size: 12px;
+  font-family: "Pretendard", sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+
+.claude-md-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-terminal);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.claude-md-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.claude-md-section-header:hover {
+  background: var(--bg-tertiary);
+}
+
+.claude-md-level-badge {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg-tertiary);
+  color: var(--label-tertiary);
+  flex-shrink: 0;
+}
+
+.claude-md-path {
+  font-size: 11px;
+  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  color: var(--label-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.claude-md-editor-wrap {
+  border-top: 1px solid var(--bg-panel-border);
+  min-height: 120px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
