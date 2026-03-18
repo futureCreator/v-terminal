@@ -161,6 +161,10 @@ impl Session for LocalSession {
     fn session_type(&self) -> super::SessionType {
         self.session_kind
     }
+
+    fn process_id(&self) -> Option<u32> {
+        self.child.lock().ok()?.process_id()
+    }
 }
 
 fn kill_process_tree(pid: u32) {

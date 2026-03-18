@@ -208,6 +208,11 @@ impl SessionManager {
         Ok((session.session_type(), session.connection_id()))
     }
 
+    pub async fn get_process_id(&self, session_id: &str) -> Option<u32> {
+        let sessions = self.sessions.lock().await;
+        sessions.get(session_id)?.process_id()
+    }
+
     pub async fn open_sftp(&self, connection_id: &str) -> Result<russh_sftp::client::SftpSession, String> {
         let mut pool = self.ssh_pool.lock().await;
         pool.open_sftp(connection_id).await

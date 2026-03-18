@@ -24,4 +24,7 @@ pub trait Session: Send + Sync {
     fn connection_id(&self) -> Option<String> {
         None
     }
+    fn process_id(&self) -> Option<u32> {
+        None
+    }
 }
