@@ -126,30 +126,114 @@ pub fn write_local(path: &str, content: &str, expected_mtime: Option<u64>) -> Re
     std::fs::write(p, content).map_err(|e| format!("write failed: {e}"))
 }
 
-// ── SFTP operations (stubbed — exact russh-sftp 2.0 API needs verification) ──
+// ── SFTP operations ──
 
 /// Discover CLAUDE.md files on a remote host via SFTP.
 pub async fn discover_sftp(
-    _sftp: &russh_sftp::client::SftpSession,
+    sftp: &russh_sftp::client::SftpSession,
     cwd: &str,
-    _home_dir: &str,
+    home_dir: &str,
 ) -> Result<Vec<ClaudeMdFile>, String> {
-    // TODO: Implement SFTP discovery once russh-sftp 2.0 API is verified.
-    // The logic mirrors discover_local but uses SFTP operations:
-    // 1. Check ~/.claude/CLAUDE.md via SFTP
+    let mut files = Vec::new();
+
+    // 1. User-level: ~/.claude/CLAUDE.md
+    let user_path = format!("{home_dir}/.claude/CLAUDE.md");
+    if let Some(f) = read_sftp_claude_md(sftp, &user_path, ClaudeMdLevel::User).await {
+        files.push(f);
+    }
+
     // 2. Walk from CWD up to root
-    // 3. Check <project-root>/.claude/CLAUDE.md
-    Err(format!("SFTP CLAUDE.md discovery not yet implemented for CWD: {cwd}"))
+    let mut project_root: Option<String> = None;
+    let mut current = cwd.to_string();
+    let mut parent_files: Vec<(String, ClaudeMdFile)> = Vec::new();
+    loop {
+        // Check for .git
+        if project_root.is_none() {
+            let git_path = format!("{current}/.git");
+            if sftp.try_exists(&git_path).await.unwrap_or(false) {
+                project_root = Some(current.clone());
+            }
+        }
+
+        let claude_md = format!("{current}/CLAUDE.md");
+        if let Some(f) = read_sftp_claude_md(sftp, &claude_md, ClaudeMdLevel::Parent).await {
+            parent_files.push((current.clone(), f));
+        }
+
+        // Pop to parent
+        match current.rfind('/') {
+            Some(0) if current.len() > 1 => {
+                current = "/".to_string();
+            }
+            Some(pos) if pos > 0 => {
+                current.truncate(pos);
+            }
+            _ => break,
+        }
+    }
+
+    // Assign correct levels
+    let root = project_root.clone().unwrap_or_else(|| cwd.to_string());
+    for (dir, file) in &mut parent_files {
+        if *dir == root {
+            file.level = ClaudeMdLevel::Project;
+        }
+    }
+
+    parent_files.reverse();
+    files.extend(parent_files.into_iter().map(|(_, f)| f));
+
+    // 3. <project-root>/.claude/CLAUDE.md
+    let dir_path = format!("{root}/.claude/CLAUDE.md");
+    if let Some(f) = read_sftp_claude_md(sftp, &dir_path, ClaudeMdLevel::Directory).await {
+        if !files.iter().any(|existing| existing.path == f.path) {
+            files.push(f);
+        }
+    }
+
+    Ok(files)
 }
 
-/// Write content to a remote file via SFTP.
-pub async fn write_sftp(
-    _sftp: &russh_sftp::client::SftpSession,
+/// Read a single CLAUDE.md file via SFTP.
+async fn read_sftp_claude_md(
+    sftp: &russh_sftp::client::SftpSession,
     path: &str,
-    _content: &str,
-    _expected_mtime: Option<u64>,
+    level: ClaudeMdLevel,
+) -> Option<ClaudeMdFile> {
+    let data = sftp.read(path).await.ok()?;
+    let content = String::from_utf8(data).ok()?;
+    let attrs = sftp.metadata(path).await.ok()?;
+    let mtime = attrs.mtime.unwrap_or(0) as u64;
+
+    Some(ClaudeMdFile {
+        path: path.to_string(),
+        level,
+        content,
+        last_modified: mtime,
+        readonly: false,
+    })
+}
+
+/// Write content to a remote file via SFTP with optional mtime check.
+pub async fn write_sftp(
+    sftp: &russh_sftp::client::SftpSession,
+    path: &str,
+    content: &str,
+    expected_mtime: Option<u64>,
 ) -> Result<(), String> {
     validate_claude_md_path(path)?;
-    // TODO: Implement SFTP write once russh-sftp 2.0 API is verified.
-    Err(format!("SFTP write not yet implemented for: {path}"))
+
+    // Optimistic concurrency check
+    if let Some(expected) = expected_mtime {
+        if let Ok(attrs) = sftp.metadata(path).await {
+            let current_mtime = attrs.mtime.unwrap_or(0) as u64;
+            if current_mtime != expected {
+                return Err("{\"code\":\"CONFLICT\",\"message\":\"file modified externally\"}".to_string());
+            }
+        }
+    }
+
+    sftp.write(path, content.as_bytes())
+        .await
+        .map_err(|e| format!("sftp write failed: {e}"))
 }

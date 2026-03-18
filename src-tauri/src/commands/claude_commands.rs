@@ -29,7 +29,7 @@ pub async fn discover_claude_md(
         SessionType::Ssh => {
             let conn_id = connection_id.ok_or("no connection_id for SSH session")?;
             let sftp = state.open_sftp(&conn_id).await?;
-            let home = ".".to_string(); // TODO: resolve home via SFTP canonicalize
+            let home = sftp.canonicalize(".").await.unwrap_or_else(|_| "/root".to_string());
             claude_md::discover_sftp(&sftp, &cwd, &home).await
         }
     }
