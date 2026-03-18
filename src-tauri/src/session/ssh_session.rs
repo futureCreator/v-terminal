@@ -56,17 +56,35 @@ impl SshSession {
                 match msg {
                     Some(ChannelMsg::Data { ref data }) => {
                         let bytes: Vec<u8> = data.to_vec();
-                        let _ = task_app.emit(
-                            "session-data",
-                            serde_json::json!({"sessionId": task_session_id, "data": bytes}),
-                        );
+                        let (filtered, cwd) = crate::claude::extract_osc_cwd(&bytes);
+                        if let Some(cwd_path) = cwd {
+                            let _ = task_app.emit(
+                                "session-cwd",
+                                serde_json::json!({"sessionId": task_session_id, "cwd": cwd_path}),
+                            );
+                        }
+                        if !filtered.is_empty() {
+                            let _ = task_app.emit(
+                                "session-data",
+                                serde_json::json!({"sessionId": task_session_id, "data": filtered}),
+                            );
+                        }
                     }
                     Some(ChannelMsg::ExtendedData { ref data, .. }) => {
                         let bytes: Vec<u8> = data.to_vec();
-                        let _ = task_app.emit(
-                            "session-data",
-                            serde_json::json!({"sessionId": task_session_id, "data": bytes}),
-                        );
+                        let (filtered, cwd) = crate::claude::extract_osc_cwd(&bytes);
+                        if let Some(cwd_path) = cwd {
+                            let _ = task_app.emit(
+                                "session-cwd",
+                                serde_json::json!({"sessionId": task_session_id, "cwd": cwd_path}),
+                            );
+                        }
+                        if !filtered.is_empty() {
+                            let _ = task_app.emit(
+                                "session-data",
+                                serde_json::json!({"sessionId": task_session_id, "data": filtered}),
+                            );
+                        }
                     }
                     Some(ChannelMsg::ExitStatus { exit_status }) => {
                         exit_code = Some(exit_status);

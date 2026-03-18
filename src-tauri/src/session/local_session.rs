@@ -86,14 +86,23 @@ impl LocalSession {
                 match reader.read(&mut buf) {
                     Ok(0) => break,
                     Ok(n) => {
-                        let data: Vec<u8> = buf[..n].to_vec();
-                        let _ = task_app.emit(
-                            "session-data",
-                            serde_json::json!({
-                                "sessionId": task_id,
-                                "data": data,
-                            }),
-                        );
+                        let raw_data: Vec<u8> = buf[..n].to_vec();
+                        let (filtered, cwd) = crate::claude::extract_osc_cwd(&raw_data);
+                        if let Some(cwd_path) = cwd {
+                            let _ = task_app.emit(
+                                "session-cwd",
+                                serde_json::json!({"sessionId": task_id, "cwd": cwd_path}),
+                            );
+                        }
+                        if !filtered.is_empty() {
+                            let _ = task_app.emit(
+                                "session-data",
+                                serde_json::json!({
+                                    "sessionId": task_id,
+                                    "data": filtered,
+                                }),
+                            );
+                        }
                     }
                     Err(_) => break,
                 }
