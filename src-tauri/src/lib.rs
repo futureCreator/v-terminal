@@ -1,5 +1,6 @@
 mod commands;
 mod session;
+mod claude;
 
 use session::manager::SessionManager;
 use commands::{session_commands, wsl_commands};
