@@ -46,7 +46,6 @@ impl SessionManager {
         rows: u16,
         shell_program: Option<String>,
         shell_args: Option<Vec<String>>,
-        session_type: super::SessionType,
     ) -> Result<SessionCreateResult, String> {
         {
             let sessions = self.sessions.lock().await;
@@ -56,7 +55,7 @@ impl SessionManager {
         }
         let session_id = Uuid::new_v4().to_string();
         let session =
-            LocalSession::create(app, session_id.clone(), &cwd, cols, rows, shell_program, shell_args, session_type)?;
+            LocalSession::create(app, session_id.clone(), &cwd, cols, rows, shell_program, shell_args)?;
         self.sessions
             .lock()
             .await
@@ -100,7 +99,7 @@ impl SessionManager {
         };
 
         let session =
-            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows, super::SessionType::Ssh)
+            SshSession::create(app, session_id.clone(), &*handle, cols, rows)
                 .await?;
 
         {
@@ -150,7 +149,7 @@ impl SessionManager {
         };
 
         let session =
-            SshSession::create(app, session_id.clone(), connection_id.clone(), &*handle, cols, rows, super::SessionType::Ssh)
+            SshSession::create(app, session_id.clone(), &*handle, cols, rows)
                 .await?;
 
         {
@@ -246,11 +245,9 @@ impl SessionManager {
         let session = SshSession::create(
             app,
             session_id.clone(),
-            connection_id.clone(),
             &*handle,
             cols,
             rows,
-            super::SessionType::Wsl,
         ).await?;
 
         {
@@ -311,32 +308,6 @@ impl SessionManager {
         pool.disconnect_all().await;
     }
 
-    pub async fn get_session_info(&self, session_id: &str) -> Result<(super::SessionType, Option<String>), String> {
-        let sessions = self.sessions.lock().await;
-        let session = sessions
-            .get(session_id)
-            .ok_or_else(|| format!("session not found: {session_id}"))?;
-        Ok((session.session_type(), session.connection_id()))
-    }
-
-    pub async fn get_process_id(&self, session_id: &str) -> Option<u32> {
-        let sessions = self.sessions.lock().await;
-        sessions.get(session_id)?.process_id()
-    }
-
-    pub async fn open_sftp(&self, connection_id: &str) -> Result<russh_sftp::client::SftpSession, String> {
-        let mut pool = self.ssh_pool.lock().await;
-        pool.open_sftp(connection_id).await
-    }
-
-    pub async fn exec_command(
-        &self,
-        connection_id: &str,
-        command: &str,
-    ) -> Result<(String, String, u32), String> {
-        let mut pool = self.ssh_pool.lock().await;
-        pool.exec_command(connection_id, command).await
-    }
 }
 
 /// Scan standard SSH key locations and return the first one that exists.

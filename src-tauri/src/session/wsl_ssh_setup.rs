@@ -170,15 +170,34 @@ fn find_sshd_port(distro: &str) -> Result<u16, String> {
     Err(format!("no free port found in range {WSL_SSH_BASE_PORT}-{WSL_SSH_MAX_PORT}"))
 }
 
+/// Ensure user-owned host keys exist in ~/.vterminal/ inside WSL (no sudo required).
+fn ensure_wsl_host_keys(distro: &str) -> Result<(), String> {
+    let keygen_cmd = concat!(
+        "mkdir -p ~/.vterminal && ",
+        "[ -f ~/.vterminal/ssh_host_ed25519_key ] || ",
+        "ssh-keygen -t ed25519 -f ~/.vterminal/ssh_host_ed25519_key -N '' -q && ",
+        "[ -f ~/.vterminal/ssh_host_rsa_key ] || ",
+        "ssh-keygen -t rsa -b 2048 -f ~/.vterminal/ssh_host_rsa_key -N '' -q"
+    );
+    let (_, stderr, code) = wsl_exec(distro, keygen_cmd)?;
+    if code != 0 {
+        return Err(format!("failed to generate WSL host keys: {stderr}"));
+    }
+    Ok(())
+}
+
 /// Start sshd inside the WSL distro with a v-terminal config.
+/// Runs as the current user using user-owned host keys (no sudo required).
 fn start_sshd(
     distro: &str,
     port: u16,
-    sudo_password: Option<&str>,
 ) -> Result<Option<u32>, String> {
+    // Ensure user-owned host keys exist
+    ensure_wsl_host_keys(distro)?;
+
     let config_path = format!("/tmp/vterminal_sshd_{port}.conf");
     let config_content = format!(
-        "ListenAddress 127.0.0.1\nPort {port}\nPubkeyAuthentication yes\nPasswordAuthentication no\nAuthorizedKeysFile .ssh/authorized_keys\nHostKey /etc/ssh/ssh_host_ed25519_key\nHostKey /etc/ssh/ssh_host_rsa_key"
+        "ListenAddress 127.0.0.1\nPort {port}\nPubkeyAuthentication yes\nPasswordAuthentication no\nAuthorizedKeysFile .ssh/authorized_keys\nHostKey %h/.vterminal/ssh_host_ed25519_key\nHostKey %h/.vterminal/ssh_host_rsa_key"
     );
 
     // Write config file
@@ -188,20 +207,13 @@ fn start_sshd(
         return Err(format!("failed to write sshd config to {config_path}"));
     }
 
-    // Generate host keys if missing
-    let (_, _, _) = wsl_sudo_exec(distro, "ssh-keygen -A 2>/dev/null", sudo_password)?;
-
-    // Start sshd
-    let (_, stderr, code) = wsl_sudo_exec(
+    // Start sshd as current user (no sudo needed)
+    let (_, stderr, code) = wsl_exec(
         distro,
         &format!("/usr/sbin/sshd -f {config_path}"),
-        sudo_password,
     )?;
 
     if code != 0 {
-        if stderr.contains("password is required") || stderr.contains("sudo:") {
-            return Err(format!("{{\"code\":\"WSL_SUDO_REQUIRED\",\"distro\":\"{distro}\"}}"));
-        }
         return Err(format!("failed to start sshd: {stderr}"));
     }
 
@@ -270,7 +282,7 @@ pub fn ensure_sshd(
         }
     }
 
-    // 5. Find port and start sshd
+    // 5. Find port and start sshd (no sudo needed — uses user-owned host keys)
     let port = find_sshd_port(distro)?;
 
     let (probe, _, _) = wsl_exec(
@@ -285,7 +297,7 @@ pub fn ensure_sshd(
         )?;
         pid_out.trim_start_matches("pid=").parse::<u32>().ok()
     } else {
-        start_sshd(distro, port, sudo_password)?
+        start_sshd(distro, port)?
     };
 
     Ok(WslSshInfo {

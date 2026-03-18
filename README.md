@@ -93,6 +93,15 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.12.1 - 2026-03-19
+
+- **fix**: WSL sshd now runs as normal user — uses user-owned host keys (`~/.vterminal/ssh_host_*` inside WSL) instead of system `/etc/ssh/` keys, eliminating the need for sudo on every app restart
+- **fix**: Sudo password is now only required once for initial `openssh-server` installation; subsequent sshd starts need no password
+- **fix**: WSL/SSH password dialog shows connecting spinner after clicking Connect instead of appearing unresponsive
+- **fix**: Password dialog now explains why the password is needed (openssh-server installation or SSH key not found)
+- **fix**: Added Cancel button to password dialog (previously only Escape key worked)
+- **cleanup**: Removed unused `SessionType` enum, `open_sftp`, `exec_command`, and session metadata methods left over from v0.11.0 Claude Code Panel removal
+
 ### v0.12.0 - 2026-03-19
 
 - **feat**: WSL SSH-based connection — WSL sessions now connect via SSH to sshd inside the WSL distro instead of ConPTY + wsl.exe, dramatically improving I/O performance

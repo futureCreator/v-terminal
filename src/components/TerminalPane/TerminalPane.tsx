@@ -92,8 +92,10 @@ export function TerminalPane({
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordConnecting, setPasswordConnecting] = useState(false);
   const [passwordDialogTitle, setPasswordDialogTitle] = useState("SSH Authentication");
   const [passwordDialogSubtitle, setPasswordDialogSubtitle] = useState("");
+  const [passwordDialogDescription, setPasswordDialogDescription] = useState("");
   const passwordResolverRef = useRef<((password: string | null) => void) | null>(null);
 
   const promptPassword = (): Promise<string | null> => {
@@ -105,7 +107,9 @@ export function TerminalPane({
   };
 
   const handlePasswordSubmit = () => {
-    if (passwordResolverRef.current) {
+    if (passwordResolverRef.current && !passwordConnecting) {
+      setPasswordConnecting(true);
+      setPasswordError(null);
       passwordResolverRef.current(passwordInput);
       passwordResolverRef.current = null;
       setPasswordInput("");
@@ -229,9 +233,13 @@ export function TerminalPane({
         if (errStr.includes("PASSWORD_REQUIRED") && sshHost && sshUsername) {
           setPasswordDialogTitle("SSH Authentication");
           setPasswordDialogSubtitle(`${sshUsername}@${sshHost}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`);
+          setPasswordDialogDescription(
+            "No SSH key found for this host. Enter the password for the remote server."
+          );
           setLoading(false);
           let authenticated = false;
           while (!authenticated) {
+            setPasswordConnecting(false);
             const password = await promptPassword();
             if (password === null || disposed) return;
             try {
@@ -246,8 +254,10 @@ export function TerminalPane({
               sessionId = result.sessionId;
               connectionId = result.connectionId;
               setShowPasswordDialog(false);
+              setPasswordConnecting(false);
               authenticated = true;
             } catch (retryErr) {
+              setPasswordConnecting(false);
               if (String(retryErr).includes("AUTH_FAILED")) {
                 setPasswordError("Authentication failed. Please try again.");
                 continue;
@@ -261,10 +271,14 @@ export function TerminalPane({
           setLoading(true);
         } else if (errStr.includes("WSL_SUDO_REQUIRED") && wslDistro) {
           setPasswordDialogTitle("WSL Authentication");
-          setPasswordDialogSubtitle(`sudo password for ${wslDistro}`);
+          setPasswordDialogSubtitle(wslDistro);
+          setPasswordDialogDescription(
+            "openssh-server is not installed in this WSL distro. Your sudo password is required for the one-time installation."
+          );
           setLoading(false);
           let authenticated = false;
           while (!authenticated) {
+            setPasswordConnecting(false);
             const password = await promptPassword();
             if (password === null || disposed) return;
             try {
@@ -274,8 +288,10 @@ export function TerminalPane({
               sessionId = result.sessionId;
               connectionId = result.connectionId;
               setShowPasswordDialog(false);
+              setPasswordConnecting(false);
               authenticated = true;
             } catch (retryErr) {
+              setPasswordConnecting(false);
               if (String(retryErr).includes("WSL_SUDO_REQUIRED") || String(retryErr).includes("AUTH_FAILED")) {
                 setPasswordError("Authentication failed. Please try again.");
                 continue;
@@ -517,27 +533,47 @@ export function TerminalPane({
             <div className="terminal-password-subtitle">
               {passwordDialogSubtitle || `${sshUsername ?? ""}@${sshHost ?? ""}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`}
             </div>
+            {passwordDialogDescription && (
+              <div className="terminal-password-description">{passwordDialogDescription}</div>
+            )}
             {passwordError && (
               <div className="terminal-password-error">{passwordError}</div>
             )}
-            <input
-              type="password"
-              className="terminal-password-input"
-              placeholder="Password"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handlePasswordSubmit();
-                if (e.key === "Escape") handlePasswordCancel();
-              }}
-              autoFocus
-            />
-            <button
-              className="terminal-password-submit"
-              onClick={handlePasswordSubmit}
-            >
-              Connect
-            </button>
+            {passwordConnecting ? (
+              <div className="terminal-password-connecting">
+                <div className="terminal-spinner" />
+                <span>Connecting...</span>
+              </div>
+            ) : (
+              <>
+                <input
+                  type="password"
+                  className="terminal-password-input"
+                  placeholder="Password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handlePasswordSubmit();
+                    if (e.key === "Escape") handlePasswordCancel();
+                  }}
+                  autoFocus
+                />
+                <div className="terminal-password-actions">
+                  <button
+                    className="terminal-password-cancel"
+                    onClick={handlePasswordCancel}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="terminal-password-submit"
+                    onClick={handlePasswordSubmit}
+                  >
+                    Connect
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -13,7 +13,6 @@ pub struct LocalSession {
     master: Box<dyn MasterPty + Send>,
     child: StdMutex<Box<dyn Child + Send + Sync>>,
     _reader_task: JoinHandle<()>,
-    session_kind: super::SessionType,
 }
 
 // Safety: all mutable fields (writer, child) are wrapped in std::sync::Mutex.
@@ -31,7 +30,6 @@ impl LocalSession {
         rows: u16,
         shell_program: Option<String>,
         shell_args: Option<Vec<String>>,
-        session_type: super::SessionType,
     ) -> Result<Self, String> {
         let pty_system = native_pty_system();
         let pair = pty_system
@@ -109,7 +107,6 @@ impl LocalSession {
             writer: StdMutex::new(writer),
             child: StdMutex::new(child),
             _reader_task: reader_task,
-            session_kind: session_type,
         })
     }
 
@@ -147,14 +144,6 @@ impl Session for LocalSession {
     async fn kill(&self) -> Result<(), String> {
         self.kill_process();
         Ok(())
-    }
-
-    fn session_type(&self) -> super::SessionType {
-        self.session_kind
-    }
-
-    fn process_id(&self) -> Option<u32> {
-        self.child.lock().ok()?.process_id()
     }
 }
 
