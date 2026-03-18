@@ -102,16 +102,14 @@ export function PanelContextMenu({
       {wslDistros.length > 0 && <div className="panel-ctx-divider" />}
       {wslDistros.map((distro) => {
         const isActiveWsl = connType === "wsl"
-          && currentConnection?.shellArgs?.[0] === "-d"
-          && currentConnection?.shellArgs?.[1] === distro;
+          && currentConnection?.wslDistro === distro;
         return (
           <button
             key={`wsl:${distro}`}
             className={`panel-ctx-item${isActiveWsl ? " panel-ctx-item--active" : ""}`}
             onClick={() => !isActiveWsl && handleClick({
               type: "wsl",
-              shellProgram: "wsl.exe",
-              shellArgs: ["-d", distro],
+              wslDistro: distro,
             })}
             role="menuitem"
           >
