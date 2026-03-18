@@ -67,7 +67,7 @@ fn parse_stats_cache(json_str: &str) -> Result<UsageData, String> {
     // Get today's token usage
     let today = chrono_today();
     let mut today_input = 0u64;
-    let mut today_output = 0u64;
+    let today_output = 0u64;
     let mut today_cost = 0.0;
 
     if let Some(daily) = cache.daily_model_tokens.iter().find(|d| d.date == today) {

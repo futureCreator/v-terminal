@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.10.1 - 2026-03-18
+
+- **fix**: Rust build errors — `HANDLE` null checks changed from `== 0` to `.is_null()` in `cwd_resolver.rs` (Windows API type mismatch)
+- **fix**: Removed unused `mut` on `today_output` in `usage.rs` to silence compiler warning
+
 ### v0.10.0 - 2026-03-18
 
 - **feat**: Onboarding Welcome Page — full-screen welcome experience for first-time users with 3 slides introducing key features

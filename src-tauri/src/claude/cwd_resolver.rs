@@ -123,7 +123,7 @@ fn get_process_cwd_windows(pid: u32) -> Result<String, String> {
     unsafe {
         // Dynamically load NtQueryInformationProcess from ntdll.dll
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr());
-        if ntdll == 0 {
+        if ntdll.is_null() {
             return Err("failed to get handle to ntdll.dll".to_string());
         }
 
@@ -135,7 +135,7 @@ fn get_process_cwd_windows(pid: u32) -> Result<String, String> {
 
         // Open the target process with read permissions
         let handle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, 0, pid);
-        if handle == 0 {
+        if handle.is_null() {
             return Err(format!("OpenProcess failed for PID {pid}"));
         }
         let _guard = HandleGuard(handle); // ensures CloseHandle on scope exit
