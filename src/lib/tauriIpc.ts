@@ -21,6 +21,18 @@ export interface SessionCreateWithPasswordParams {
   cols: number; rows: number;
 }
 
+export interface ClaudeMdFile {
+  path: string;
+  level: "user" | "project" | "directory" | "parent";
+  content: string;
+  lastModified: number;
+  readonly: boolean;
+}
+
+export type CwdResult =
+  | { type: "resolved"; value: string }
+  | { type: "pending" };
+
 const sessionDataHandlers = new Map<string, (data: Uint8Array) => void>();
 const sessionExitHandlers = new Map<string, (code?: number) => void>();
 const sshStatusHandlers = new Map<string, (status: string, error?: string) => void>();
@@ -64,6 +76,36 @@ async function ensureSshStatusListener(): Promise<void> {
   return sshStatusListenerPromise;
 }
 
+const sessionCwdHandlers = new Map<string, (cwd: string) => void>();
+let sessionCwdUnlisten: UnlistenFn | null = null;
+let sessionCwdListenerPromise: Promise<void> | null = null;
+
+async function ensureSessionCwdListener(): Promise<void> {
+  if (sessionCwdUnlisten) return;
+  if (!sessionCwdListenerPromise) {
+    sessionCwdListenerPromise = listen<{ sessionId: string; cwd: string }>("session-cwd", (event) => {
+      const { sessionId, cwd } = event.payload;
+      sessionCwdHandlers.get(sessionId)?.(cwd);
+    }).then((unlisten) => { sessionCwdUnlisten = unlisten; });
+  }
+  return sessionCwdListenerPromise;
+}
+
+const claudeMdChangedHandlers: Array<(path: string) => void> = [];
+let claudeMdChangedUnlisten: UnlistenFn | null = null;
+let claudeMdChangedListenerPromise: Promise<void> | null = null;
+
+async function ensureClaudeMdChangedListener(): Promise<void> {
+  if (claudeMdChangedUnlisten) return;
+  if (!claudeMdChangedListenerPromise) {
+    claudeMdChangedListenerPromise = listen<{ path: string }>("claude-md-changed", (event) => {
+      const { path } = event.payload;
+      for (const handler of claudeMdChangedHandlers) handler(path);
+    }).then((unlisten) => { claudeMdChangedUnlisten = unlisten; });
+  }
+  return claudeMdChangedListenerPromise;
+}
+
 export const ipc = {
   async sessionCreate(params: SessionCreateParams): Promise<SessionCreateResult> {
     return invoke<SessionCreateResult>("session_create", params as unknown as Record<string, unknown>);
@@ -97,5 +139,30 @@ export const ipc = {
     await ensureSshStatusListener();
     sshStatusHandlers.set(connectionId, handler);
     return () => { sshStatusHandlers.delete(connectionId); };
+  },
+  async getSessionCwd(sessionId: string): Promise<CwdResult> {
+    return invoke<CwdResult>("get_session_cwd", { sessionId });
+  },
+  async discoverClaudeMd(sessionId: string, cwd: string): Promise<ClaudeMdFile[]> {
+    return invoke<ClaudeMdFile[]>("discover_claude_md", { sessionId, cwd });
+  },
+  async readClaudeMd(sessionId: string, path: string): Promise<string> {
+    return invoke<string>("read_claude_md", { sessionId, path });
+  },
+  async writeClaudeMd(sessionId: string, path: string, content: string, expectedMtime?: number): Promise<void> {
+    return invoke("write_claude_md", { sessionId, path, content, expectedMtime: expectedMtime ?? null });
+  },
+  async onSessionCwd(sessionId: string, handler: (cwd: string) => void): Promise<() => void> {
+    await ensureSessionCwdListener();
+    sessionCwdHandlers.set(sessionId, handler);
+    return () => { sessionCwdHandlers.delete(sessionId); };
+  },
+  async onClaudeMdChanged(handler: (path: string) => void): Promise<() => void> {
+    await ensureClaudeMdChangedListener();
+    claudeMdChangedHandlers.push(handler);
+    return () => {
+      const idx = claudeMdChangedHandlers.indexOf(handler);
+      if (idx >= 0) claudeMdChangedHandlers.splice(idx, 1);
+    };
   },
 };
