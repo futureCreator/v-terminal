@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.16.3 - 2026-03-20
+
+- **feat**: Welcome slide 4 — "Browse without leaving" slide added to onboarding, showcasing the built-in browser panel with `Ctrl+Shift+B` shortcut and CSS-only illustration (browser toolbar + page content alongside terminal)
+- **cleanup**: Removed cheatsheet references from welcome slides — cheatsheet feature was removed in v0.16.2 but slide descriptions still mentioned it
+
 ### v0.16.2 - 2026-03-20
 
 - **refactor**: App.tsx decomposed from 977 lines to 387 lines — extracted migrations, keyboard shortcuts, theme application, and palette command builders into dedicated modules

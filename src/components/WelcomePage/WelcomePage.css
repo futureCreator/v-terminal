@@ -608,6 +608,133 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Illustration: Browser Panel ──────────────────────────────── */
+
+.illust-browser {
+  width: 340px;
+  height: 180px;
+  display: flex;
+  gap: 1px;
+  background: var(--separator-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.illust-browser-panel {
+  width: 55%;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.illust-browser-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 8px 6px;
+  border-bottom: 1px solid var(--separator-strong);
+}
+
+.illust-browser-nav-btns {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.illust-browser-nav-btn {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--separator-strong);
+}
+
+.illust-browser-url-bar {
+  flex: 1;
+  height: 16px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+}
+
+.illust-browser-url-text {
+  height: 5px;
+  width: 70%;
+  background: var(--label-tertiary);
+  border-radius: 3px;
+  opacity: 0.35;
+}
+
+.illust-browser-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+}
+
+.illust-browser-page-title {
+  height: 8px;
+  width: 50%;
+  background: var(--accent);
+  border-radius: 3px;
+  opacity: 0.5;
+  margin-bottom: 2px;
+}
+
+.illust-browser-page-line {
+  height: 5px;
+  width: 90%;
+  background: var(--label-tertiary);
+  border-radius: 3px;
+  opacity: 0.2;
+}
+
+.illust-browser-page-line--short {
+  width: 55%;
+}
+
+.illust-browser-page-line--medium {
+  width: 75%;
+}
+
+.illust-browser-terminal {
+  flex: 1;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.illust-browser-term-line {
+  height: 6px;
+  width: 70%;
+  background: var(--label-tertiary);
+  border-radius: 3px;
+  opacity: 0.2;
+}
+
+.illust-browser-term-line--short {
+  width: 40%;
+}
+
+.illust-browser-term-line--medium {
+  width: 55%;
+}
+
+.illust-browser-term-cursor {
+  width: 8px;
+  height: 14px;
+  background: var(--label-primary);
+  border-radius: 1px;
+  opacity: 0.6;
+  animation: cursor-blink 1s step-end infinite;
+}
+
 /* ── Reduced Motion ───────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -621,7 +748,8 @@
     transition: none;
   }
   .illust-claude-cursor,
-  .illust-prod-cursor {
+  .illust-prod-cursor,
+  .illust-browser-term-cursor {
     animation: none;
     opacity: 0.6;
   }

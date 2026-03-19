@@ -70,6 +70,7 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
                   {slide.id === "claude-code" && <ClaudeCodeIllustration />}
                   {slide.id === "flexible-layout" && <LayoutIllustration />}
                   {slide.id === "productivity" && <ProductivityIllustration />}
+                  {slide.id === "browser" && <BrowserIllustration />}
                 </div>
 
                 {/* Text content */}
@@ -234,6 +235,41 @@ function ProductivityIllustration() {
         <div className="illust-prod-timer">
           <div className="illust-prod-timer-circle" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function BrowserIllustration() {
+  return (
+    <div className="illust-browser">
+      {/* Browser panel (left) */}
+      <div className="illust-browser-panel">
+        {/* Toolbar */}
+        <div className="illust-browser-toolbar">
+          <div className="illust-browser-nav-btns">
+            <div className="illust-browser-nav-btn" />
+            <div className="illust-browser-nav-btn" />
+          </div>
+          <div className="illust-browser-url-bar">
+            <div className="illust-browser-url-text" />
+          </div>
+        </div>
+        {/* Page content */}
+        <div className="illust-browser-content">
+          <div className="illust-browser-page-title" />
+          <div className="illust-browser-page-line" />
+          <div className="illust-browser-page-line illust-browser-page-line--short" />
+          <div className="illust-browser-page-line illust-browser-page-line--medium" />
+          <div className="illust-browser-page-line" />
+        </div>
+      </div>
+      {/* Terminal (right) */}
+      <div className="illust-browser-terminal">
+        <div className="illust-browser-term-line" />
+        <div className="illust-browser-term-line illust-browser-term-line--short" />
+        <div className="illust-browser-term-line illust-browser-term-line--medium" />
+        <div className="illust-browser-term-cursor" />
       </div>
     </div>
   );
