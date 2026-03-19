@@ -93,6 +93,18 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.15.0 - 2026-03-20
+
+- **feat**: Browser Panel — native WebView2 browser embedded in the panel grid via Tauri 2 multiwebview; browse the web without leaving the terminal
+- **feat**: Browser toolbar with Back, Forward, Reload buttons and URL input bar
+- **feat**: Browser panel accessible from SessionPicker, PanelContextMenu, and CommandPalette (`#browser`)
+- **feat**: Browser home page configurable in Settings → Browser tab (default: blank page)
+- **feat**: Workspace persistence — last visited URL saved and restored on app restart via `browserUrl` field on `PanelConnection`
+- **feat**: URL sync via initialization script (intercepts `pushState`/`replaceState`/`popstate`/`hashchange`) + `on_navigation` callback for reliable URL bar updates
+- **feat**: 9 Rust IPC commands for webview lifecycle (`browser_create`, `browser_navigate`, `browser_go_back`, `browser_go_forward`, `browser_reload`, `browser_resize`, `browser_destroy`, `browser_get_current_url`, `browser_url_report`)
+- **feat**: Webview cleanup in all teardown paths — layout change, tab close, tab kill, and connection switch all properly destroy native WebView2 instances
+- **feat**: Browser panel hidden via 0×0 resize when tab is inactive or panel is zoomed out
+
 ### v0.14.4 - 2026-03-19
 
 - **feat**: App version displayed in Windows title bar — "v-terminal 0.14.4" shown with version in subdued quaternary label color (11px, weight 400) for quick version identification without visual clutter
