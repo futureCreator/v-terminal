@@ -25,7 +25,7 @@
 .terminal-container {
   flex: 1;
   overflow: hidden;
-  padding: 6px 4px 4px 6px;
+  padding: 6px 4px 6px 6px;
 }
 
 /* xterm.js overrides */

@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.13.2 - 2026-03-19
+
+- **fix**: Terminal container bottom padding added — terminal content no longer appears flush against the bottom edge of the panel (matched to top/left padding)
+
 ### v0.13.1 - 2026-03-19
 
 - **feat**: Onboarding "Flexible Layout" slide — new welcome page slide showcasing multi-panel layouts (1 to 9 panels) and independent panel connections (Local, SSH, WSL)
