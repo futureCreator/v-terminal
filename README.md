@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.13.3 - 2026-03-19
+
+- **fix**: Terminal output overflow in split layouts — moved padding from `.terminal-container` to `.xterm` element so that xterm.js FitAddon correctly accounts for padding when calculating row count; previously `box-sizing: border-box` caused FitAddon to overestimate available height, rendering extra rows that overflowed behind adjacent panels
+
 ### v0.13.2 - 2026-03-19
 
 - **fix**: Terminal container bottom padding added — terminal content no longer appears flush against the bottom edge of the panel (matched to top/left padding)

@@ -25,12 +25,12 @@
 .terminal-container {
   flex: 1;
   overflow: hidden;
-  padding: 6px 4px 6px 6px;
 }
 
 /* xterm.js overrides */
 .terminal-container .xterm {
   height: 100%;
+  padding: 6px 4px 6px 6px;
 }
 
 .terminal-container .xterm-viewport {
