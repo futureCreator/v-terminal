@@ -39,7 +39,7 @@ export function NoteEditor({ panelId }: NoteEditorProps) {
         ...baseMarkdownExtensions({
           fontSizeCompartment: fontSizeCompartment.current,
           initialFontSize,
-          placeholderText: "Type your note here...",
+          placeholderText: "Type your markdown note here...",
         }),
         updateListener,
       ],

@@ -192,8 +192,9 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
                 tabId={tab.id}
                 browserUrl={panel.connection.browserUrl}
                 isActive={panel.id === activePanelId}
-                isVisible={isVisible && !hidden}
+                isVisible={isVisible && !hidden && !ctxMenu}
                 onFocus={() => setActivePanelId(panel.id)}
+                onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
               />
             ) : (
               <TerminalPane

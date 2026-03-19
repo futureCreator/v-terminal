@@ -12,6 +12,7 @@ interface BrowserPanelProps {
   isActive: boolean;
   isVisible: boolean;
   onFocus: () => void;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 interface BrowserUrlPayload {
@@ -26,6 +27,7 @@ export function BrowserPanel({
   isActive,
   isVisible,
   onFocus,
+  onContextMenu,
 }: BrowserPanelProps) {
   const webviewLabel = `browser-${panelId}`;
   const placeholderRef = useRef<HTMLDivElement>(null);
@@ -177,13 +179,27 @@ export function BrowserPanel({
       .catch((err) => setError(String(err)));
   }, [webviewLabel, browserUrl, getStartUrl]);
 
+  const handleToolbarClick = useCallback((e: React.MouseEvent) => {
+    // Only activate panel if clicking on the toolbar background, not on buttons/input
+    if ((e.target as HTMLElement).closest("button, input, form")) return;
+    onFocus();
+  }, [onFocus]);
+
+  const handleToolbarContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onFocus();
+    onContextMenu?.(e);
+  }, [onFocus, onContextMenu]);
+
   return (
-    <div
-      className={`browser-panel${isActive ? " browser-panel--active" : ""}`}
-      onClick={onFocus}
-    >
-      {/* Toolbar */}
-      <div className="browser-toolbar">
+    <div className={`browser-panel${isActive ? " browser-panel--active" : ""}`}>
+      {/* Toolbar — only React-clickable area; WebView2 captures everything below */}
+      <div
+        className="browser-toolbar"
+        onClick={handleToolbarClick}
+        onContextMenu={handleToolbarContextMenu}
+      >
         <button className="browser-nav-btn" onClick={handleBack} title="Back">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M9 2.5L4.5 7 9 11.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -206,11 +222,24 @@ export function BrowserPanel({
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            onFocus={onFocus}
             placeholder="Enter URL..."
             spellCheck={false}
             autoComplete="off"
           />
         </form>
+        {/* Menu button — switch connection, always clickable */}
+        <button
+          className="browser-menu-btn"
+          onClick={(e) => { e.stopPropagation(); onFocus(); onContextMenu?.(e); }}
+          title="Switch connection"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="7" cy="3" r="1.2" fill="currentColor" />
+            <circle cx="7" cy="7" r="1.2" fill="currentColor" />
+            <circle cx="7" cy="11" r="1.2" fill="currentColor" />
+          </svg>
+        </button>
       </div>
 
       {/* Webview placeholder */}
