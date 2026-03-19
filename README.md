@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.16.1 - 2026-03-20
+
+- **fix**: Browser panel width changed from fixed 600px to 40% of window width — scales properly across different screen sizes
+
 ### v0.16.0 - 2026-03-20
 
 - **feat**: Browser Left Panel — browser moved from an embedded PanelConnection type to an independent 600px left-side panel, coexisting with the right-side toolkit panel (280px)
