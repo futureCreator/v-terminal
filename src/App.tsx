@@ -781,14 +781,13 @@ export function App() {
     removeTab(tabId);
   };
 
-  const handleTabKill = async (tabId: string) => {
+  const handleTabKill = (tabId: string) => {
     const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
-      await Promise.all(
-        tab.panels
-          .filter((p) => p.sessionId !== null)
-          .map((p) => ipc.sessionKill(p.sessionId!).catch(() => {}))
-      );
+      // Fire-and-forget: kill sessions in background, don't block UI
+      tab.panels
+        .filter((p) => p.sessionId !== null)
+        .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
     }
     removeTab(tabId);
   };

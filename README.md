@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.13.5 - 2026-03-19
+
+- **perf**: Tab close is now instant — `handleTabKill` no longer `await`s session kills before removing the tab; UI updates immediately with kills running in the background (fire-and-forget)
+- **perf**: `kill_process_tree` changed from blocking `.output()` to non-blocking `.spawn()` — `taskkill /F /T` (Windows) and `kill -9` (Unix) no longer block the tokio runtime thread
+
 ### v0.13.4 - 2026-03-19
 
 - **fix**: Tab close kills panels sequentially instead of in parallel — `SessionManager::kill()` held the tokio `Mutex` lock across `session.kill().await` due to Rust 2021 `if let` temporary lifetime rules; separated the lock scope so concurrent kills no longer serialize through mutex contention

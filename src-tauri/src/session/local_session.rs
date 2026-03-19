@@ -151,15 +151,16 @@ fn kill_process_tree(pid: u32) {
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
+        // spawn (fire-and-forget) instead of output (blocking wait)
         let _ = std::process::Command::new("taskkill")
             .args(["/F", "/T", "/PID", &pid.to_string()])
             .creation_flags(0x08000000) // CREATE_NO_WINDOW
-            .output();
+            .spawn();
     }
     #[cfg(not(windows))]
     {
         let _ = std::process::Command::new("kill")
             .args(["-9", &pid.to_string()])
-            .output();
+            .spawn();
     }
 }
