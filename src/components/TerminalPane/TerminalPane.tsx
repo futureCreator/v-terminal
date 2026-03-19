@@ -9,6 +9,7 @@ import { ipc } from "../../lib/tauriIpc";
 import { ensureFontLoaded, ensureSpecificFontLoaded } from "../../lib/fontLoader";
 import { useThemeStore, resolveThemeDefinition } from "../../store/themeStore";
 import { useTerminalConfigStore } from "../../store/terminalConfigStore";
+import { usePasswordDialog } from "../../hooks/usePasswordDialog";
 import "@xterm/xterm/css/xterm.css";
 import "./TerminalPane.css";
 
@@ -88,40 +89,11 @@ export function TerminalPane({
   const [initKey, setInitKey] = useState(0);
   const [connectionLost, setConnectionLost] = useState(false);
 
-  // Password dialog state
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
-  const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordConnecting, setPasswordConnecting] = useState(false);
-  const [passwordDialogTitle, setPasswordDialogTitle] = useState("SSH Authentication");
-  const [passwordDialogSubtitle, setPasswordDialogSubtitle] = useState("");
-  const [passwordDialogDescription, setPasswordDialogDescription] = useState("");
-  const passwordResolverRef = useRef<((password: string | null) => void) | null>(null);
-
-  const promptPassword = (): Promise<string | null> => {
-    return new Promise((resolve) => {
-      passwordResolverRef.current = resolve;
-      setShowPasswordDialog(true);
-      setPasswordError(null);
-    });
-  };
-
-  const handlePasswordSubmit = () => {
-    if (passwordResolverRef.current && !passwordConnecting) {
-      setPasswordConnecting(true);
-      setPasswordError(null);
-      passwordResolverRef.current(passwordInput);
-      passwordResolverRef.current = null;
-      setPasswordInput("");
-    }
-  };
+  // Password dialog
+  const [pwState, pwActions] = usePasswordDialog();
 
   const handlePasswordCancel = () => {
-    if (passwordResolverRef.current) {
-      passwordResolverRef.current(null);
-      passwordResolverRef.current = null;
-    }
-    setShowPasswordDialog(false);
+    pwActions.cancel();
     setExited(true);
   };
 
@@ -231,16 +203,15 @@ export function TerminalPane({
 
         // Handle password-required flow for SSH
         if (errStr.includes("PASSWORD_REQUIRED") && sshHost && sshUsername) {
-          setPasswordDialogTitle("SSH Authentication");
-          setPasswordDialogSubtitle(`${sshUsername}@${sshHost}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`);
-          setPasswordDialogDescription(
-            "No SSH key found for this host. Enter the password for the remote server."
-          );
           setLoading(false);
           let authenticated = false;
           while (!authenticated) {
-            setPasswordConnecting(false);
-            const password = await promptPassword();
+            pwActions.setConnecting(false);
+            const password = await pwActions.prompt(
+              "SSH Authentication",
+              `${sshUsername}@${sshHost}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`,
+              "No SSH key found for this host. Enter the password for the remote server.",
+            );
             if (password === null || disposed) return;
             try {
               const result = await ipc.sessionCreateWithPassword({
@@ -253,16 +224,15 @@ export function TerminalPane({
               });
               sessionId = result.sessionId;
               connectionId = result.connectionId;
-              setShowPasswordDialog(false);
-              setPasswordConnecting(false);
+              pwActions.hide();
               authenticated = true;
             } catch (retryErr) {
-              setPasswordConnecting(false);
+              pwActions.setConnecting(false);
               if (String(retryErr).includes("AUTH_FAILED")) {
-                setPasswordError("Authentication failed. Please try again.");
+                pwActions.setError("Authentication failed. Please try again.");
                 continue;
               }
-              setShowPasswordDialog(false);
+              pwActions.hide();
               term.write(`\r\n\x1b[31mFailed to connect: ${retryErr}\x1b[0m\r\n`);
               setExited(true);
               return;
@@ -270,16 +240,15 @@ export function TerminalPane({
           }
           setLoading(true);
         } else if (errStr.includes("WSL_SUDO_REQUIRED") && wslDistro) {
-          setPasswordDialogTitle("WSL Authentication");
-          setPasswordDialogSubtitle(wslDistro);
-          setPasswordDialogDescription(
-            "openssh-server is not installed in this WSL distro. Your sudo password is required for the one-time installation."
-          );
           setLoading(false);
           let authenticated = false;
           while (!authenticated) {
-            setPasswordConnecting(false);
-            const password = await promptPassword();
+            pwActions.setConnecting(false);
+            const password = await pwActions.prompt(
+              "WSL Authentication",
+              wslDistro,
+              "openssh-server is not installed in this WSL distro. Your sudo password is required for the one-time installation.",
+            );
             if (password === null || disposed) return;
             try {
               const result = await ipc.sessionCreateWslWithSudo(
@@ -287,16 +256,15 @@ export function TerminalPane({
               );
               sessionId = result.sessionId;
               connectionId = result.connectionId;
-              setShowPasswordDialog(false);
-              setPasswordConnecting(false);
+              pwActions.hide();
               authenticated = true;
             } catch (retryErr) {
-              setPasswordConnecting(false);
+              pwActions.setConnecting(false);
               if (String(retryErr).includes("WSL_SUDO_REQUIRED") || String(retryErr).includes("AUTH_FAILED")) {
-                setPasswordError("Authentication failed. Please try again.");
+                pwActions.setError("Authentication failed. Please try again.");
                 continue;
               }
-              setShowPasswordDialog(false);
+              pwActions.hide();
               term.write(`\r\n\x1b[31mFailed to connect: ${retryErr}\x1b[0m\r\n`);
               setExited(true);
               return;
@@ -521,25 +489,25 @@ export function TerminalPane({
       style={style}
       onClick={() => { onFocus(); termRef.current?.focus(); }}
     >
-      {loading && !exited && !showPasswordDialog && (
+      {loading && !exited && !pwState.visible && (
         <div className="terminal-loading">
           <div className="terminal-spinner" />
         </div>
       )}
-      {showPasswordDialog && (
+      {pwState.visible && (
         <div className="terminal-password-dialog">
           <div className="terminal-password-content">
-            <div className="terminal-password-title">{passwordDialogTitle}</div>
+            <div className="terminal-password-title">{pwState.title}</div>
             <div className="terminal-password-subtitle">
-              {passwordDialogSubtitle || `${sshUsername ?? ""}@${sshHost ?? ""}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`}
+              {pwState.subtitle || `${sshUsername ?? ""}@${sshHost ?? ""}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`}
             </div>
-            {passwordDialogDescription && (
-              <div className="terminal-password-description">{passwordDialogDescription}</div>
+            {pwState.description && (
+              <div className="terminal-password-description">{pwState.description}</div>
             )}
-            {passwordError && (
-              <div className="terminal-password-error">{passwordError}</div>
+            {pwState.error && (
+              <div className="terminal-password-error">{pwState.error}</div>
             )}
-            {passwordConnecting ? (
+            {pwState.connecting ? (
               <div className="terminal-password-connecting">
                 <div className="terminal-spinner" />
                 <span>Connecting...</span>
@@ -550,10 +518,10 @@ export function TerminalPane({
                   type="password"
                   className="terminal-password-input"
                   placeholder="Password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
+                  value={pwState.input}
+                  onChange={(e) => pwActions.setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") handlePasswordSubmit();
+                    if (e.key === "Enter") pwActions.submit();
                     if (e.key === "Escape") handlePasswordCancel();
                   }}
                   autoFocus
@@ -567,7 +535,7 @@ export function TerminalPane({
                   </button>
                   <button
                     className="terminal-password-submit"
-                    onClick={handlePasswordSubmit}
+                    onClick={pwActions.submit}
                   >
                     Connect
                   </button>
@@ -586,7 +554,7 @@ export function TerminalPane({
       <div
         ref={containerRef}
         className="terminal-container"
-        style={{ display: exited || showPasswordDialog ? "none" : undefined }}
+        style={{ display: exited || pwState.visible ? "none" : undefined }}
       />
       {exited && (
         <div className="terminal-exit-panel" onClick={handleRestart}>

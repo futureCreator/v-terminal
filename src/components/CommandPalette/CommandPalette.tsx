@@ -36,53 +36,13 @@ interface Props {
   onClose: () => void;
   extraSections?: PaletteSection[];
   onQueryChange?: (query: string) => void;
-  onCheatsheetTopicChange?: (topicId: string | null) => void;
   initialQuery?: string;
 }
 
 /* ── Fuzzy matching ─────────────────────────────────────────────── */
 
-interface FuzzyResult {
-  score: number;
-  indices: number[];
-}
-
-function fuzzyMatch(query: string, text: string): FuzzyResult | null {
-  const q = query.toLowerCase();
-  const t = text.toLowerCase();
-
-  let qi = 0;
-  let score = 0;
-  const indices: number[] = [];
-  let lastMatch = -1;
-
-  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
-    if (t[ti] === q[qi]) {
-      indices.push(ti);
-      if (lastMatch === ti - 1) score += 5; // consecutive
-      if (ti === 0 || /[\s\-:_]/.test(t[ti - 1])) score += 3; // word boundary
-      if (ti === qi) score += 2; // prefix
-      score += 1;
-      lastMatch = ti;
-      qi++;
-    }
-  }
-
-  if (qi < q.length) return null;
-  return { score, indices };
-}
-
-function fuzzyMatchCommand(query: string, cmd: Command): FuzzyResult | null {
-  const results = [
-    fuzzyMatch(query, cmd.label),
-    fuzzyMatch(query, cmd.category),
-    cmd.subSection ? fuzzyMatch(query, cmd.subSection) : null,
-    cmd.description ? fuzzyMatch(query, cmd.description) : null,
-  ].filter((r): r is FuzzyResult => r !== null);
-
-  if (results.length === 0) return null;
-  return results.reduce((best, r) => (r.score > best.score ? r : best));
-}
+import { fuzzyMatch, fuzzyMatchFields } from "../../lib/fuzzyMatch";
+import type { FuzzyResult } from "../../lib/fuzzyMatch";
 
 function highlightText(text: string, indices: number[]): React.ReactNode {
   if (indices.length === 0) return text;
@@ -100,7 +60,7 @@ function highlightText(text: string, indices: number[]): React.ReactNode {
 
 /* ── Prefix mode ────────────────────────────────────────────────── */
 
-type PrefixMode = "all" | "tabs" | "layout" | "connection" | "background" | "clipboard" | "cheatsheet";
+type PrefixMode = "all" | "tabs" | "layout" | "connection" | "background" | "clipboard";
 
 function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
   const trimmed = raw.trimStart();
@@ -119,22 +79,18 @@ function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
   if (trimmed.startsWith("!")) {
     return { mode: "clipboard", query: trimmed.slice(1).trimStart() };
   }
-  if (trimmed.startsWith("?")) {
-    return { mode: "cheatsheet", query: trimmed.slice(1).trimStart() };
-  }
   return { mode: "all", query: trimmed };
 }
 
 /* ── Component ──────────────────────────────────────────────────── */
 
-export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange, onCheatsheetTopicChange, initialQuery = "" }: Props) {
+export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange, initialQuery = "" }: Props) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [phase, setPhase] = useState<"in" | "out" | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   /* ── Build command list ─────────────────────────────────── */
   const commands = useMemo<Command[]>(() => {
@@ -174,25 +130,13 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
       pool = pool.filter((c) => c.category === "Background");
     } else if (mode === "clipboard") {
       pool = pool.filter((c) => c.category === "Clipboard");
-    } else if (mode === "cheatsheet") {
-      // When query is empty, show only topic entries (drill-down entry points)
-      // When query is typed, show all cheatsheet items for cross-topic search
-      if (!q) {
-        pool = pool.filter((c) => c.category === "Cheatsheet Topics" || c.category === "Cheatsheet");
-        // Further filter: if "Cheatsheet Topics" category, only show topic entries (id starts with "cheatsheet-topic:")
-        pool = pool.filter((c) => c.category === "Cheatsheet" || c.id.startsWith("cheatsheet-topic:"));
-      } else {
-        pool = pool.filter((c) => c.category === "Cheatsheet Topics" || c.category === "Cheatsheet");
-        // Exclude topic entries from search results — only show actual cheatsheet items
-        pool = pool.filter((c) => !c.id.startsWith("cheatsheet-topic:"));
-      }
     }
 
     if (!q) return pool;
 
     // Fuzzy filter + sort by score
     const scored = pool
-      .map((cmd) => ({ cmd, result: fuzzyMatchCommand(q, cmd) }))
+      .map((cmd) => ({ cmd, result: fuzzyMatchFields(q, cmd) }))
       .filter((x): x is { cmd: Command; result: FuzzyResult } => x.result !== null);
 
     scored.sort((a, b) => b.result.score - a.result.score);
@@ -217,7 +161,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
       setPhase("in");
       setQuery(initialQuery);
       setActiveIndex(0);
-      setSelectedTopic(null);
       onQueryChange?.(initialQuery);
     } else if (visible) {
       setPhase("out");
@@ -253,19 +196,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
     el?.scrollIntoView({ block: "nearest" });
   }, [activeIndex, q]);
 
-  useEffect(() => {
-    onCheatsheetTopicChange?.(selectedTopic);
-  }, [selectedTopic, onCheatsheetTopicChange]);
-
   /* ── Execute ────────────────────────────────────────────── */
   const execute = useCallback(async (cmd: Command) => {
-    // Cheatsheet topic selection → drill into topic
-    if (cmd.id.startsWith("cheatsheet-topic:")) {
-      const topicId = cmd.id.replace("cheatsheet-topic:", "");
-      setSelectedTopic(topicId);
-      setActiveIndex(0);
-      return;
-    }
     await cmd.action();
     onClose();
   }, [onClose]);
@@ -273,13 +205,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
   /* ── Keyboard ───────────────────────────────────────────── */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const max = totalCount - 1;
-
-    // Back navigation in cheatsheet drill-down
-    if (e.key === "Backspace" && mode === "cheatsheet" && selectedTopic && q === "") {
-      e.preventDefault();
-      setSelectedTopic(null);
-      return;
-    }
 
     switch (e.key) {
       case "Escape":
@@ -470,7 +395,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
   };
 
   // Mode indicator for prefix
-  const modeLabel = mode === "tabs" ? "Tabs" : mode === "connection" ? "Connection" : mode === "layout" ? "Layout" : mode === "background" ? "Background" : mode === "clipboard" ? "Clipboard" : mode === "cheatsheet" ? "Cheatsheet" : null;
+  const modeLabel = mode === "tabs" ? "Tabs" : mode === "connection" ? "Connection" : mode === "layout" ? "Layout" : mode === "background" ? "Background" : mode === "clipboard" ? "Clipboard" : null;
 
   return createPortal(
     <div
@@ -493,7 +418,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "connection" ? "Switch connection..." : mode === "layout" ? "Change layout..." : mode === "background" ? "Restore background tab..." : mode === "clipboard" ? "Search clipboard history..." : mode === "cheatsheet" ? "Search cheatsheets..." : "Search commands..."}
+            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "connection" ? "Switch connection..." : mode === "layout" ? "Change layout..." : mode === "background" ? "Restore background tab..." : mode === "clipboard" ? "Search clipboard history..." : "Search commands..."}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); onQueryChange?.(e.target.value); }}
             onKeyDown={handleKeyDown}
@@ -528,7 +453,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
           <span className="cp-hint"><kbd>#</kbd> Connect</span>
           <span className="cp-hint"><kbd>%</kbd> Layout</span>
           <span className="cp-hint"><kbd>!</kbd> Clipboard</span>
-          <span className="cp-hint"><kbd>?</kbd> Cheatsheet</span>
         </div>
       </div>
     </div>,

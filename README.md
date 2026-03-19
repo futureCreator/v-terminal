@@ -93,6 +93,19 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.16.2 - 2026-03-20
+
+- **refactor**: App.tsx decomposed from 977 lines to 387 lines — extracted migrations, keyboard shortcuts, theme application, and palette command builders into dedicated modules
+- **refactor**: Extracted `useGlobalKeyboardShortcuts` hook — global keyboard shortcut handling isolated from App component
+- **refactor**: Extracted `useThemeApplication` hook — theme CSS variable injection and system color scheme listener
+- **refactor**: Extracted `useMigrations` hook — one-time data migration logic (notes→todos, browser panel conversion)
+- **refactor**: Extracted `usePasswordDialog` hook — SSH/WSL password dialog state machine extracted from TerminalPane (570 lines, down from 602)
+- **refactor**: Extracted `fuzzyMatch` utility — fuzzy matching algorithm moved from CommandPalette to reusable `src/lib/fuzzyMatch.ts`
+- **refactor**: Extracted `paletteCommands.tsx` — command palette section builders (tab, layout, clipboard, connection) moved to `src/lib/`
+- **refactor**: Extracted `noteCleanup.ts` — consolidated duplicated note panel cleanup logic from 4 locations into shared utility
+- **refactor**: Extracted `formatRelativeTime` utility to `src/lib/formatters.ts`
+- **cleanup**: Removed Cheatsheet feature — deleted CheatsheetPanel component and all cheatsheet data files (docker, git, kubectl, vim)
+
 ### v0.16.1 - 2026-03-20
 
 - **fix**: Browser panel width changed from fixed 600px to 40% of window width — scales properly across different screen sizes

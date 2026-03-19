@@ -1,10 +1,9 @@
 import { TodoSection } from "../NotePanel/TodoSection";
 import { TimersPanel } from "./TimersPanel";
-import { CheatsheetPanel } from "./CheatsheetPanel";
 import "../NotePanel/NotePanel.css";
 import "./SidePanel.css";
 
-export type SidebarTab = "todos" | "timers" | "cheatsheet";
+export type SidebarTab = "todos" | "timers";
 
 interface SidePanelProps {
   activeTab: SidebarTab;
@@ -41,16 +40,6 @@ export function SidePanel({ activeTab, onTabChange, onClose }: SidePanelProps) {
               <line x1="7.5" y1="1.5" x2="7.5" y2="3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
           </button>
-          <button
-            className={`side-panel-tab${activeTab === "cheatsheet" ? " side-panel-tab--active" : ""}`}
-            onClick={() => onTabChange("cheatsheet")}
-            title="Cheatsheet"
-          >
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <path d="M5.5 3.5L2.5 7.5l3 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M9.5 3.5l3 4-3 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
         </div>
         <button
           className="side-panel-close"
@@ -72,7 +61,6 @@ export function SidePanel({ activeTab, onTabChange, onClose }: SidePanelProps) {
       <div className="side-panel-body">
         {activeTab === "todos" && <TodoSection />}
         {activeTab === "timers" && <TimersPanel />}
-        {activeTab === "cheatsheet" && <CheatsheetPanel />}
       </div>
     </div>
   );

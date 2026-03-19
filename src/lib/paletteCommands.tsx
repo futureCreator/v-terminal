@@ -1,0 +1,326 @@
+import type { PaletteSection } from "../components/CommandPalette/CommandPalette";
+import type { Tab, Layout, PanelConnection, SshProfile, Panel } from "../types/terminal";
+import type { ClipboardEntry } from "../store/clipboardStore";
+import { formatRelativeTime } from "./formatters";
+import { cleanupNotePanel } from "./noteCleanup";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+
+/* ── Icon helper ─────────────────────────────────────────────────── */
+
+function Icon({ children }: { children: React.ReactNode }) {
+  return <span className="cp-cmd-icon">{children}</span>;
+}
+
+/* ── Tab commands ────────────────────────────────────────────────── */
+
+interface TabCommandsParams {
+  activeTab: Tab | undefined;
+  tabs: Tab[];
+  sidebarOpen: boolean;
+  browserPanelOpen: boolean;
+  panelCount: number;
+  onNewTab: () => void;
+  onCloseTab: () => void;
+  onToggleBroadcast: () => void;
+  onPrevTab: () => void;
+  onNextTab: () => void;
+  onToggleToolkit: () => void;
+  onToggleBrowserPanel: () => void;
+  onOpenSshProfiles: () => void;
+  onOpenSettings: () => void;
+  onTogglePanelZoom: () => void;
+  onPrevPanel: () => void;
+  onNextPanel: () => void;
+}
+
+export function buildTabSection(p: TabCommandsParams): PaletteSection {
+  const commands = [
+    {
+      id: "tab:new",
+      label: "New Tab",
+      description: "Open a new terminal tab",
+      meta: "Ctrl+Shift+T",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg></Icon>,
+      action: p.onNewTab,
+    },
+    {
+      id: "tab:close",
+      label: "Close Current Tab",
+      description: "Close the active tab",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg></Icon>,
+      action: p.onCloseTab,
+    },
+    {
+      id: "tab:broadcast",
+      label: p.activeTab?.broadcastEnabled ? "Disable Broadcast" : "Enable Broadcast",
+      description: "Send keyboard input to all panels in the current tab simultaneously",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="1.5" fill="currentColor" /><path d="M4 7a3 3 0 0 1 3-3M10 7a3 3 0 0 1-3 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /><path d="M1.5 7A5.5 5.5 0 0 1 7 1.5M12.5 7A5.5 5.5 0 0 1 7 12.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg></Icon>,
+      isActive: p.activeTab?.broadcastEnabled,
+      action: p.onToggleBroadcast,
+    },
+    ...(p.tabs.length > 1 ? [
+      {
+        id: "tab:prev",
+        label: "Previous Tab",
+        description: "Switch to the tab on the left",
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 3L4 7l4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /><rect x="9" y="3" width="2" height="8" rx="0.8" fill="currentColor" opacity="0.35" /></svg></Icon>,
+        action: p.onPrevTab,
+      },
+      {
+        id: "tab:next",
+        label: "Next Tab",
+        description: "Switch to the tab on the right",
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M6 3l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /><rect x="3" y="3" width="2" height="8" rx="0.8" fill="currentColor" opacity="0.35" /></svg></Icon>,
+        action: p.onNextTab,
+      },
+    ] : []),
+    {
+      id: "view:toolkit",
+      label: p.sidebarOpen ? "Hide Toolkit" : "Show Toolkit",
+      description: "Toggle the side panel with notes, timers, and tools",
+      meta: "Ctrl+Shift+N",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.1" /></svg></Icon>,
+      isActive: p.sidebarOpen,
+      action: p.onToggleToolkit,
+    },
+    {
+      id: "view:browser",
+      label: p.browserPanelOpen ? "Hide Browser" : "Show Browser",
+      description: "Toggle the browser side panel",
+      meta: "Ctrl+Shift+B",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" /><ellipse cx="7" cy="7" rx="2.5" ry="5.5" stroke="currentColor" strokeWidth="1" /><line x1="1.5" y1="7" x2="12.5" y2="7" stroke="currentColor" strokeWidth="1" /></svg></Icon>,
+      isActive: p.browserPanelOpen,
+      action: p.onToggleBrowserPanel,
+    },
+    {
+      id: "ssh:profiles",
+      label: "SSH Profiles",
+      description: "Manage and connect to saved SSH servers",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M1 5.5h12" stroke="currentColor" strokeWidth="1.3" /><circle cx="3" cy="4.25" r="0.6" fill="currentColor" /><circle cx="5" cy="4.25" r="0.6" fill="currentColor" /><path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /><path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg></Icon>,
+      action: p.onOpenSshProfiles,
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      description: "Configure appearance, terminal, and font settings",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M3.05 3.05l1.06 1.06M9.89 9.89l1.06 1.06M10.95 3.05l-1.06 1.06M4.11 9.89l-1.06 1.06" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg></Icon>,
+      action: p.onOpenSettings,
+    },
+    ...(p.panelCount > 1 ? [
+      {
+        id: "panel:zoom",
+        label: "Zoom Current Panel",
+        description: "Toggle fullscreen for the focused panel",
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 5V2h3M10 2h3v3M13 9v3h-3M4 13H1v-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg></Icon>,
+        action: p.onTogglePanelZoom,
+      },
+      {
+        id: "panel:prev",
+        label: "Previous Panel",
+        description: "Move focus to the previous panel",
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="7.5" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" opacity="0.4" /><path d="M4.5 7H11M4.5 7L6.5 5M4.5 7L6.5 9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" /></svg></Icon>,
+        action: p.onPrevPanel,
+      },
+      {
+        id: "panel:next",
+        label: "Next Panel",
+        description: "Move focus to the next panel",
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" opacity="0.4" /><rect x="7.5" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" /><path d="M9.5 7H3M9.5 7L7.5 5M9.5 7L7.5 9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" /></svg></Icon>,
+        action: p.onNextPanel,
+      },
+    ] : []),
+  ];
+
+  return { category: "Tab", commands };
+}
+
+/* ── Tab list commands ───────────────────────────────────────────── */
+
+export function buildTabListSection(
+  tabs: Tab[],
+  activeTabId: string,
+  setActiveTab: (id: string) => void,
+): PaletteSection {
+  return {
+    category: "Tab List",
+    commands: tabs.map((tab) => ({
+      id: `tab:switch:${tab.id}`,
+      label: tab.label,
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.2" stroke="currentColor" strokeWidth="1.2" /><path d="M1 6h12" stroke="currentColor" strokeWidth="1.2" /><path d="M4 4.5V1.5M10 4.5V1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg></Icon>,
+      isActive: tab.id === activeTabId,
+      action: () => setActiveTab(tab.id),
+    })),
+  };
+}
+
+/* ── Layout commands ─────────────────────────────────────────────── */
+
+const LAYOUT_OPTIONS: Array<{ value: Layout; label: string; icon: React.ReactNode }> = [
+  {
+    value: 1,
+    label: "1 Panel",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="16" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
+  },
+  {
+    value: 2,
+    label: "2 Panels",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="7" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="1" width="7" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
+  },
+  {
+    value: 3,
+    label: "3 Panels",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="7" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="1" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="7.5" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
+  },
+  {
+    value: 4,
+    label: "4 Panels",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="1" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="1" y="7.5" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="7.5" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
+  },
+  {
+    value: "4c",
+    label: "4 Columns",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 22 14" fill="none"><rect x="1" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="6.25" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="11.5" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="16.75" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /></svg></Icon>,
+  },
+  {
+    value: 6,
+    label: "6 Panels",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 20 14" fill="none"><rect x="1" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="7.5" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="14" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="1" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="7.5" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="14" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /></svg></Icon>,
+  },
+  {
+    value: 9,
+    label: "9 Panels",
+    icon: <Icon><svg width="14" height="14" viewBox="0 0 20 16" fill="none">{[0, 1, 2].map((col) => [0, 1, 2].map((row) => (<rect key={`${col}-${row}`} x={1 + col * 6.5} y={1 + row * 4.8} width="5" height="3.6" rx="0.8" stroke="currentColor" strokeWidth="1" />)))}</svg></Icon>,
+  },
+];
+
+export function buildLayoutSection(
+  activeTab: Tab | undefined,
+  onLayoutChange: (layout: Layout) => void,
+): PaletteSection {
+  return {
+    category: "Layout",
+    commands: LAYOUT_OPTIONS.map(({ value, label, icon }) => ({
+      id: `layout:${value}`,
+      label,
+      description: `Split the current tab into ${label.toLowerCase()}`,
+      icon,
+      isActive: activeTab?.layout === value,
+      action: () => onLayoutChange(value),
+    })),
+  };
+}
+
+/* ── Clipboard commands ──────────────────────────────────────────── */
+
+export function buildClipboardSection(
+  entries: ClipboardEntry[],
+  clearHistory: () => void,
+): PaletteSection {
+  const commands = entries.map((entry) => {
+    const preview = entry.text.split("\n")[0].slice(0, 80);
+    return {
+      id: `clip:${entry.id}`,
+      label: preview,
+      meta: formatRelativeTime(entry.copiedAt),
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="3" y="1" width="8" height="2" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="2" y="2.5" width="10" height="10.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
+      action: async () => {
+        try { await writeText(entry.text); } catch { /* ignore */ }
+      },
+    };
+  });
+
+  if (entries.length > 0) {
+    commands.push({
+      id: "clip:clear",
+      label: "Clear Clipboard History",
+      meta: "",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 4h8M5.5 4V3h3v1M4 4v7.5a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" /></svg></Icon>,
+      action: async () => { clearHistory(); },
+    });
+  }
+
+  return { category: "Clipboard", commands };
+}
+
+/* ── Switch Connection commands ──────────────────────────────────── */
+
+interface ConnectionCommandsParams {
+  activeTab: Tab | undefined;
+  activePanelId: string | null;
+  activePanel: Panel | null;
+  wslDistros: string[];
+  sshProfiles: SshProfile[];
+  switchPanelConnection: (tabId: string, panelId: string, connection: PanelConnection) => void;
+}
+
+export function buildConnectionSection(p: ConnectionCommandsParams): PaletteSection | null {
+  if (!p.activeTab || !p.activePanelId) return null;
+
+  const conn = p.activePanel?.connection;
+  const connType = conn?.type ?? "local";
+  const isActiveLocal = connType === "local";
+  const tabId = p.activeTab.id;
+  const panelId = p.activePanelId;
+
+  const commands = [
+    {
+      id: "conn:local",
+      label: "Local Shell",
+      description: "Switch to a local terminal session",
+      meta: "PowerShell",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" /><path d="M3.5 6l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /><path d="M7.5 9.5h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg></Icon>,
+      isActive: isActiveLocal,
+      action: () => {
+        if (isActiveLocal) return;
+        if (connType === "note") cleanupNotePanel(panelId);
+        p.switchPanelConnection(tabId, panelId, { type: "local" });
+      },
+    },
+    {
+      id: "conn:note",
+      label: "Note",
+      description: "Switch to a markdown note editor",
+      meta: "Markdown",
+      icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /><line x1="4.5" y1="4" x2="9.5" y2="4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" /><line x1="4.5" y1="6.5" x2="9.5" y2="6.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" /><line x1="4.5" y1="9" x2="7.5" y2="9" stroke="currentColor" strokeWidth="1" strokeLinecap="round" /></svg></Icon>,
+      isActive: connType === "note",
+      action: () => {
+        if (connType === "note") return;
+        p.switchPanelConnection(tabId, panelId, { type: "note" });
+      },
+    },
+    ...p.wslDistros.map((distro) => {
+      const isActiveWsl = connType === "wsl" && conn?.wslDistro === distro;
+      return {
+        id: `conn:wsl:${distro}`,
+        label: distro,
+        description: `Switch to WSL: ${distro}`,
+        meta: "WSL",
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" /><path d="M4 5.5c.5-1 1.5-1.5 3-1.5s2.5.5 3 1.5M4 8.5c.5 1 1.5 1.5 3 1.5s2.5-.5 3-1.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg></Icon>,
+        isActive: isActiveWsl,
+        action: () => {
+          if (isActiveWsl) return;
+          if (connType === "note") cleanupNotePanel(panelId);
+          p.switchPanelConnection(tabId, panelId, { type: "wsl", wslDistro: distro });
+        },
+      };
+    }),
+    ...p.sshProfiles.map((profile) => {
+      const isActiveSsh = connType === "ssh" && conn?.sshProfileId === profile.id;
+      return {
+        id: `conn:ssh:${profile.id}`,
+        label: profile.name,
+        description: `Switch to SSH: ${profile.username}@${profile.host}${profile.port !== 22 ? `:${profile.port}` : ""}`,
+        meta: `${profile.username}@${profile.host}`,
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M1 5.5h12" stroke="currentColor" strokeWidth="1.3" /><circle cx="3" cy="4.25" r="0.6" fill="currentColor" /><circle cx="5" cy="4.25" r="0.6" fill="currentColor" /><path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /><path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg></Icon>,
+        isActive: isActiveSsh,
+        action: () => {
+          if (isActiveSsh) return;
+          if (connType === "note") cleanupNotePanel(panelId);
+          p.switchPanelConnection(tabId, panelId, { type: "ssh", sshProfileId: profile.id });
+        },
+      };
+    }),
+  ];
+
+  return { category: "Switch Connection", commands };
+}

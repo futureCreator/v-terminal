@@ -5,8 +5,8 @@ import { NotePanel } from "../NotePanel/NotePanel";
 import { PanelContextMenu } from "../PanelContextMenu/PanelContextMenu";
 import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
-import { useNoteStore } from "../../store/noteStore";
 import { useSshStore } from "../../store/sshStore";
+import { cleanupNotePanel } from "../../lib/noteCleanup";
 import { ipc } from "../../lib/tauriIpc";
 import "./PanelGrid.css";
 
@@ -62,7 +62,7 @@ export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged,
       const currentPanel = currentTab?.panels.find((p) => p.id === ctxMenu.panelId);
       // Clean up note data if switching away from note panel
       if (currentPanel?.connection?.type === "note" && connection.type !== "note") {
-        useNoteStore.getState().removeNote(ctxMenu.panelId);
+        cleanupNotePanel(ctxMenu.panelId);
       }
       switchPanelConnection(tab.id, ctxMenu.panelId, connection);
       setCtxMenu(null);
