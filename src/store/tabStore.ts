@@ -216,7 +216,7 @@ export const useTabStore = create<TabStore>((set, get) => {
       if (newCount > oldPanels.length) {
         // Inherit connection from the first panel so new panels match (e.g. SSH)
         const firstConn = oldPanels[0]?.connection;
-        const baseConnection = firstConn?.type === "note" ? undefined : firstConn;
+        const baseConnection = (firstConn?.type === "note" || firstConn?.type === "browser") ? undefined : firstConn;
         const extra: Panel[] = Array.from(
           { length: newCount - oldPanels.length },
           () => ({

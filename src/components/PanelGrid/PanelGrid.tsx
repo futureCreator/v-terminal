@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { Tab, PanelConnection } from "../../types/terminal";
 import { TerminalPane } from "../TerminalPane/TerminalPane";
 import { NotePanel } from "../NotePanel/NotePanel";
+import { BrowserPanel } from "../BrowserPanel/BrowserPanel";
 import { PanelContextMenu } from "../PanelContextMenu/PanelContextMenu";
 import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
@@ -57,9 +58,13 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
   const handleSwitchConnection = useCallback(
     (connection: PanelConnection) => {
       if (!ctxMenu) return;
-      // Clean up note data if switching away from note panel
       const currentTab = useTabStore.getState().tabs.find((t) => t.id === tab.id);
       const currentPanel = currentTab?.panels.find((p) => p.id === ctxMenu.panelId);
+      // Clean up browser webview if switching away from browser panel
+      if (currentPanel?.connection?.type === "browser") {
+        ipc.browserDestroy(`browser-${ctxMenu.panelId}`).catch(() => {});
+      }
+      // Clean up note data if switching away from note panel
       if (currentPanel?.connection?.type === "note" && connection.type !== "note") {
         useNoteStore.getState().removeNote(ctxMenu.panelId);
       }
@@ -179,6 +184,15 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
               <NotePanel
                 panelId={panel.id}
                 isActive={panel.id === activePanelId}
+                onFocus={() => setActivePanelId(panel.id)}
+              />
+            ) : panel.connection?.type === "browser" ? (
+              <BrowserPanel
+                panelId={panel.id}
+                tabId={tab.id}
+                browserUrl={panel.connection.browserUrl}
+                isActive={panel.id === activePanelId}
+                isVisible={isVisible && !hidden}
                 onFocus={() => setActivePanelId(panel.id)}
               />
             ) : (
