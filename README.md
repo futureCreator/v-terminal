@@ -93,6 +93,12 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.13.1 - 2026-03-19
+
+- **feat**: Onboarding "Flexible Layout" slide — new welcome page slide showcasing multi-panel layouts (1 to 9 panels) and independent panel connections (Local, SSH, WSL)
+- **feat**: CSS-only layout illustration with miniature layout thumbnails (single, split, quad, L-shaped) and a 2-panel split preview showing different connection types with colored badges
+- **fix**: Keycap badges conditionally rendered — slides without shortcut keys no longer display an empty shortcut section
+
 ### v0.13.0 - 2026-03-19
 
 - **refactor**: Terminal font changed from JetBrains Mono Nerd Font to plain JetBrains Mono — lighter, cleaner default font without bundled Nerd Font glyphs

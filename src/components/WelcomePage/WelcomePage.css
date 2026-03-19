@@ -368,6 +368,146 @@
   50% { opacity: 0; }
 }
 
+/* ── Illustration: Flexible Layout ────────────────────────────── */
+
+.illust-layout {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.illust-layout-thumbs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.illust-layout-thumb {
+  width: 36px;
+  height: 28px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 4px;
+  border: 1px solid var(--separator-strong);
+  background: var(--bg-primary);
+  cursor: default;
+  transition: border-color 200ms;
+}
+
+.illust-layout-thumb--active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-primary));
+}
+
+.illust-layout-thumb--quad {
+  flex-wrap: wrap;
+}
+
+.illust-layout-thumb--triple {
+  flex-wrap: wrap;
+}
+
+.illust-layout-cell {
+  flex: 1;
+  min-width: 0;
+  background: var(--label-tertiary);
+  border-radius: 2px;
+  opacity: 0.3;
+}
+
+.illust-layout-thumb--active .illust-layout-cell {
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.illust-layout-thumb--quad .illust-layout-cell {
+  flex: 0 0 calc(50% - 1px);
+}
+
+.illust-layout-thumb--triple .illust-layout-cell {
+  flex: 0 0 calc(50% - 1px);
+}
+
+.illust-layout-thumb--triple .illust-layout-cell--tall {
+  flex: 0 0 calc(50% - 1px);
+  height: 100%;
+}
+
+.illust-layout-preview {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  gap: 1px;
+  background: var(--separator-strong);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.illust-layout-pane {
+  flex: 1;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 6px;
+}
+
+.illust-layout-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--label-secondary);
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  padding: 2px 8px;
+  width: fit-content;
+  letter-spacing: 0.3px;
+}
+
+.illust-layout-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34c759;
+  flex-shrink: 0;
+}
+
+.illust-layout-badge-dot--ssh {
+  background: #5ac8fa;
+}
+
+.illust-layout-badge--ssh {
+  color: var(--label-secondary);
+}
+
+.illust-layout-line {
+  height: 5px;
+  width: 70%;
+  background: var(--label-tertiary);
+  border-radius: 3px;
+  opacity: 0.2;
+}
+
+.illust-layout-line--short {
+  width: 45%;
+}
+
+.illust-layout-cursor {
+  width: 7px;
+  height: 12px;
+  background: var(--label-primary);
+  border-radius: 1px;
+  opacity: 0.6;
+  margin-top: auto;
+  animation: cursor-blink 1s step-end infinite;
+}
+
 /* ── Illustration: Productivity Tools ─────────────────────────── */
 
 .illust-productivity {

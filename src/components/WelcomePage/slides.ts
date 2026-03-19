@@ -14,6 +14,13 @@ export const slides: SlideData[] = [
     shortcutKeys: ["Ctrl", "K"],
   },
   {
+    id: "flexible-layout",
+    headline: "Your workspace, your way",
+    description:
+      "Switch between single to 9-panel layouts instantly. Each panel connects independently to Local, SSH, or WSL — mix them freely in one view.",
+    shortcutKeys: [],
+  },
+  {
     id: "productivity",
     headline: "Stay focused, stay in flow",
     description:

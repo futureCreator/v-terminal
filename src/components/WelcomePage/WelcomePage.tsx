@@ -68,6 +68,7 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
                 <div className={`welcome-illustration welcome-illustration--${slide.id}`}>
                   {slide.id === "command-palette" && <CommandPaletteIllustration />}
                   {slide.id === "claude-code" && <ClaudeCodeIllustration />}
+                  {slide.id === "flexible-layout" && <LayoutIllustration />}
                   {slide.id === "productivity" && <ProductivityIllustration />}
                 </div>
 
@@ -76,14 +77,16 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
                 <p className="welcome-description">{slide.description}</p>
 
                 {/* Keycap badges */}
-                <div className="welcome-shortcut">
-                  {slide.shortcutKeys.map((key, i) => (
-                    <span key={i}>
-                      {i > 0 && <span className="welcome-shortcut-plus">+</span>}
-                      <kbd className="welcome-keycap">{key}</kbd>
-                    </span>
-                  ))}
-                </div>
+                {slide.shortcutKeys.length > 0 && (
+                  <div className="welcome-shortcut">
+                    {slide.shortcutKeys.map((key, i) => (
+                      <span key={i}>
+                        {i > 0 && <span className="welcome-shortcut-plus">+</span>}
+                        <kbd className="welcome-keycap">{key}</kbd>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -158,6 +161,56 @@ function ClaudeCodeIllustration() {
         <div className="illust-claude-term-line" />
         <div className="illust-claude-term-line illust-claude-term-line--short" />
         <div className="illust-claude-cursor" />
+      </div>
+    </div>
+  );
+}
+
+function LayoutIllustration() {
+  return (
+    <div className="illust-layout">
+      {/* Layout option thumbnails */}
+      <div className="illust-layout-thumbs">
+        <div className="illust-layout-thumb">
+          <div className="illust-layout-cell" />
+        </div>
+        <div className="illust-layout-thumb illust-layout-thumb--active">
+          <div className="illust-layout-cell" />
+          <div className="illust-layout-cell" />
+        </div>
+        <div className="illust-layout-thumb illust-layout-thumb--quad">
+          <div className="illust-layout-cell" />
+          <div className="illust-layout-cell" />
+          <div className="illust-layout-cell" />
+          <div className="illust-layout-cell" />
+        </div>
+        <div className="illust-layout-thumb illust-layout-thumb--triple">
+          <div className="illust-layout-cell illust-layout-cell--tall" />
+          <div className="illust-layout-cell" />
+          <div className="illust-layout-cell" />
+        </div>
+      </div>
+
+      {/* Main preview — 2-panel split */}
+      <div className="illust-layout-preview">
+        <div className="illust-layout-pane">
+          <div className="illust-layout-badge">
+            <span className="illust-layout-badge-dot" />
+            Local
+          </div>
+          <div className="illust-layout-line" />
+          <div className="illust-layout-line illust-layout-line--short" />
+          <div className="illust-layout-cursor" />
+        </div>
+        <div className="illust-layout-pane">
+          <div className="illust-layout-badge illust-layout-badge--ssh">
+            <span className="illust-layout-badge-dot illust-layout-badge-dot--ssh" />
+            SSH
+          </div>
+          <div className="illust-layout-line" />
+          <div className="illust-layout-line illust-layout-line--short" />
+          <div className="illust-layout-cursor" />
+        </div>
       </div>
     </div>
   );
