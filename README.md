@@ -93,6 +93,19 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.14.0 - 2026-03-19
+
+- **feat**: Note Panel — notes promoted from a side panel tab to a full panel type; any panel can be switched to a markdown editor via right-click context menu, command palette (`#` prefix), or SessionPicker
+- **feat**: Multiple note panels — a single tab can have a mix of terminal and note panels in any layout (e.g., 2-split: terminal left, note right)
+- **feat**: Global Todos — todo list extracted from per-tab notes into a single global list, accessible from the dedicated "Todos" tab in the toolkit side panel
+- **feat**: Workspace persistence — tab layout, panel types, connection info, and note content are saved to localStorage and fully restored on app restart
+- **feat**: Todos tab icon — new checklist-style SVG icon replaces the old notes icon in the toolkit panel
+- **refactor**: `noteStore` rewritten to key by panel ID instead of tab ID; todos moved to separate `todoStore`
+- **refactor**: Side panel restructured: Notes tab removed, Todos tab added as first tab (global)
+- **fix**: Note data properly cleaned up on tab close, layout shrink, and panel connection switch
+- **fix**: Layout expansion from a note panel creates local terminal panels (not more note panels)
+- **migration**: Existing per-tab todos are merged into the global todo list; per-tab notes are discarded (incompatible with panel-based model)
+
 ### v0.13.5 - 2026-03-19
 
 - **perf**: Tab close is now instant — `handleTabKill` no longer `await`s session kills before removing the tab; UI updates immediately with kills running in the background (fire-and-forget)
