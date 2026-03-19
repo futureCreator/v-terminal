@@ -6,10 +6,11 @@ import { useThemeStore } from "../../store/themeStore";
 import { THEME_GROUPS } from "../../themes/definitions";
 import { ensureSpecificFontLoaded } from "../../lib/fontLoader";
 import { useOnboardingStore } from "../../store/onboardingStore";
+import { useBrowserConfigStore } from "../../store/browserConfigStore";
 import { Toast } from "../Toast/Toast";
 import "./SettingsModal.css";
 
-type Tab = "appearance" | "terminal";
+type Tab = "appearance" | "terminal" | "browser";
 
 const FONT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "JetBrains Mono", label: "JetBrains Mono" },
@@ -47,6 +48,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const { themeId, setThemeId } = useThemeStore();
   const resetOnboarding = useOnboardingStore((s) => s.reset);
+  const { homePage, setHomePage } = useBrowserConfigStore();
   const [toastVisible, setToastVisible] = useState(false);
 
   // ESC to close
@@ -142,6 +144,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </svg>
               Terminal
             </button>
+            <button
+              className={`settings-nav-item${activeTab === "browser" ? " settings-nav-item--active" : ""}`}
+              onClick={() => setActiveTab("browser")}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+                <ellipse cx="7" cy="7" rx="2.5" ry="5.5" stroke="currentColor" strokeWidth="1" />
+                <line x1="1.5" y1="7" x2="12.5" y2="7" stroke="currentColor" strokeWidth="1" />
+              </svg>
+              Browser
+            </button>
           </nav>
 
           {/* Right Content */}
@@ -171,6 +184,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onLineHeightChange={setLineHeight}
                 onScrollbackChange={setScrollback}
                 onFontSizeChange={setFontSize}
+              />
+            )}
+            {activeTab === "browser" && (
+              <BrowserSettingsTab
+                homePage={homePage}
+                onHomePageChange={setHomePage}
               />
             )}
           </div>
@@ -475,6 +494,37 @@ function TerminalTab({
               if (!isNaN(val)) onScrollbackChange(val);
             }}
           />
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ── Browser Tab ──────────────────────────────────────────────── */
+
+interface BrowserSettingsTabProps {
+  homePage: string;
+  onHomePageChange: (url: string) => void;
+}
+
+function BrowserSettingsTab({ homePage, onHomePageChange }: BrowserSettingsTabProps) {
+  return (
+    <>
+      <div className="settings-section">
+        <div className="settings-section-label">Home Page</div>
+        <div className="settings-field">
+          <input
+            className="settings-text-input"
+            type="text"
+            value={homePage}
+            onChange={(e) => onHomePageChange(e.target.value)}
+            placeholder="https://example.com"
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <span className="settings-field-sublabel">
+            Leave empty for blank page
+          </span>
         </div>
       </div>
     </>
