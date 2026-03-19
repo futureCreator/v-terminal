@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.13.4 - 2026-03-19
+
+- **fix**: Tab close kills panels sequentially instead of in parallel — `SessionManager::kill()` held the tokio `Mutex` lock across `session.kill().await` due to Rust 2021 `if let` temporary lifetime rules; separated the lock scope so concurrent kills no longer serialize through mutex contention
+
 ### v0.13.3 - 2026-03-19
 
 - **fix**: Terminal output overflow in split layouts — moved padding from `.terminal-container` to `.xterm` element so that xterm.js FitAddon correctly accounts for padding when calculating row count; previously `box-sizing: border-box` caused FitAddon to overestimate available height, rendering extra rows that overflowed behind adjacent panels

@@ -184,15 +184,19 @@ impl SessionManager {
     }
 
     pub async fn kill(&self, session_id: &str) -> Result<(), String> {
-        if let Some(session) = self.sessions.lock().await.remove(session_id) {
+        // Remove from map first, then release lock before killing.
+        // In Rust 2021, `if let` keeps the MutexGuard alive across the block,
+        // so we use a separate `let` binding to drop it at the semicolon.
+        let session = self.sessions.lock().await.remove(session_id);
+        if let Some(session) = session {
             session.kill().await?;
         }
         Ok(())
     }
 
     pub async fn kill_all(&self) {
-        let mut sessions = self.sessions.lock().await;
-        for (_, session) in sessions.drain() {
+        let all: Vec<_> = self.sessions.lock().await.drain().collect();
+        for (_, session) in all {
             let _ = session.kill().await;
         }
         let mut pool = self.ssh_pool.lock().await;
