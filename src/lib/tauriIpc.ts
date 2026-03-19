@@ -102,4 +102,30 @@ export const ipc = {
     sshStatusHandlers.set(connectionId, handler);
     return () => { sshStatusHandlers.delete(connectionId); };
   },
+
+  // Browser panel
+  async browserCreate(label: string, url: string, x: number, y: number, width: number, height: number): Promise<void> {
+    return invoke("browser_create", { label, url, x, y, width, height });
+  },
+  async browserNavigate(label: string, url: string): Promise<void> {
+    return invoke("browser_navigate", { label, url });
+  },
+  async browserGoBack(label: string): Promise<void> {
+    return invoke("browser_go_back", { label });
+  },
+  async browserGoForward(label: string): Promise<void> {
+    return invoke("browser_go_forward", { label });
+  },
+  async browserReload(label: string): Promise<void> {
+    return invoke("browser_reload", { label });
+  },
+  async browserResize(label: string, x: number, y: number, width: number, height: number): Promise<void> {
+    return invoke("browser_resize", { label, x, y, width, height });
+  },
+  async browserDestroy(label: string): Promise<void> {
+    return invoke("browser_destroy", { label });
+  },
+  async browserGetCurrentUrl(label: string): Promise<string> {
+    return invoke<string>("browser_get_current_url", { label });
+  },
 };
