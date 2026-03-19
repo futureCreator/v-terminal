@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useTodoStore } from "../../store/todoStore";
 import { useTerminalConfigStore } from "../../store/terminalConfigStore";
 
 export function TodoSection() {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -59,7 +61,7 @@ export function TodoSection() {
             strokeLinejoin="round"
           />
         </svg>
-        <span className="todo-header-label">TODO</span>
+        <span className="todo-header-label">{t('todo.title')}</span>
         {total > 0 && (
           <span className="todo-header-count">
             {completed}/{total}
@@ -72,8 +74,8 @@ export function TodoSection() {
               e.stopPropagation();
               clearCompleted();
             }}
-            aria-label="Clear completed"
-            title="Clear completed"
+            aria-label={t('todo.clearCompleted')}
+            title={t('todo.clearCompleted')}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path
@@ -99,7 +101,7 @@ export function TodoSection() {
                 <button
                   className="todo-checkbox"
                   onClick={() => toggleTodo(todo.id)}
-                  aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
+                  aria-label={todo.completed ? t('todo.markIncomplete') : t('todo.markComplete')}
                 >
                   {todo.completed ? (
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -154,8 +156,8 @@ export function TodoSection() {
                 <button
                   className="todo-delete"
                   onClick={() => removeTodo(todo.id)}
-                  aria-label="Delete"
-                  title="Delete"
+                  aria-label={t('todo.delete')}
+                  title={t('todo.delete')}
                 >
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                     <path
@@ -174,7 +176,7 @@ export function TodoSection() {
               ref={inputRef}
               className="todo-input"
               type="text"
-              placeholder="Add a task..."
+              placeholder={t('todo.addTask')}
               style={{ fontSize: `${fontSize}px` }}
               onKeyDown={handleAdd}
             />

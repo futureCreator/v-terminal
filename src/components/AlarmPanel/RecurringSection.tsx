@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAlarmStore } from "../../store/alarmStore";
 
-const WEEKDAY_LABELS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-
 export function RecurringSection() {
+  const { t } = useTranslation();
+  const WEEKDAY_LABELS = t('alarm.weekdays', { returnObjects: true }) as string[];
   const [newTime, setNewTime] = useState("09:00");
   const [newLabel, setNewLabel] = useState("");
   const [newWeekdays, setNewWeekdays] = useState<boolean[]>([true, true, true, true, true, false, false]);
@@ -79,7 +80,7 @@ export function RecurringSection() {
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
-          <span>No alarms set</span>
+          <span>{t('alarm.noAlarmsSet')}</span>
         </div>
       )}
 
@@ -87,9 +88,9 @@ export function RecurringSection() {
       {showForm ? (
         <div className="recurring-add-form">
           <div className="recurring-form-header">
-            <span className="recurring-form-title">New Alarm</span>
+            <span className="recurring-form-title">{t('alarm.newAlarm')}</span>
             <button className="recurring-form-cancel" onClick={() => setShowForm(false)}>
-              Cancel
+              {t('common.cancel')}
             </button>
           </div>
           <input
@@ -101,7 +102,7 @@ export function RecurringSection() {
           <input
             className="recurring-label-input"
             type="text"
-            placeholder="Label (optional)"
+            placeholder={t('alarm.labelOptional')}
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
@@ -122,7 +123,7 @@ export function RecurringSection() {
             onClick={handleAdd}
             disabled={!newTime || !newWeekdays.some(Boolean)}
           >
-            Save
+            {t('common.save')}
           </button>
         </div>
       ) : (
@@ -130,7 +131,7 @@ export function RecurringSection() {
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
-          <span>Add Alarm</span>
+          <span>{t('alarm.addAlarm')}</span>
         </button>
       )}
     </div>

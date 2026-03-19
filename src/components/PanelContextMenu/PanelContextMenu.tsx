@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import type { PanelConnection, SshProfile } from "../../types/terminal";
 import "./PanelContextMenu.css";
 
@@ -22,6 +23,7 @@ export function PanelContextMenu({
   onSwitchConnection,
   onClose,
 }: PanelContextMenuProps) {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: y, left: x });
 
@@ -81,7 +83,7 @@ export function PanelContextMenu({
       role="menu"
       style={{ top: pos.top, left: pos.left }}
     >
-      <div className="panel-ctx-section-label">Switch Connection</div>
+      <div className="panel-ctx-section-label">{t('connection.switchConnection')}</div>
 
       {/* Local Shell */}
       <button
@@ -93,8 +95,8 @@ export function PanelContextMenu({
           <rect x="1.5" y="2.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
           <path d="M5 14h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
         </svg>
-        <span className="panel-ctx-item-label">Local Shell</span>
-        <span className="panel-ctx-item-meta">PowerShell</span>
+        <span className="panel-ctx-item-label">{t('session.localShell')}</span>
+        <span className="panel-ctx-item-meta">{t('session.powerShell')}</span>
         {isLocal && checkIcon}
       </button>
 
@@ -166,8 +168,8 @@ export function PanelContextMenu({
               <line x1="5.5" y1="7.5" x2="10.5" y2="7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
               <line x1="5.5" y1="10" x2="8.5" y2="10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
             </svg>
-            <span className="panel-ctx-item-label">Note</span>
-            <span className="panel-ctx-item-meta">Markdown</span>
+            <span className="panel-ctx-item-label">{t('session.note')}</span>
+            <span className="panel-ctx-item-meta">{t('note.markdown')}</span>
             {isActiveNote && checkIcon}
           </button>
         );

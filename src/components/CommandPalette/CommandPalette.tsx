@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import "./CommandPalette.css";
 
 /* ── Types ──────────────────────────────────────────────────────── */
@@ -85,6 +86,7 @@ function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
 /* ── Component ──────────────────────────────────────────────────── */
 
 export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange, initialQuery = "" }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -121,15 +123,15 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
 
     // Prefix mode filter
     if (mode === "tabs") {
-      pool = pool.filter((c) => c.category === "Tab List");
+      pool = pool.filter((c) => c.category === t('command.categoryTabList'));
     } else if (mode === "connection") {
-      pool = pool.filter((c) => c.category === "Switch Connection");
+      pool = pool.filter((c) => c.category === t('command.categorySwitchConnection'));
     } else if (mode === "layout") {
-      pool = pool.filter((c) => c.category === "Layout");
+      pool = pool.filter((c) => c.category === t('command.categoryLayout'));
     } else if (mode === "background") {
       pool = pool.filter((c) => c.category === "Background");
     } else if (mode === "clipboard") {
-      pool = pool.filter((c) => c.category === "Clipboard");
+      pool = pool.filter((c) => c.category === t('command.categoryClipboard'));
     }
 
     if (!q) return pool;
@@ -375,9 +377,9 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
     const suggestions = ["tab", "layout", "panel", "connect"];
     return (
       <div className="cp-empty">
-        <div className="cp-empty-title">No results for "{q}"</div>
+        <div className="cp-empty-title">{t('commandPalette.noResults', { query: q })}</div>
         <div className="cp-empty-suggestions">
-          Try{" "}
+          {t('commandPalette.try')}{" "}
           {suggestions.map((s, i) => (
             <span key={s}>
               {i > 0 && (i === suggestions.length - 1 ? ", or " : ", ")}
@@ -395,7 +397,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
   };
 
   // Mode indicator for prefix
-  const modeLabel = mode === "tabs" ? "Tabs" : mode === "connection" ? "Connection" : mode === "layout" ? "Layout" : mode === "background" ? "Background" : mode === "clipboard" ? "Clipboard" : null;
+  const modeLabel = mode === "tabs" ? t('commandPalette.hintTabs') : mode === "connection" ? t('commandPalette.hintConnect') : mode === "layout" ? t('commandPalette.hintLayout') : mode === "background" ? t('commandPalette.hintBackground') : mode === "clipboard" ? t('commandPalette.hintClipboard') : null;
 
   return createPortal(
     <div
@@ -418,7 +420,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder={mode === "tabs" ? "Switch to tab..." : mode === "connection" ? "Switch connection..." : mode === "layout" ? "Change layout..." : mode === "background" ? "Restore background tab..." : mode === "clipboard" ? "Search clipboard history..." : "Search commands..."}
+            placeholder={mode === "tabs" ? t('commandPalette.switchToTab') : mode === "connection" ? t('commandPalette.switchConnection') : mode === "layout" ? t('commandPalette.changeLayout') : mode === "background" ? t('commandPalette.restoreBackground') : mode === "clipboard" ? t('commandPalette.searchClipboard') : t('commandPalette.searchCommands')}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); onQueryChange?.(e.target.value); }}
             onKeyDown={handleKeyDown}
@@ -448,11 +450,11 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
 
         {/* Footer hint */}
         <div className="cp-footer">
-          <span className="cp-hint"><kbd>&gt;</kbd> Tabs</span>
-          <span className="cp-hint"><kbd>@</kbd> Background</span>
-          <span className="cp-hint"><kbd>#</kbd> Connect</span>
-          <span className="cp-hint"><kbd>%</kbd> Layout</span>
-          <span className="cp-hint"><kbd>!</kbd> Clipboard</span>
+          <span className="cp-hint"><kbd>&gt;</kbd> {t('commandPalette.hintTabs')}</span>
+          <span className="cp-hint"><kbd>@</kbd> {t('commandPalette.hintBackground')}</span>
+          <span className="cp-hint"><kbd>#</kbd> {t('commandPalette.hintConnect')}</span>
+          <span className="cp-hint"><kbd>%</kbd> {t('commandPalette.hintLayout')}</span>
+          <span className="cp-hint"><kbd>!</kbd> {t('commandPalette.hintClipboard')}</span>
         </div>
       </div>
     </div>,

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { ipc } from "../../lib/tauriIpc";
 import { useBrowserConfigStore } from "../../store/browserConfigStore";
@@ -19,6 +20,7 @@ interface BrowserUrlPayload {
 }
 
 export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrowserPanelProps) {
+  const { t } = useTranslation();
   const placeholderRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState(() => localStorage.getItem(URL_STORAGE_KEY) ?? "");
   const [inputValue, setInputValue] = useState(() => localStorage.getItem(URL_STORAGE_KEY) ?? "");
@@ -175,7 +177,7 @@ export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrow
     <div className={`left-browser-panel${isVisible ? "" : " left-browser-panel--hidden"}`}>
       {/* Header */}
       <div className="left-browser-header">
-        <span className="left-browser-title">Browser</span>
+        <span className="left-browser-title">{t('browser.title')}</span>
         <button
           className="left-browser-close"
           onClick={onClose}
@@ -190,23 +192,23 @@ export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrow
 
       {/* Toolbar */}
       <div className="left-browser-toolbar">
-        <button className="left-browser-nav-btn" onClick={handleBack} title="Back">
+        <button className="left-browser-nav-btn" onClick={handleBack} title={t('browser.back')}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M9 2.5L4.5 7 9 11.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <button className="left-browser-nav-btn" onClick={handleForward} title="Forward">
+        <button className="left-browser-nav-btn" onClick={handleForward} title={t('browser.forward')}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M5 2.5L9.5 7 5 11.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <button className="left-browser-nav-btn" onClick={handleReload} title="Reload">
+        <button className="left-browser-nav-btn" onClick={handleReload} title={t('browser.reload')}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M2.5 7a4.5 4.5 0 1 1 1 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
             <path d="M2.5 11.5V7H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <button className="left-browser-nav-btn" onClick={handleHome} title="Home">
+        <button className="left-browser-nav-btn" onClick={handleHome} title={t('browser.home')}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M2.5 7L7 2.5L11.5 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M4 6v5.5h2.25V9h1.5v2.5H10V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
@@ -218,7 +220,7 @@ export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrow
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Enter URL..."
+            placeholder={t('browser.enterUrl')}
             spellCheck={false}
             autoComplete="off"
           />
@@ -231,7 +233,7 @@ export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrow
           <div className="left-browser-error">
             <p className="left-browser-error-msg">{error}</p>
             <button className="left-browser-retry-btn" onClick={handleRetry}>
-              Retry
+              {t('browser.retry')}
             </button>
           </div>
         )}

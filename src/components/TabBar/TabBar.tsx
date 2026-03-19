@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { useTabStore } from "../../store/tabStore";
 import "./TabBar.css";
 
@@ -114,6 +115,7 @@ interface TabItemProps {
 }
 
 function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }: TabItemProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -206,8 +208,8 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
             e.stopPropagation();
             onKill();
           }}
-          title="Close Tab"
-          aria-label="Close tab"
+          title={t('tab.closeTab')}
+          aria-label={t('tab.closeTab')}
         >
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
             <path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -226,7 +228,7 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
                 <path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
               </svg>
             </span>
-            <span className="tab-ctx-item-label">Close Tab</span>
+            <span className="tab-ctx-item-label">{t('tab.closeTab')}</span>
           </div>
           <div className="tab-ctx-divider" />
           <div className="tab-ctx-item" onMouseDown={(e) => { e.stopPropagation(); startEdit(); setCtxMenu(null); }}>
@@ -236,7 +238,7 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
                 <path d="M8.5 3.5l2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
             </span>
-            <span className="tab-ctx-item-label">Rename Tab</span>
+            <span className="tab-ctx-item-label">{t('tab.renameTab')}</span>
           </div>
         </div>,
         document.body

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { PomodoroSection } from "../AlarmPanel/PomodoroSection";
 import { TimerSection } from "../AlarmPanel/TimerSection";
 import { RecurringSection } from "../AlarmPanel/RecurringSection";
@@ -53,11 +54,12 @@ export function TimersPanel() {
 /* ── Pomodoro section ─────────────────────────────────────────────── */
 
 function PomodoroCollapsible({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
   const phase = useAlarmStore((s) => s.pomodoroState.phase);
   const remainingMs = useAlarmStore((s) => s.pomodoroState.remainingMs);
 
   const isActive = phase !== "idle";
-  const phaseLabel = phase === "focus" ? "Focus" : phase === "break" ? "Break" : phase === "longBreak" ? "Long Break" : "";
+  const phaseLabel = phase === "focus" ? t('timer.focus') : phase === "break" ? t('timer.break') : phase === "longBreak" ? t('timer.longBreak') : "";
   const phaseColor = phase === "focus"
     ? "var(--accent)"
     : phase === "break"
@@ -73,7 +75,7 @@ function PomodoroCollapsible({ collapsed, onToggle }: { collapsed: boolean; onTo
         >
           <path d="M2 1.5L5.5 4 2 6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <span className="collapsible-label">Pomodoro</span>
+        <span className="collapsible-label">{t('timer.pomodoro')}</span>
         {isActive && (
           <span className="collapsible-status">
             <span className="collapsible-status-dot" style={{ background: phaseColor }} />
@@ -93,19 +95,20 @@ function PomodoroCollapsible({ collapsed, onToggle }: { collapsed: boolean; onTo
 /* ── Timer section ────────────────────────────────────────────────── */
 
 function TimerCollapsible({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
   const timers = useAlarmStore((s) => s.timers);
 
-  const runningCount = timers.filter((t) => t.status === "running").length;
-  const pausedCount = timers.filter((t) => t.status === "paused").length;
+  const runningCount = timers.filter((ti) => ti.status === "running").length;
+  const pausedCount = timers.filter((ti) => ti.status === "paused").length;
   const isActive = runningCount > 0 || pausedCount > 0;
 
   let statusText = "";
   if (runningCount > 0 && pausedCount > 0) {
-    statusText = `${runningCount} running, ${pausedCount} paused`;
+    statusText = t('timer.runningAndPaused', { running: runningCount, paused: pausedCount });
   } else if (runningCount > 0) {
-    statusText = `${runningCount} running`;
+    statusText = t('timer.runningCount', { count: runningCount });
   } else if (pausedCount > 0) {
-    statusText = `${pausedCount} paused`;
+    statusText = t('timer.pausedCount', { count: pausedCount });
   }
 
   return (
@@ -117,7 +120,7 @@ function TimerCollapsible({ collapsed, onToggle }: { collapsed: boolean; onToggl
         >
           <path d="M2 1.5L5.5 4 2 6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <span className="collapsible-label">Timer</span>
+        <span className="collapsible-label">{t('timer.timerLabel')}</span>
         {isActive && (
           <span className="collapsible-status">
             <span className="collapsible-status-dot" style={{ background: "var(--accent)" }} />
@@ -137,6 +140,7 @@ function TimerCollapsible({ collapsed, onToggle }: { collapsed: boolean; onToggl
 /* ── Alarms section ───────────────────────────────────────────────── */
 
 function AlarmsCollapsible({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
   const alarms = useAlarmStore((s) => s.alarms);
 
   const enabledAlarms = alarms.filter((a) => a.enabled);
@@ -153,11 +157,11 @@ function AlarmsCollapsible({ collapsed, onToggle }: { collapsed: boolean; onTogg
         >
           <path d="M2 1.5L5.5 4 2 6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <span className="collapsible-label">Alarms</span>
+        <span className="collapsible-label">{t('alarm.alarms')}</span>
         {nextAlarm && (
           <span className="collapsible-status">
             <span className="collapsible-status-dot" style={{ background: "var(--warning)" }} />
-            <span className="collapsible-status-text">Next {nextAlarm.time}</span>
+            <span className="collapsible-status-text">{t('timer.nextAlarm', { time: nextAlarm.time })}</span>
           </span>
         )}
       </button>

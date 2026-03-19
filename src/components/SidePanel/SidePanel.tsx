@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { TodoSection } from "../NotePanel/TodoSection";
 import { TimersPanel } from "./TimersPanel";
 import "../NotePanel/NotePanel.css";
@@ -12,6 +13,7 @@ interface SidePanelProps {
 }
 
 export function SidePanel({ activeTab, onTabChange, onClose }: SidePanelProps) {
+  const { t } = useTranslation();
   return (
     <div className="side-panel">
       <div className="side-panel-header">
@@ -19,7 +21,7 @@ export function SidePanel({ activeTab, onTabChange, onClose }: SidePanelProps) {
           <button
             className={`side-panel-tab${activeTab === "todos" ? " side-panel-tab--active" : ""}`}
             onClick={() => onTabChange("todos")}
-            title="Todos"
+            title={t('todo.title')}
           >
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
               <rect x="2.5" y="1.5" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -31,7 +33,7 @@ export function SidePanel({ activeTab, onTabChange, onClose }: SidePanelProps) {
           <button
             className={`side-panel-tab${activeTab === "timers" ? " side-panel-tab--active" : ""}`}
             onClick={() => onTabChange("timers")}
-            title="Timers"
+            title={t('timer.timerLabel')}
           >
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
               <circle cx="7.5" cy="8" r="5" stroke="currentColor" strokeWidth="1.2"/>

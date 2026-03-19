@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAlarmStore, getPhaseDuration } from "../../store/alarmStore";
 
 function formatMs(ms: number): string {
@@ -9,6 +10,7 @@ function formatMs(ms: number): string {
 }
 
 export function PomodoroSection() {
+  const { t } = useTranslation();
   const pomodoroConfig = useAlarmStore((s) => s.pomodoroConfig);
   const pomodoroState = useAlarmStore((s) => s.pomodoroState);
   const { startPomodoro, pausePomodoro, resumePomodoro, resetPomodoro, setPomodoroConfig } =
@@ -29,7 +31,7 @@ export function PomodoroSection() {
   const displayMs = phase === "idle" ? pomodoroConfig.focusMinutes * 60_000 : remainingMs;
 
   const phaseLabel =
-    phase === "focus" ? "Focus" : phase === "break" ? "Break" : phase === "longBreak" ? "Long Break" : "";
+    phase === "focus" ? t('timer.focus') : phase === "break" ? t('timer.break') : phase === "longBreak" ? t('timer.longBreak') : "";
 
   const phaseColor =
     phase === "focus"
@@ -85,7 +87,7 @@ export function PomodoroSection() {
         <span className="pomodoro-session-label">
           {phase !== "idle"
             ? `${sessionsDone} / ${sessionsTotal}`
-            : `${sessionsTotal} sessions`}
+            : t('timer.sessionsIdle', { count: sessionsTotal })}
         </span>
       </div>
 
@@ -93,28 +95,28 @@ export function PomodoroSection() {
       <div className="pomodoro-controls">
         {phase === "idle" ? (
           <button className="pomodoro-btn pomodoro-btn--primary" onClick={startPomodoro}>
-            Start
+            {t('timer.start')}
           </button>
         ) : (
           <>
             {isRunning ? (
               <button className="pomodoro-btn" onClick={pausePomodoro}>
-                Pause
+                {t('timer.pause')}
               </button>
             ) : isPaused ? (
               <button className="pomodoro-btn pomodoro-btn--primary" onClick={resumePomodoro}>
-                Resume
+                {t('timer.resume')}
               </button>
             ) : null}
             <button className="pomodoro-btn pomodoro-btn--danger" onClick={resetPomodoro}>
-              Reset
+              {t('timer.reset')}
             </button>
           </>
         )}
         <button
             className={`pomodoro-gear-btn${showSettings ? " pomodoro-gear-btn--active" : ""}`}
             onClick={() => setShowSettings((v) => !v)}
-            title="Settings"
+            title={t('common.settings')}
             aria-label="Toggle settings"
         >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
@@ -128,7 +130,7 @@ export function PomodoroSection() {
       {showSettings && (
           <div className={`pomodoro-settings${phase !== "idle" ? " pomodoro-settings--disabled" : ""}`}>
               <div className="pomodoro-stepper-row">
-                  <span className="pomodoro-stepper-label">Focus</span>
+                  <span className="pomodoro-stepper-label">{t('timer.focus')}</span>
                   <div className="pomodoro-stepper">
                       <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.focusMinutes <= 5}
                           onClick={() => setPomodoroConfig({ focusMinutes: pomodoroConfig.focusMinutes - 5 })}>−</button>
@@ -138,7 +140,7 @@ export function PomodoroSection() {
                   </div>
               </div>
               <div className="pomodoro-stepper-row">
-                  <span className="pomodoro-stepper-label">Break</span>
+                  <span className="pomodoro-stepper-label">{t('timer.break')}</span>
                   <div className="pomodoro-stepper">
                       <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.breakMinutes <= 1}
                           onClick={() => setPomodoroConfig({ breakMinutes: pomodoroConfig.breakMinutes - 1 })}>−</button>
@@ -148,7 +150,7 @@ export function PomodoroSection() {
                   </div>
               </div>
               <div className="pomodoro-stepper-row">
-                  <span className="pomodoro-stepper-label">Long Break</span>
+                  <span className="pomodoro-stepper-label">{t('timer.longBreak')}</span>
                   <div className="pomodoro-stepper">
                       <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.longBreakMinutes <= 10}
                           onClick={() => setPomodoroConfig({ longBreakMinutes: pomodoroConfig.longBreakMinutes - 5 })}>−</button>
@@ -159,8 +161,8 @@ export function PomodoroSection() {
               </div>
               <div className="pomodoro-stepper-row pomodoro-stepper-row--last">
                   <div className="pomodoro-stepper-label-group">
-                      <span className="pomodoro-stepper-label">Sessions</span>
-                      <span className="pomodoro-stepper-sublabel">before long break</span>
+                      <span className="pomodoro-stepper-label">{t('timer.sessionsLabel')}</span>
+                      <span className="pomodoro-stepper-sublabel">{t('timer.beforeLongBreak')}</span>
                   </div>
                   <div className="pomodoro-stepper">
                       <button className="pomodoro-stepper-btn" disabled={phase !== "idle" || pomodoroConfig.sessionsBeforeLongBreak <= 1}

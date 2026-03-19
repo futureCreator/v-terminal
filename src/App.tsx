@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { homeDir } from "@tauri-apps/api/path";
 import { TitleBar } from "./components/TitleBar/TitleBar";
 import { TabBar } from "./components/TabBar/TabBar";
@@ -41,6 +42,7 @@ import "./styles/globals.css";
 import "./App.css";
 
 export function App() {
+  const { t } = useTranslation();
   const { tabs, activeTabId, addTab, removeTab, setLayout, toggleBroadcast, setActiveTab, switchPanelConnection, resolveSessionPick } =
     useTabStore();
   const { themeId } = useThemeStore();
@@ -239,23 +241,23 @@ export function App() {
     onTogglePanelZoom: handleTogglePanelZoom,
     onPrevPanel: () => panelNavRef.current?.prevPanel(),
     onNextPanel: () => panelNavRef.current?.nextPanel(),
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen, browserPanelOpen, handleToggleBrowserPanel]);
+  }, t), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen, browserPanelOpen, handleToggleBrowserPanel, t]);
 
   const tabListPaletteSection = useMemo(
-    () => buildTabListSection(tabs, activeTabId, setActiveTab),
-    [tabs, activeTabId, setActiveTab],
+    () => buildTabListSection(tabs, activeTabId, setActiveTab, t),
+    [tabs, activeTabId, setActiveTab, t],
   );
 
   const layoutPaletteSection = useMemo(
-    () => buildLayoutSection(activeTab, handleLayoutChange),
-    [activeTab, handleLayoutChange],
+    () => buildLayoutSection(activeTab, handleLayoutChange, t),
+    [activeTab, handleLayoutChange, t],
   );
 
   const clipboardEntries = useClipboardStore((s) => s.entries);
   const clearClipboardHistory = useClipboardStore((s) => s.clearHistory);
   const clipboardPaletteSection = useMemo(
-    () => buildClipboardSection(clipboardEntries, clearClipboardHistory),
-    [clipboardEntries, clearClipboardHistory],
+    () => buildClipboardSection(clipboardEntries, clearClipboardHistory, t),
+    [clipboardEntries, clearClipboardHistory, t],
   );
 
   const activePanel = useMemo(() => {
@@ -276,8 +278,8 @@ export function App() {
       wslDistros,
       sshProfiles,
       switchPanelConnection,
-    }),
-    [activeTab, activePanelId, activePanel, switchPanelConnection, wslDistros, sshProfiles],
+    }, t),
+    [activeTab, activePanelId, activePanel, switchPanelConnection, wslDistros, sshProfiles, t],
   );
 
   // ── Tab close / kill ──────────────────────────────────────────

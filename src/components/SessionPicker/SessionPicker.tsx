@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ipc } from "../../lib/tauriIpc";
 import { useSshStore } from "../../store/sshStore";
 import { panelCount, getGridConfig } from "../../lib/layoutMath";
@@ -188,6 +189,7 @@ function PanelConfigGrid({
   onOpenDropdown: (index: number | null) => void;
   onSelect: (panelIndex: number, optionId: string) => void;
 }) {
+  const { t } = useTranslation();
   const gridConfig = getGridConfig(layout);
   const count = panelCount(layout);
 
@@ -223,7 +225,7 @@ function PanelConfigGrid({
             className="sp-panel-cell"
             style={layout === 3 && i === 0 ? { gridRow: "1 / 3" } : undefined}
           >
-            <span className="sp-panel-cell-label">Panel {i + 1}</span>
+            <span className="sp-panel-cell-label">{t('session.panel', { n: i + 1 })}</span>
             <div className="sp-panel-dropdown">
               <button
                 className="sp-panel-dropdown-trigger"
@@ -284,6 +286,7 @@ function PanelConfigGrid({
 /* ── SessionPicker ──────────────────────────────────────────────── */
 
 export function SessionPicker({ onNewSession }: SessionPickerProps) {
+  const { t } = useTranslation();
   const [wslDistros, setWslDistros] = useState<string[]>([]);
   const { profiles: sshProfiles } = useSshStore();
 
@@ -313,7 +316,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
   // Build connection options
   const connectionOptions = useMemo<ConnectionOption[]>(() => {
     const opts: ConnectionOption[] = [
-      { id: "local", type: "local", name: "Local Shell", subtitle: "PowerShell" },
+      { id: "local", type: "local", name: t('session.localShell'), subtitle: t('session.powerShell') },
     ];
     for (const distro of wslDistros) {
       opts.push({
@@ -336,11 +339,11 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
     opts.push({
       id: "note",
       type: "note" as const,
-      name: "Note",
-      subtitle: "Markdown editor",
+      name: t('session.note'),
+      subtitle: t('session.markdownEditor'),
     });
     return opts;
-  }, [wslDistros, sshProfiles]);
+  }, [wslDistros, sshProfiles, t]);
 
   const findOption = useCallback(
     (id: string) =>
@@ -400,7 +403,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
       <div className="sp-container">
         {/* ── Layout Picker ── */}
         <div className="sp-group">
-          <div className="sp-group-label">Layout</div>
+          <div className="sp-group-label">{t('session.layout')}</div>
           <div className="sp-layout-picker">
             {LAYOUT_OPTIONS.map((layout) => (
               <button
@@ -422,7 +425,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
 
         {/* ── Connection ── */}
         <div className="sp-group">
-          <div className="sp-group-label">Connection</div>
+          <div className="sp-group-label">{t('session.connection')}</div>
 
           {isMultiPanel && (
             <div className="sp-segmented">
@@ -432,7 +435,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
                 }`}
                 onClick={() => setConnectionMode("all")}
               >
-                All Same
+                {t('session.allSame')}
               </button>
               <button
                 className={`sp-segmented-btn ${
@@ -442,7 +445,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
                 }`}
                 onClick={() => setConnectionMode("perPanel")}
               >
-                Per Panel
+                {t('session.perPanel')}
               </button>
             </div>
           )}
@@ -486,7 +489,7 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
                 onSelect={handlePerPanelSelect}
               />
               <button className="sp-open-btn" onClick={handlePerPanelOpen}>
-                Open
+                {t('session.open')}
               </button>
             </div>
           )}

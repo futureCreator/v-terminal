@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
@@ -59,6 +60,7 @@ export function TerminalPane({
   onNextPanel,
   onPrevPanel,
 }: TerminalPaneProps) {
+  const { t } = useTranslation();
   const { themeId } = useThemeStore();
   const themeRef = useRef(themeId);
   themeRef.current = themeId;
@@ -208,9 +210,9 @@ export function TerminalPane({
           while (!authenticated) {
             pwActions.setConnecting(false);
             const password = await pwActions.prompt(
-              "SSH Authentication",
+              t('ssh.authTitle'),
               `${sshUsername}@${sshHost}${sshPort && sshPort !== 22 ? `:${sshPort}` : ""}`,
-              "No SSH key found for this host. Enter the password for the remote server.",
+              t('ssh.noKeyFound'),
             );
             if (password === null || disposed) return;
             try {
@@ -229,7 +231,7 @@ export function TerminalPane({
             } catch (retryErr) {
               pwActions.setConnecting(false);
               if (String(retryErr).includes("AUTH_FAILED")) {
-                pwActions.setError("Authentication failed. Please try again.");
+                pwActions.setError(t('ssh.authFailed'));
                 continue;
               }
               pwActions.hide();
@@ -245,9 +247,9 @@ export function TerminalPane({
           while (!authenticated) {
             pwActions.setConnecting(false);
             const password = await pwActions.prompt(
-              "WSL Authentication",
+              t('wsl.authTitle'),
               wslDistro,
-              "openssh-server is not installed in this WSL distro. Your sudo password is required for the one-time installation.",
+              t('wsl.sudoRequired'),
             );
             if (password === null || disposed) return;
             try {
@@ -261,7 +263,7 @@ export function TerminalPane({
             } catch (retryErr) {
               pwActions.setConnecting(false);
               if (String(retryErr).includes("WSL_SUDO_REQUIRED") || String(retryErr).includes("AUTH_FAILED")) {
-                pwActions.setError("Authentication failed. Please try again.");
+                pwActions.setError(t('ssh.authFailed'));
                 continue;
               }
               pwActions.hide();
@@ -510,14 +512,14 @@ export function TerminalPane({
             {pwState.connecting ? (
               <div className="terminal-password-connecting">
                 <div className="terminal-spinner" />
-                <span>Connecting...</span>
+                <span>{t('connection.connecting')}</span>
               </div>
             ) : (
               <>
                 <input
                   type="password"
                   className="terminal-password-input"
-                  placeholder="Password"
+                  placeholder={t('connection.password')}
                   value={pwState.input}
                   onChange={(e) => pwActions.setInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -531,13 +533,13 @@ export function TerminalPane({
                     className="terminal-password-cancel"
                     onClick={handlePasswordCancel}
                   >
-                    Cancel
+                    {t('connection.cancel')}
                   </button>
                   <button
                     className="terminal-password-submit"
                     onClick={pwActions.submit}
                   >
-                    Connect
+                    {t('connection.connect')}
                   </button>
                 </div>
               </>
@@ -547,8 +549,8 @@ export function TerminalPane({
       )}
       {connectionLost && !exited && (
         <div className="terminal-connection-lost" onClick={handleRestart}>
-          <span className="terminal-connection-lost-text">Connection lost</span>
-          <span className="terminal-connection-lost-action">Click to reconnect</span>
+          <span className="terminal-connection-lost-text">{t('connection.connectionLost')}</span>
+          <span className="terminal-connection-lost-action">{t('connection.clickToReconnect')}</span>
         </div>
       )}
       <div
@@ -562,7 +564,7 @@ export function TerminalPane({
             <path d="M3 5.5L7.5 10L3 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M10 14.5H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
-          <span className="terminal-exit-label">New Session</span>
+          <span className="terminal-exit-label">{t('connection.newSession')}</span>
         </div>
       )}
     </div>

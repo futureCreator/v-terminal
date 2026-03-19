@@ -4,6 +4,7 @@ import { EditorView } from "@codemirror/view";
 import { baseMarkdownExtensions, buildFontSizeTheme } from "../../lib/codemirrorSetup";
 import { useNoteStore } from "../../store/noteStore";
 import { useTerminalConfigStore } from "../../store/terminalConfigStore";
+import i18n from "../../i18n";
 
 interface NoteEditorProps {
   panelId: string;
@@ -39,7 +40,7 @@ export function NoteEditor({ panelId }: NoteEditorProps) {
         ...baseMarkdownExtensions({
           fontSizeCompartment: fontSizeCompartment.current,
           initialFontSize,
-          placeholderText: "Type your markdown note here...",
+          placeholderText: i18n.t('note.placeholder'),
         }),
         updateListener,
       ],

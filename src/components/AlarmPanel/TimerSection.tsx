@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAlarmStore } from "../../store/alarmStore";
 import type { CountdownTimer } from "../../store/alarmStore";
 
@@ -39,6 +40,7 @@ const PRESETS: PresetDef[] = [
 ];
 
 export function TimerSection() {
+  const { t } = useTranslation();
   const timers = useAlarmStore((s) => s.timers);
   const { addTimer, removeTimer, pauseTimer, resumeTimer, clearFinishedTimers } = useAlarmStore();
 
@@ -63,10 +65,10 @@ export function TimerSection() {
       {timers.length > 0 && (
         <>
           <div className="timer-list-header">
-            <span className="timer-list-title">Active Timers</span>
+            <span className="timer-list-title">{t('timer.activeTimers')}</span>
             {finishedCount > 0 && (
-              <button className="timer-clear-btn" onClick={clearFinishedTimers} title="Clear finished timers">
-                Clear Done
+              <button className="timer-clear-btn" onClick={clearFinishedTimers} title={t('timer.clearDone')}>
+                {t('timer.clearDone')}
               </button>
             )}
           </div>
@@ -84,7 +86,7 @@ export function TimerSection() {
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          <span>Select a preset to start a timer</span>
+          <span>{t('timer.selectPreset')}</span>
         </div>
       )}
     </div>
@@ -102,6 +104,7 @@ function TimerItem({
   onResume: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const { id, remainingMs, durationMs, status, label } = timer;
   const progress = durationMs > 0 ? (1 - remainingMs / durationMs) : 1;
 
@@ -113,7 +116,7 @@ function TimerItem({
           <button
             className="timer-play-btn"
             onClick={() => (status === "running" ? onPause(id) : onResume(id))}
-            aria-label={status === "running" ? "Pause" : "Resume"}
+            aria-label={status === "running" ? t('timer.pause') : t('timer.resume')}
           >
             {status === "running" ? (
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -135,13 +138,13 @@ function TimerItem({
         )}
         <span className="timer-label">{label || formatDuration(durationMs)}</span>
         <span className={`timer-time${status === "finished" ? " timer-time--done" : ""}`}>
-          {status === "finished" ? "Done" : formatMs(remainingMs)}
+          {status === "finished" ? t('timer.done') : formatMs(remainingMs)}
         </span>
         <button
           className="timer-remove-btn"
           onClick={() => onRemove(id)}
-          aria-label="Remove"
-          title="Remove"
+          aria-label={t('timer.remove')}
+          title={t('timer.remove')}
         >
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
             <path d="M1.5 1.5l6 6M7.5 1.5l-6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />

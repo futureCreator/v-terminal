@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useSshStore } from "../../store/sshStore";
 import type { SshProfile } from "../../types/terminal";
 import "./SshManagerModal.css";
@@ -40,6 +41,7 @@ function getAvatarColor(str: string): string {
 }
 
 export function SshManagerModal({ onClose }: Props) {
+  const { t } = useTranslation();
   const { profiles, addProfile, removeProfile, updateProfile } = useSshStore();
 
   const [selectedId, setSelectedId] = useState<string | null>(profiles[0]?.id ?? null);
@@ -139,7 +141,7 @@ export function SshManagerModal({ onClose }: Props) {
               <path d="M3.5 8.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M8 11.5h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
-            <span className="ssh-modal-title">SSH Profiles</span>
+            <span className="ssh-modal-title">{t('ssh.profiles')}</span>
           </div>
           <button className="ssh-modal-close" onClick={onClose} aria-label="Close">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -157,12 +159,12 @@ export function SshManagerModal({ onClose }: Props) {
           {/* Profile list */}
           <div className="ssh-profile-list">
             <div className="ssh-list-header">
-              <span className="ssh-list-heading">Saved Servers</span>
+              <span className="ssh-list-heading">{t('ssh.savedServers')}</span>
               <button
                 className="ssh-list-add-icon"
                 onClick={startNew}
-                aria-label="Add Server"
-                title="Add Server"
+                aria-label={t('ssh.addServer')}
+                title={t('ssh.addServer')}
               >
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path
@@ -184,8 +186,8 @@ export function SshManagerModal({ onClose }: Props) {
                     <circle cx="6.5" cy="9.5" r="0.75" fill="currentColor" />
                     <circle cx="9.5" cy="9.5" r="0.75" fill="currentColor" />
                   </svg>
-                  <div className="ssh-empty-title">No saved servers</div>
-                  <div className="ssh-empty-desc">Click + to add your first server</div>
+                  <div className="ssh-empty-title">{t('ssh.noSavedServers')}</div>
+                  <div className="ssh-empty-desc">{t('ssh.addFirstServer')}</div>
                 </div>
               ) : (
                 profiles.map((p) => {
@@ -221,7 +223,7 @@ export function SshManagerModal({ onClose }: Props) {
           {/* Form */}
           <div className="ssh-form">
             <div className="ssh-field">
-              <label className="ssh-label">Name</label>
+              <label className="ssh-label">{t('ssh.name')}</label>
               <input
                 className="ssh-input"
                 value={form.name}
@@ -233,7 +235,7 @@ export function SshManagerModal({ onClose }: Props) {
             </div>
             <div className="ssh-field-row">
               <div className="ssh-field ssh-field--flex">
-                <label className="ssh-label">Host</label>
+                <label className="ssh-label">{t('ssh.host')}</label>
                 <input
                   className="ssh-input"
                   value={form.host}
@@ -242,7 +244,7 @@ export function SshManagerModal({ onClose }: Props) {
                 />
               </div>
               <div className="ssh-field ssh-field--port">
-                <label className="ssh-label">Port</label>
+                <label className="ssh-label">{t('ssh.port')}</label>
                 <input
                   className="ssh-input"
                   value={form.port}
@@ -252,7 +254,7 @@ export function SshManagerModal({ onClose }: Props) {
               </div>
             </div>
             <div className="ssh-field">
-              <label className="ssh-label">Username</label>
+              <label className="ssh-label">{t('ssh.username')}</label>
               <input
                 className="ssh-input"
                 value={form.username}
@@ -262,8 +264,8 @@ export function SshManagerModal({ onClose }: Props) {
             </div>
             <div className="ssh-field">
               <label className="ssh-label">
-                Identity File{" "}
-                <span className="ssh-label-optional">(optional)</span>
+                {t('ssh.identityFile')}{" "}
+                <span className="ssh-label-optional">{t('ssh.optional')}</span>
               </label>
               <input
                 className="ssh-input"
@@ -276,7 +278,7 @@ export function SshManagerModal({ onClose }: Props) {
             {/* SSH Command Preview */}
             {sshPreview && (
               <div className="ssh-preview">
-                <div className="ssh-preview-label">Command Preview</div>
+                <div className="ssh-preview-label">{t('ssh.commandPreview')}</div>
                 <div className="ssh-preview-code">{sshPreview}</div>
               </div>
             )}
@@ -286,11 +288,11 @@ export function SshManagerModal({ onClose }: Props) {
         {/* Footer */}
         <div className="ssh-modal-footer">
           <button className="ssh-btn ssh-btn--secondary" onClick={onClose}>
-            Close
+            {t('common.close')}
           </button>
           {!isNew && (
             <button className="ssh-btn ssh-btn--danger" onClick={handleDelete}>
-              Delete
+              {t('common.delete')}
             </button>
           )}
           <div className="ssh-footer-gap" />
@@ -299,7 +301,7 @@ export function SshManagerModal({ onClose }: Props) {
             onClick={handleSave}
             disabled={!canSave}
           >
-            Save
+            {t('common.save')}
           </button>
         </div>
       </div>
