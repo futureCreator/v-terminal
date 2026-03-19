@@ -196,6 +196,11 @@
   color: var(--warning, #f5a623);
 }
 
+.sp-row-icon--note {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
 /* ─── Row Content ────────────────────────────────────────────── */
 .sp-row-content {
   flex: 1;
@@ -271,6 +276,10 @@
 
 .sp-dot--wsl {
   background: var(--icon-wsl);
+}
+
+.sp-dot--note {
+  background: var(--accent);
 }
 
 .sp-dot--browser {

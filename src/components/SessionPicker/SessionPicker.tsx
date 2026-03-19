@@ -20,7 +20,7 @@ interface SessionPickerProps {
 
 interface ConnectionOption {
   id: string;
-  type: "local" | "ssh" | "wsl";
+  type: "local" | "ssh" | "wsl" | "note";
   name: string;
   subtitle: string;
   sshProfileId?: string;
@@ -30,6 +30,9 @@ interface ConnectionOption {
 }
 
 function optionToConnection(opt: ConnectionOption): PanelConnection {
+  if (opt.type === "note") {
+    return { type: "note" };
+  }
   return {
     type: opt.type,
     sshProfileId: opt.sshProfileId,
@@ -64,6 +67,15 @@ const IconSsh = () => (
     <rect x="9.5" y="4.5" width="5" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
     <path d="M6.5 8h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
     <path d="M8.5 6.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconNote = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect x="2.5" y="1.5" width="11" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.25" />
+    <line x1="5.5" y1="5" x2="10.5" y2="5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+    <line x1="5.5" y1="7.5" x2="10.5" y2="7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+    <line x1="5.5" y1="10" x2="8.5" y2="10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
   </svg>
 );
 
@@ -321,6 +333,12 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
         sshProfileId: profile.id,
       });
     }
+    opts.push({
+      id: "note",
+      type: "note" as const,
+      name: "Note",
+      subtitle: "Markdown editor",
+    });
     return opts;
   }, [wslDistros, sshProfiles]);
 
@@ -444,6 +462,8 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
                       <IconSsh />
                     ) : opt.type === "wsl" ? (
                       <IconLinux />
+                    ) : opt.type === "note" ? (
+                      <IconNote />
                     ) : (
                       <IconTerminal />
                     )}

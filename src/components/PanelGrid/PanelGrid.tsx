@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import type { Tab, PanelConnection } from "../../types/terminal";
 import { TerminalPane } from "../TerminalPane/TerminalPane";
+import { NotePanel } from "../NotePanel/NotePanel";
 import { PanelContextMenu } from "../PanelContextMenu/PanelContextMenu";
 import { getGridConfig } from "../../lib/layoutMath";
 import { useTabStore } from "../../store/tabStore";
+import { useNoteStore } from "../../store/noteStore";
 import { useSshStore } from "../../store/sshStore";
 import { ipc } from "../../lib/tauriIpc";
 import "./PanelGrid.css";
@@ -55,6 +57,12 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
   const handleSwitchConnection = useCallback(
     (connection: PanelConnection) => {
       if (!ctxMenu) return;
+      // Clean up note data if switching away from note panel
+      const currentTab = useTabStore.getState().tabs.find((t) => t.id === tab.id);
+      const currentPanel = currentTab?.panels.find((p) => p.id === ctxMenu.panelId);
+      if (currentPanel?.connection?.type === "note" && connection.type !== "note") {
+        useNoteStore.getState().removeNote(ctxMenu.panelId);
+      }
       switchPanelConnection(tab.id, ctxMenu.panelId, connection);
       setCtxMenu(null);
     },
@@ -167,25 +175,29 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
               ...(hidden ? { display: "none" } : {}),
             }}
           >
-            <TerminalPane
-              cwd={tab.cwd}
-              isActive={panel.id === activePanelId}
-              broadcastEnabled={tab.broadcastEnabled}
-              siblingSessionIds={siblingSessionIds}
-              connectionType={panel.connection?.type}
-              sshHost={sshProfile?.host}
-              sshPort={sshProfile?.port}
-              sshUsername={sshProfile?.username}
-              sshIdentityFile={sshProfile?.identityFile}
-              shellProgram={panel.connection?.shellProgram}
-              shellArgs={panel.connection?.shellArgs}
-              wslDistro={panel.connection?.wslDistro}
-              onSessionCreated={(sessionId, connectionId) => handleSessionCreated(panel.id, sessionId, connectionId)}
-              onSessionKilled={() => handleSessionKilled(panel.id)}
-              onFocus={() => setActivePanelId(panel.id)}
-              onNextPanel={handleNextPanel}
-              onPrevPanel={handlePrevPanel}
-            />
+            {panel.connection?.type === "note" ? (
+              <NotePanel panelId={panel.id} />
+            ) : (
+              <TerminalPane
+                cwd={tab.cwd}
+                isActive={panel.id === activePanelId}
+                broadcastEnabled={tab.broadcastEnabled}
+                siblingSessionIds={siblingSessionIds}
+                connectionType={panel.connection?.type}
+                sshHost={sshProfile?.host}
+                sshPort={sshProfile?.port}
+                sshUsername={sshProfile?.username}
+                sshIdentityFile={sshProfile?.identityFile}
+                shellProgram={panel.connection?.shellProgram}
+                shellArgs={panel.connection?.shellArgs}
+                wslDistro={panel.connection?.wslDistro}
+                onSessionCreated={(sessionId, connectionId) => handleSessionCreated(panel.id, sessionId, connectionId)}
+                onSessionKilled={() => handleSessionKilled(panel.id)}
+                onFocus={() => setActivePanelId(panel.id)}
+                onNextPanel={handleNextPanel}
+                onPrevPanel={handlePrevPanel}
+              />
+            )}
           </div>
         );
       })}

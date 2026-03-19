@@ -21,6 +21,7 @@ import { useClipboardStore } from "./store/clipboardStore";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { allTopics } from "./data/cheatsheets";
 import { useTabStore } from "./store/tabStore";
+import { useNoteStore } from "./store/noteStore";
 import { useThemeStore, resolveThemeDefinition } from "./store/themeStore";
 import { useTerminalConfigStore } from "./store/terminalConfigStore";
 import { useSshStore } from "./store/sshStore";
@@ -65,13 +66,16 @@ export function App() {
   });
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
     const stored = localStorage.getItem("v-terminal:sidebar-tab");
-    if (stored === "notes" || stored === "timers" || stored === "cheatsheet") return stored;
-    // Migrate legacy values
+    if (stored === "todos" || stored === "timers" || stored === "cheatsheet") return stored;
+    if (stored === "notes") {
+      localStorage.setItem("v-terminal:sidebar-tab", "todos");
+      return "todos";
+    }
     if (stored === "pomodoro" || stored === "timer" || stored === "recurring" || stored === "alerts") {
       localStorage.setItem("v-terminal:sidebar-tab", "timers");
       return "timers";
     }
-    return localStorage.getItem("v-terminal:alarm-open") === "true" ? "timers" : "notes";
+    return localStorage.getItem("v-terminal:alarm-open") === "true" ? "timers" : "todos";
   });
   const activePanelSessionIdRef = useRef<string | null>(null);
   const activePanelIdRef = useRef<string | null>(null);
@@ -90,6 +94,44 @@ export function App() {
   // Prefetch WSL distros on startup to warm the Rust-side cache
   useEffect(() => {
     ipc.getWslDistros().catch(() => {});
+  }, []);
+
+  // One-time migration from old per-tab notes+todos to new format
+  useEffect(() => {
+    const MIGRATION_KEY = "v-terminal:migration-note-panel-done";
+    if (localStorage.getItem(MIGRATION_KEY)) return;
+
+    const oldNotesRaw = localStorage.getItem("v-terminal:tab-notes");
+    if (oldNotesRaw) {
+      try {
+        const oldNotes = JSON.parse(oldNotesRaw) as Record<string, { markdown: string; todos: Array<{ id: string; text: string; completed: boolean }> }>;
+        const allTodos: Array<{ id: string; text: string; completed: boolean }> = [];
+        const seenTexts = new Set<string>();
+
+        for (const tabNote of Object.values(oldNotes)) {
+          if (tabNote.todos) {
+            for (const todo of tabNote.todos) {
+              const key = todo.text.trim().toLowerCase();
+              if (!seenTexts.has(key)) {
+                seenTexts.add(key);
+                allTodos.push(todo);
+              }
+            }
+          }
+        }
+
+        if (allTodos.length > 0) {
+          const existingRaw = localStorage.getItem("v-terminal:todos");
+          const existing = existingRaw ? JSON.parse(existingRaw) as Array<{ id: string; text: string; completed: boolean }> : [];
+          localStorage.setItem("v-terminal:todos", JSON.stringify([...existing, ...allTodos]));
+        }
+
+        localStorage.removeItem("v-terminal:tab-notes");
+      } catch {}
+    }
+
+    localStorage.removeItem("v-terminal:note-content");
+    localStorage.setItem(MIGRATION_KEY, "true");
   }, []);
 
   // Alarm tick engine
@@ -199,10 +241,15 @@ export function App() {
   const handleLayoutChange = useCallback((layout: Layout) => {
     if (!activeTab) return;
     const { removed } = setLayout(activeTab.id, layout);
-    // Kill sessions for removed panels
     removed
       .filter((p) => p.sessionId !== null)
       .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
+    const removedNotePanelIds = removed
+      .filter((p) => p.connection?.type === "note")
+      .map((p) => p.id);
+    if (removedNotePanelIds.length > 0) {
+      useNoteStore.getState().removeNotes(removedNotePanelIds);
+    }
   }, [activeTab, setLayout]);
 
   const handleToggleBroadcast = useCallback(() => {
@@ -712,7 +759,33 @@ export function App() {
         isActive: isActiveLocal,
         action: () => {
           if (isActiveLocal) return; // no-op if already active
+          // Clean up note data if switching away from note panel
+          if (connType === "note") {
+            useNoteStore.getState().removeNote(activePanelId);
+          }
           switchPanelConnection(activeTab.id, activePanelId, { type: "local" });
+        },
+      },
+      // Note
+      {
+        id: "conn:note",
+        label: "Note",
+        description: "Switch to a markdown note editor",
+        meta: "Markdown",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+              <line x1="4.5" y1="4" x2="9.5" y2="4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+              <line x1="4.5" y1="6.5" x2="9.5" y2="6.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+              <line x1="4.5" y1="9" x2="7.5" y2="9" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+            </svg>
+          </span>
+        ),
+        isActive: connType === "note",
+        action: () => {
+          if (connType === "note") return;
+          switchPanelConnection(activeTab.id, activePanelId, { type: "note" });
         },
       },
       // WSL distros
@@ -735,6 +808,10 @@ export function App() {
           isActive: isActiveWsl,
           action: () => {
             if (isActiveWsl) return;
+            // Clean up note data if switching away from note panel
+            if (connType === "note") {
+              useNoteStore.getState().removeNote(activePanelId);
+            }
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "wsl",
               wslDistro: distro,
@@ -765,6 +842,10 @@ export function App() {
           isActive: isActiveSsh,
           action: () => {
             if (isActiveSsh) return;
+            // Clean up note data if switching away from note panel
+            if (connType === "note") {
+              useNoteStore.getState().removeNote(activePanelId);
+            }
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "ssh",
               sshProfileId: profile.id,
@@ -778,16 +859,30 @@ export function App() {
   }, [activeTab, activePanelId, activePanel, switchPanelConnection, wslDistros, sshProfiles]);
 
   const handleTabClose = (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab) {
+      const notePanelIds = tab.panels
+        .filter((p) => p.connection?.type === "note")
+        .map((p) => p.id);
+      if (notePanelIds.length > 0) {
+        useNoteStore.getState().removeNotes(notePanelIds);
+      }
+    }
     removeTab(tabId);
   };
 
   const handleTabKill = (tabId: string) => {
     const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
-      // Fire-and-forget: kill sessions in background, don't block UI
       tab.panels
         .filter((p) => p.sessionId !== null)
         .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
+      const notePanelIds = tab.panels
+        .filter((p) => p.connection?.type === "note")
+        .map((p) => p.id);
+      if (notePanelIds.length > 0) {
+        useNoteStore.getState().removeNotes(notePanelIds);
+      }
     }
     removeTab(tabId);
   };
@@ -840,7 +935,6 @@ export function App() {
         </div>
         {sidebarOpen && (
           <SidePanel
-            tabId={activeTabId}
             activeTab={sidebarTab}
             onTabChange={handleSidebarTabChange}
             onClose={handleCloseSidebar}

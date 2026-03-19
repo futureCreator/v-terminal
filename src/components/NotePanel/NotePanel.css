@@ -1,3 +1,55 @@
+/* ── NotePanel base styles ─────────────────────────────────────── */
+.note-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.note-panel-header {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--separator);
+}
+
+.note-panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label-tertiary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: "Pretendard", sans-serif;
+}
+
+.note-panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Embedded mode — inside PanelGrid ──────────────────────────── */
+.note-panel--embedded {
+  border: none;
+  border-radius: 0;
+}
+
+.note-panel--embedded .note-cm-container {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+}
+
+.note-panel--embedded .note-cm-container .cm-editor {
+  height: 100%;
+}
+
 /* ── CodeMirror container ───────────────────────────────────────── */
 .note-cm-container {
   flex: 1;

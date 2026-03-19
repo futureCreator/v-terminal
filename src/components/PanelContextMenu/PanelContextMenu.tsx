@@ -150,6 +150,29 @@ export function PanelContextMenu({
         );
       })}
 
+      {/* Note */}
+      <div className="panel-ctx-divider" />
+      {(() => {
+        const isActiveNote = connType === "note";
+        return (
+          <button
+            className={`panel-ctx-item${isActiveNote ? " panel-ctx-item--active" : ""}`}
+            onClick={() => !isActiveNote && handleClick({ type: "note" })}
+            role="menuitem"
+          >
+            <svg className="panel-ctx-item-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <rect x="2.5" y="1.5" width="11" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+              <line x1="5.5" y1="5" x2="10.5" y2="5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+              <line x1="5.5" y1="7.5" x2="10.5" y2="7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+              <line x1="5.5" y1="10" x2="8.5" y2="10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+            </svg>
+            <span className="panel-ctx-item-label">Note</span>
+            <span className="panel-ctx-item-meta">Markdown</span>
+            {isActiveNote && checkIcon}
+          </button>
+        );
+      })()}
+
     </div>,
     document.body
   );
