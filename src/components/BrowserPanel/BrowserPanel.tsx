@@ -244,7 +244,7 @@ export function BrowserPanel({
 
       {/* Webview placeholder */}
       <div ref={placeholderRef} className="browser-content">
-        {error && (
+        {error && !created && (
           <div className="browser-error">
             <p className="browser-error-msg">{error}</p>
             <button className="browser-retry-btn" onClick={handleRetry}>
