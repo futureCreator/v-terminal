@@ -93,6 +93,18 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.17.0 - 2026-03-20
+
+- **feat**: Internationalization (i18n) — full multilanguage support with English and Korean using `react-i18next`
+- **feat**: OS language auto-detection — automatically selects Korean for `ko`/`ko-KR` system locales, English for all others
+- **feat**: Language selector in Settings → Appearance tab — dropdown to switch between English and 한국어, applies immediately without restart
+- **feat**: ~170 translation keys covering all UI text: settings, command palette, welcome page, session picker, SSH manager, terminal dialogs, browser panel, timers, alarms, todos, notes, and context menus
+- **feat**: Translation files at `src/locales/en.json` and `src/locales/ko.json` with structured key namespaces
+- **refactor**: All 18+ components migrated from hardcoded strings to `t()` translation function calls
+- **refactor**: `paletteCommands.tsx` builder functions now accept `TFunction` parameter for translated command labels and descriptions
+- **refactor**: `slides.ts` changed from raw strings to translation key identifiers (`headlineKey`/`descriptionKey`)
+- **docs**: CLAUDE.md updated — language policy changed from "English only" to i18n guidelines (use `t()`, no hardcoded strings)
+
 ### v0.16.3 - 2026-03-20
 
 - **feat**: Welcome slide 4 — "Browse without leaving" slide added to onboarding, showcasing the built-in browser panel with `Ctrl+Shift+B` shortcut and CSS-only illustration (browser toolbar + page content alongside terminal)
