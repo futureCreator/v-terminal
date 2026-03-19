@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.14.1 - 2026-03-19
+
+- **fix**: Local PTY sessions now set `TERM=xterm-256color` and `COLORTERM=truecolor` environment variables — CLI tools (Gemini CLI, neovim, bat, delta, etc.) correctly detect 24-bit true color support instead of showing "True color not detected" warnings
+
 ### v0.14.0 - 2026-03-19
 
 - **feat**: Note Panel — notes promoted from a side panel tab to a full panel type; any panel can be switched to a markdown editor via right-click context menu, command palette (`#` prefix), or SessionPicker

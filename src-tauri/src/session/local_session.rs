@@ -59,6 +59,8 @@ impl LocalSession {
             }
         }
         cmd.cwd(cwd);
+        cmd.env("TERM", "xterm-256color");
+        cmd.env("COLORTERM", "truecolor");
 
         let child = pair
             .slave
