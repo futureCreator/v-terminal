@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.14.2 - 2026-03-19
+
+- **fix**: Todo panel font size now syncs with terminal and note editor — todo item text and input field dynamically follow the global font size setting (Settings → Appearance or Ctrl +/-)
+- **fix**: Note panel header removed — eliminated the 28px "Note" title bar so editor content starts at the same vertical position as terminal panels, improving visual consistency across panel types (Apple HIG: reduce chrome, maximize content)
+
 ### v0.14.1 - 2026-03-19
 
 - **fix**: Local PTY sessions now set `TERM=xterm-256color` and `COLORTERM=truecolor` environment variables — CLI tools (Gemini CLI, neovim, bat, delta, etc.) correctly detect 24-bit true color support instead of showing "True color not detected" warnings

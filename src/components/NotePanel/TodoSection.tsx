@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useTodoStore } from "../../store/todoStore";
+import { useTerminalConfigStore } from "../../store/terminalConfigStore";
 
 export function TodoSection() {
   const [collapsed, setCollapsed] = useState(false);
@@ -8,6 +9,7 @@ export function TodoSection() {
   const todos = useTodoStore((s) => s.todos);
   const { addTodo, toggleTodo, removeTodo, updateTodoText, clearCompleted } =
     useTodoStore();
+  const fontSize = useTerminalConfigStore((s) => s.fontSize);
 
   const completed = todos.filter((t) => t.completed).length;
   const total = todos.length;
@@ -136,6 +138,7 @@ export function TodoSection() {
                   contentEditable
                   suppressContentEditableWarning
                   spellCheck={false}
+                  style={{ fontSize: `${fontSize}px` }}
                   onBlur={(e) =>
                     handleBlurEdit(todo.id, e.currentTarget.textContent ?? "")
                   }
@@ -172,6 +175,7 @@ export function TodoSection() {
               className="todo-input"
               type="text"
               placeholder="Add a task..."
+              style={{ fontSize: `${fontSize}px` }}
               onKeyDown={handleAdd}
             />
           </div>
