@@ -250,6 +250,12 @@ export function App() {
     if (removedNotePanelIds.length > 0) {
       useNoteStore.getState().removeNotes(removedNotePanelIds);
     }
+    const removedBrowserPanelIds = removed
+      .filter((p) => p.connection?.type === "browser")
+      .map((p) => p.id);
+    for (const id of removedBrowserPanelIds) {
+      ipc.browserDestroy(`browser-${id}`).catch(() => {});
+    }
   }, [activeTab, setLayout]);
 
   const handleToggleBroadcast = useCallback(() => {
@@ -763,6 +769,9 @@ export function App() {
           if (connType === "note") {
             useNoteStore.getState().removeNote(activePanelId);
           }
+          if (connType === "browser") {
+            ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
+          }
           switchPanelConnection(activeTab.id, activePanelId, { type: "local" });
         },
       },
@@ -785,7 +794,34 @@ export function App() {
         isActive: connType === "note",
         action: () => {
           if (connType === "note") return;
+          if (connType === "browser") {
+            ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
+          }
           switchPanelConnection(activeTab.id, activePanelId, { type: "note" });
+        },
+      },
+      // Browser
+      {
+        id: "conn:browser",
+        label: "Browser",
+        description: "Open a web browser in this panel",
+        meta: "Web",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+              <ellipse cx="7" cy="7" rx="2.5" ry="5.5" stroke="currentColor" strokeWidth="1" />
+              <line x1="1.5" y1="7" x2="12.5" y2="7" stroke="currentColor" strokeWidth="1" />
+            </svg>
+          </span>
+        ),
+        isActive: connType === "browser",
+        action: () => {
+          if (connType === "browser") return;
+          if (connType === "note") {
+            useNoteStore.getState().removeNote(activePanelId);
+          }
+          switchPanelConnection(activeTab.id, activePanelId, { type: "browser" });
         },
       },
       // WSL distros
@@ -811,6 +847,9 @@ export function App() {
             // Clean up note data if switching away from note panel
             if (connType === "note") {
               useNoteStore.getState().removeNote(activePanelId);
+            }
+            if (connType === "browser") {
+              ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
             }
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "wsl",
@@ -846,6 +885,9 @@ export function App() {
             if (connType === "note") {
               useNoteStore.getState().removeNote(activePanelId);
             }
+            if (connType === "browser") {
+              ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
+            }
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "ssh",
               sshProfileId: profile.id,
@@ -867,6 +909,12 @@ export function App() {
       if (notePanelIds.length > 0) {
         useNoteStore.getState().removeNotes(notePanelIds);
       }
+      const browserPanelIds = tab.panels
+        .filter((p) => p.connection?.type === "browser")
+        .map((p) => p.id);
+      for (const id of browserPanelIds) {
+        ipc.browserDestroy(`browser-${id}`).catch(() => {});
+      }
     }
     removeTab(tabId);
   };
@@ -882,6 +930,12 @@ export function App() {
         .map((p) => p.id);
       if (notePanelIds.length > 0) {
         useNoteStore.getState().removeNotes(notePanelIds);
+      }
+      const browserPanelIds = tab.panels
+        .filter((p) => p.connection?.type === "browser")
+        .map((p) => p.id);
+      for (const id of browserPanelIds) {
+        ipc.browserDestroy(`browser-${id}`).catch(() => {});
       }
     }
     removeTab(tabId);
