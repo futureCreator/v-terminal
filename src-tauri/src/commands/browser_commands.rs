@@ -55,6 +55,11 @@ pub async fn browser_create(
     width: f64,
     height: f64,
 ) -> Result<(), String> {
+    // Idempotent: if webview already exists, just return Ok
+    if app.get_webview(&label).is_some() {
+        return Ok(());
+    }
+
     let window = app.get_window("main")
         .ok_or("Main window not found")?;
 
@@ -150,8 +155,9 @@ pub async fn browser_resize(
     width: f64,
     height: f64,
 ) -> Result<(), String> {
-    let webview = app.get_webview(&label)
-        .ok_or(format!("Webview '{label}' not found"))?;
+    let Some(webview) = app.get_webview(&label) else {
+        return Ok(()); // Webview may not exist yet or was destroyed
+    };
     webview.set_position(LogicalPosition::new(x, y))
         .map_err(|e| format!("Set position failed: {e}"))?;
     webview.set_size(LogicalSize::new(width, height))
