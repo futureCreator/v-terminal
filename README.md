@@ -93,6 +93,18 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.16.0 - 2026-03-20
+
+- **feat**: Browser Left Panel — browser moved from an embedded PanelConnection type to an independent 600px left-side panel, coexisting with the right-side toolkit panel (280px)
+- **feat**: Keep-alive WebView2 — browser webview is created lazily on first open and never destroyed, preserving browsing state (scroll position, form data, JS runtime) across toggles
+- **feat**: Home button in browser toolbar — navigates to the configured homepage (Settings → Browser, default: Google)
+- **feat**: Browser toggle via `Ctrl+Shift+B` keyboard shortcut and Command Palette ("Show/Hide Browser")
+- **feat**: Browser panel header with close button matching Apple HIG SidePanel design (36px)
+- **feat**: Toolbar with Back, Forward, Reload, Home buttons and URL input bar with backdrop blur
+- **refactor**: Removed `'browser'` from `PanelConnection` type union — browser is no longer a panel grid connection type
+- **refactor**: Removed browser option from PanelContextMenu, SessionPicker, and Command Palette connection switching
+- **migration**: Existing workspaces with browser panels in localStorage are automatically converted to local terminal sessions
+
 ### v0.15.5 - 2026-03-20
 
 - **fix**: Browser webview hidden when overlays are active — context menu no longer covered by native WebView2, command palette blur/dim effect now applies uniformly to browser panels; `overlayActive` prop passed from App.tsx to PanelGrid for browser-specific visibility control
