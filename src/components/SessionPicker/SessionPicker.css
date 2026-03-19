@@ -191,11 +191,6 @@
   color: var(--success);
 }
 
-.sp-row-icon--browser {
-  background: color-mix(in srgb, var(--warning, #f5a623) 18%, transparent);
-  color: var(--warning, #f5a623);
-}
-
 .sp-row-icon--note {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--accent);
@@ -281,8 +276,6 @@
 .sp-dot--note {
   background: var(--accent);
 }
-
-.sp-dot--browser { background: #3b82f6; }
 
 /* ─── Panel Dropdown ─────────────────────────────────────────── */
 .sp-panel-dropdown {
