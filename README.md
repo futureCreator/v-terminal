@@ -93,6 +93,12 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.12.4 - 2026-03-19
+
+- **fix**: WSL sshd shell exits immediately — added `UsePAM no` to sshd config to prevent PAM-related session failures in WSL environments where PAM is not properly configured
+- **fix**: WSL sshd fails to start without `/run/sshd` — auto-creates the privilege separation directory before launching sshd (tries without sudo first, falls back to sudo if needed)
+- **fix**: WSL sshd error diagnostics — sshd now logs to `/tmp/vterminal_sshd_{port}.log` and error messages include log tail on failure
+
 ### v0.12.3 - 2026-03-19
 
 - **fix**: WSL sshd race condition — waits up to 3 seconds for sshd to start listening before attempting SSH connection (100ms polling interval)

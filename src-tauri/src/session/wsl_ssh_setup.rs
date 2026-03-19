@@ -204,7 +204,14 @@ fn start_sshd(
 
     let config_path = format!("/tmp/vterminal_sshd_{port}.conf");
     let config_content = format!(
-        "ListenAddress 127.0.0.1\nPort {port}\nPubkeyAuthentication yes\nPasswordAuthentication no\nAuthorizedKeysFile .ssh/authorized_keys\nHostKey {home_dir}/.vterminal/ssh_host_ed25519_key\nHostKey {home_dir}/.vterminal/ssh_host_rsa_key"
+        "ListenAddress 127.0.0.1\n\
+         Port {port}\n\
+         PubkeyAuthentication yes\n\
+         PasswordAuthentication no\n\
+         UsePAM no\n\
+         AuthorizedKeysFile .ssh/authorized_keys\n\
+         HostKey {home_dir}/.vterminal/ssh_host_ed25519_key\n\
+         HostKey {home_dir}/.vterminal/ssh_host_rsa_key"
     );
 
     // Write config file
@@ -214,25 +221,34 @@ fn start_sshd(
         return Err(format!("failed to write sshd config to {config_path}"));
     }
 
+    // Ensure /run/sshd exists (required for privilege separation, not auto-created in WSL)
+    let (_, _, mkdir_code) = wsl_exec(distro, "[ -d /run/sshd ] || mkdir -p /run/sshd 2>/dev/null")?;
+    if mkdir_code != 0 {
+        // Need sudo to create /run/sshd
+        let (_, _, _) = wsl_sudo_exec(distro, "mkdir -p /run/sshd", sudo_password)?;
+    }
+
     // Try starting sshd as current user first (no sudo needed for port > 1024)
     let (_, stderr, code) = wsl_exec(
         distro,
-        &format!("/usr/sbin/sshd -f {config_path}"),
+        &format!("/usr/sbin/sshd -f {config_path} -E /tmp/vterminal_sshd_{port}.log"),
     )?;
 
     if code != 0 {
         // Some distros restrict non-root sshd — fall back to sudo
         let (_, sudo_stderr, sudo_code) = wsl_sudo_exec(
             distro,
-            &format!("/usr/sbin/sshd -f {config_path}"),
+            &format!("/usr/sbin/sshd -f {config_path} -E /tmp/vterminal_sshd_{port}.log"),
             sudo_password,
         )?;
         if sudo_code != 0 {
             if sudo_stderr.contains("password is required") || sudo_stderr.contains("sudo:") {
                 return Err(format!("{{\"code\":\"WSL_SUDO_REQUIRED\",\"distro\":\"{distro}\"}}"));
             }
-            // Report both errors for debugging
-            return Err(format!("failed to start sshd: {stderr} | sudo attempt: {sudo_stderr}"));
+            // Read sshd log for detailed error info
+            let (log_content, _, _) = wsl_exec(distro, &format!("tail -5 /tmp/vterminal_sshd_{port}.log 2>/dev/null"));
+            let log_detail = log_content.unwrap_or_default();
+            return Err(format!("failed to start sshd: {stderr} | sudo: {sudo_stderr} | log: {log_detail}"));
         }
     }
 
