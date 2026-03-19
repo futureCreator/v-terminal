@@ -1,10 +1,10 @@
 /* ══════════════════════════════════════════════════════════════════
-   LeftBrowserPanel — 600px left sidebar with embedded browser
+   LeftBrowserPanel — 40% left sidebar with embedded browser
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── Panel container ────────────────────────────────────────────── */
 .left-browser-panel {
-  width: 600px;
+  width: 40%;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
