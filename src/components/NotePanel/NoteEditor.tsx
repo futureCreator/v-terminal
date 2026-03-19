@@ -6,33 +6,30 @@ import { useNoteStore } from "../../store/noteStore";
 import { useTerminalConfigStore } from "../../store/terminalConfigStore";
 
 interface NoteEditorProps {
-  tabId: string;
+  panelId: string;
 }
 
-export function NoteEditor({ tabId }: NoteEditorProps) {
+export function NoteEditor({ panelId }: NoteEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const tabIdRef = useRef(tabId);
+  const panelIdRef = useRef(panelId);
   const suppressRef = useRef(false);
   const fontSizeCompartment = useRef(new Compartment());
 
   const setMarkdown = useNoteStore((s) => s.setMarkdown);
   const terminalFontSize = useTerminalConfigStore((s) => s.fontSize);
 
-  // Create editor once on mount
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const content =
-      useNoteStore.getState().notes[tabId]?.markdown ?? "";
-
+    const content = useNoteStore.getState().notes[panelId] ?? "";
     const initialFontSize = useTerminalConfigStore.getState().fontSize;
 
     const updateListener = EditorView.updateListener.of((update) => {
       if (suppressRef.current) return;
       if (update.docChanged) {
         const doc = update.state.doc.toString();
-        setMarkdown(tabIdRef.current, doc);
+        setMarkdown(panelIdRef.current, doc);
       }
     });
 
@@ -58,7 +55,6 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync font size with terminal config
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
@@ -69,14 +65,12 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
     });
   }, [terminalFontSize]);
 
-  // Swap content when tabId changes
   useEffect(() => {
-    tabIdRef.current = tabId;
+    panelIdRef.current = panelId;
     const view = viewRef.current;
     if (!view) return;
 
-    const newContent =
-      useNoteStore.getState().notes[tabId]?.markdown ?? "";
+    const newContent = useNoteStore.getState().notes[panelId] ?? "";
     const currentContent = view.state.doc.toString();
 
     if (newContent !== currentContent) {
@@ -86,7 +80,7 @@ export function NoteEditor({ tabId }: NoteEditorProps) {
       });
       suppressRef.current = false;
     }
-  }, [tabId]);
+  }, [panelId]);
 
   return <div ref={containerRef} className="note-cm-container" />;
 }

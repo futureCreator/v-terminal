@@ -27,7 +27,7 @@ export interface SshProfile {
 }
 
 export interface PanelConnection {
-  type: 'local' | 'ssh' | 'wsl';
+  type: 'local' | 'ssh' | 'wsl' | 'note';
   sshProfileId?: string;
   shellProgram?: string;
   shellArgs?: string[];

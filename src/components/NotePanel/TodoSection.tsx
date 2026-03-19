@@ -1,17 +1,13 @@
 import { useState, useRef, useCallback } from "react";
-import { useNoteStore } from "../../store/noteStore";
+import { useTodoStore } from "../../store/todoStore";
 
-interface TodoSectionProps {
-  tabId: string;
-}
-
-export function TodoSection({ tabId }: TodoSectionProps) {
+export function TodoSection() {
   const [collapsed, setCollapsed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const todos = useNoteStore((s) => s.notes[tabId]?.todos ?? []);
+  const todos = useTodoStore((s) => s.todos);
   const { addTodo, toggleTodo, removeTodo, updateTodoText, clearCompleted } =
-    useNoteStore();
+    useTodoStore();
 
   const completed = todos.filter((t) => t.completed).length;
   const total = todos.length;
@@ -21,22 +17,22 @@ export function TodoSection({ tabId }: TodoSectionProps) {
       if (e.key !== "Enter") return;
       const text = (e.target as HTMLInputElement).value.trim();
       if (!text) return;
-      addTodo(tabId, text);
+      addTodo(text);
       (e.target as HTMLInputElement).value = "";
     },
-    [tabId, addTodo],
+    [addTodo],
   );
 
   const handleBlurEdit = useCallback(
     (todoId: string, text: string) => {
       const trimmed = text.trim();
       if (trimmed) {
-        updateTodoText(tabId, todoId, trimmed);
+        updateTodoText(todoId, trimmed);
       } else {
-        removeTodo(tabId, todoId);
+        removeTodo(todoId);
       }
     },
-    [tabId, updateTodoText, removeTodo],
+    [updateTodoText, removeTodo],
   );
 
   return (
@@ -72,7 +68,7 @@ export function TodoSection({ tabId }: TodoSectionProps) {
             className="todo-clear-btn"
             onClick={(e) => {
               e.stopPropagation();
-              clearCompleted(tabId);
+              clearCompleted();
             }}
             aria-label="Clear completed"
             title="Clear completed"
@@ -100,7 +96,7 @@ export function TodoSection({ tabId }: TodoSectionProps) {
               >
                 <button
                   className="todo-checkbox"
-                  onClick={() => toggleTodo(tabId, todo.id)}
+                  onClick={() => toggleTodo(todo.id)}
                   aria-label={todo.completed ? "Mark incomplete" : "Mark complete"}
                 >
                   {todo.completed ? (
@@ -154,7 +150,7 @@ export function TodoSection({ tabId }: TodoSectionProps) {
                 </span>
                 <button
                   className="todo-delete"
-                  onClick={() => removeTodo(tabId, todo.id)}
+                  onClick={() => removeTodo(todo.id)}
                   aria-label="Delete"
                   title="Delete"
                 >

@@ -1,42 +1,32 @@
-import { useEffect } from "react";
-import { NoteEditor } from "../NotePanel/NoteEditor";
 import { TodoSection } from "../NotePanel/TodoSection";
 import { TimersPanel } from "./TimersPanel";
 import { CheatsheetPanel } from "./CheatsheetPanel";
-import { useNoteStore } from "../../store/noteStore";
 import "../NotePanel/NotePanel.css";
 import "./SidePanel.css";
 
-export type SidebarTab = "notes" | "timers" | "cheatsheet";
+export type SidebarTab = "todos" | "timers" | "cheatsheet";
 
 interface SidePanelProps {
-  tabId: string;
   activeTab: SidebarTab;
   onTabChange: (tab: SidebarTab) => void;
   onClose: () => void;
 }
 
-export function SidePanel({ tabId, activeTab, onTabChange, onClose }: SidePanelProps) {
-  // Migrate legacy global note on first mount
-  useEffect(() => {
-    useNoteStore.getState().migrateOldNote(tabId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+export function SidePanel({ activeTab, onTabChange, onClose }: SidePanelProps) {
   return (
     <div className="side-panel">
       <div className="side-panel-header">
         <div className="side-panel-tabs">
           <button
-            className={`side-panel-tab${activeTab === "notes" ? " side-panel-tab--active" : ""}`}
-            onClick={() => onTabChange("notes")}
-            title="Notes"
+            className={`side-panel-tab${activeTab === "todos" ? " side-panel-tab--active" : ""}`}
+            onClick={() => onTabChange("todos")}
+            title="Todos"
           >
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <rect x="2.5" y="1" width="10" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
-              <line x1="5" y1="4.5" x2="10" y2="4.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-              <line x1="5" y1="7" x2="10" y2="7" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
-              <line x1="5" y1="9.5" x2="8" y2="9.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              <rect x="2.5" y="1.5" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M5 5l1.5 1.5L9 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="5" y1="8.5" x2="10" y2="8.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+              <line x1="5" y1="11" x2="8" y2="11" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
             </svg>
           </button>
           <button
@@ -80,12 +70,7 @@ export function SidePanel({ tabId, activeTab, onTabChange, onClose }: SidePanelP
       </div>
 
       <div className="side-panel-body">
-        {activeTab === "notes" && (
-          <>
-            <NoteEditor tabId={tabId} />
-            <TodoSection tabId={tabId} />
-          </>
-        )}
+        {activeTab === "todos" && <TodoSection />}
         {activeTab === "timers" && <TimersPanel />}
         {activeTab === "cheatsheet" && <CheatsheetPanel />}
       </div>
