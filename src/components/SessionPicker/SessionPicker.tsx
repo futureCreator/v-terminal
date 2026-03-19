@@ -20,7 +20,7 @@ interface SessionPickerProps {
 
 interface ConnectionOption {
   id: string;
-  type: "local" | "ssh" | "wsl" | "note";
+  type: "local" | "ssh" | "wsl" | "note" | "browser";
   name: string;
   subtitle: string;
   sshProfileId?: string;
@@ -32,6 +32,9 @@ interface ConnectionOption {
 function optionToConnection(opt: ConnectionOption): PanelConnection {
   if (opt.type === "note") {
     return { type: "note" };
+  }
+  if (opt.type === "browser") {
+    return { type: "browser" };
   }
   return {
     type: opt.type,
@@ -76,6 +79,14 @@ const IconNote = () => (
     <line x1="5.5" y1="5" x2="10.5" y2="5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     <line x1="5.5" y1="7.5" x2="10.5" y2="7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     <line x1="5.5" y1="10" x2="8.5" y2="10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+  </svg>
+);
+
+const IconBrowser = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.25" />
+    <ellipse cx="8" cy="8" rx="3" ry="6" stroke="currentColor" strokeWidth="1.1" />
+    <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="1.1" />
   </svg>
 );
 
@@ -339,6 +350,12 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
       name: "Note",
       subtitle: "Markdown editor",
     });
+    opts.push({
+      id: "browser",
+      type: "browser" as const,
+      name: "Browser",
+      subtitle: "Web browser",
+    });
     return opts;
   }, [wslDistros, sshProfiles]);
 
@@ -464,6 +481,8 @@ export function SessionPicker({ onNewSession }: SessionPickerProps) {
                       <IconLinux />
                     ) : opt.type === "note" ? (
                       <IconNote />
+                    ) : opt.type === "browser" ? (
+                      <IconBrowser />
                     ) : (
                       <IconTerminal />
                     )}

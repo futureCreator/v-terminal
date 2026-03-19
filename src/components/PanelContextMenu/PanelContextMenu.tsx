@@ -173,6 +173,28 @@ export function PanelContextMenu({
         );
       })()}
 
+      {/* Browser */}
+      <div className="panel-ctx-divider" />
+      {(() => {
+        const isActiveBrowser = connType === "browser";
+        return (
+          <button
+            className={`panel-ctx-item${isActiveBrowser ? " panel-ctx-item--active" : ""}`}
+            onClick={() => !isActiveBrowser && handleClick({ type: "browser" })}
+            role="menuitem"
+          >
+            <svg className="panel-ctx-item-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+              <ellipse cx="7" cy="7" rx="2.5" ry="5.5" stroke="currentColor" strokeWidth="1" />
+              <line x1="1.5" y1="7" x2="12.5" y2="7" stroke="currentColor" strokeWidth="1" />
+            </svg>
+            <span className="panel-ctx-item-label">Browser</span>
+            <span className="panel-ctx-item-meta">Web</span>
+            {isActiveBrowser && checkIcon}
+          </button>
+        );
+      })()}
+
     </div>,
     document.body
   );

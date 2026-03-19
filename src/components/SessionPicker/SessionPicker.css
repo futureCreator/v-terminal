@@ -282,9 +282,7 @@
   background: var(--accent);
 }
 
-.sp-dot--browser {
-  background: var(--warning, #f5a623);
-}
+.sp-dot--browser { background: #3b82f6; }
 
 /* ─── Panel Dropdown ─────────────────────────────────────────── */
 .sp-panel-dropdown {
