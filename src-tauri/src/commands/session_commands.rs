@@ -29,7 +29,11 @@ pub async fn session_create(
         "local" => state.create_local(app, cwd, cols, rows, shell_program, shell_args).await,
         "wsl" => {
             let distro = wsl_distro.ok_or("wsl_distro is required for type 'wsl'")?;
-            state.create_wsl_ssh(app, distro, cols, rows, None).await
+            state.create_local(
+                app, cwd, cols, rows,
+                Some("wsl.exe".to_string()),
+                Some(vec!["-d".to_string(), distro, "--cd".to_string(), "~".to_string()]),
+            ).await
         }
         "ssh" => {
             let ssh = ssh.ok_or("ssh params required for type 'ssh'")?;
@@ -44,11 +48,16 @@ pub async fn session_create_wsl_with_sudo(
     state: tauri::State<'_, SessionManager>,
     app: AppHandle,
     distro: String,
-    password: String,
+    _password: String,
     cols: u16,
     rows: u16,
 ) -> Result<SessionCreateResult, String> {
-    state.create_wsl_ssh(app, distro, cols, rows, Some(password)).await
+    // WSL now uses direct PTY — password is no longer needed
+    state.create_local(
+        app, "~".to_string(), cols, rows,
+        Some("wsl.exe".to_string()),
+        Some(vec!["-d".to_string(), distro, "--cd".to_string(), "~".to_string()]),
+    ).await
 }
 
 #[tauri::command]
