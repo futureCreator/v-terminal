@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.14.4 - 2026-03-19
+
+- **feat**: App version displayed in Windows title bar — "v-terminal 0.14.4" shown with version in subdued quaternary label color (11px, weight 400) for quick version identification without visual clutter
+- **build**: `__APP_VERSION__` injected at build time via Vite `define` from `package.json` — version updates automatically on next build
+
 ### v0.14.3 - 2026-03-19
 
 - **fix**: Note panel now has a visible border matching terminal panels — added `1px solid var(--bg-panel-border)` with `border-radius` to the embedded note panel container

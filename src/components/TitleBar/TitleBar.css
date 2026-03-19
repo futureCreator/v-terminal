@@ -113,6 +113,14 @@
   letter-spacing: 0.02em;
 }
 
+.titlebar-version {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--label-quaternary);
+  letter-spacing: 0.01em;
+}
+
 /* ── Windows controls ─────────────────────────────────────────── */
 .titlebar-win-controls {
   display: flex;

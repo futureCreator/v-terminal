@@ -1,6 +1,8 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./TitleBar.css";
 
+declare const __APP_VERSION__: string;
+
 export function TitleBar() {
   const win = getCurrentWindow();
   const isWindows = navigator.platform.toUpperCase().includes("WIN");
@@ -10,6 +12,9 @@ export function TitleBar() {
       <div className="titlebar titlebar--windows" data-tauri-drag-region>
         <span className="titlebar-app-name" data-tauri-drag-region>
           v-terminal
+          <span className="titlebar-version" data-tauri-drag-region>
+            {__APP_VERSION__}
+          </span>
         </span>
         <div className="titlebar-win-controls">
           <button
