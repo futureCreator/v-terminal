@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.15.3 - 2026-03-20
+
+- **fix**: Browser error/retry UI only shown when webview creation genuinely failed (`error && !created`) — when webview is temporarily hidden by overlays (context menu, command palette), placeholder area is now blank instead of displaying stale error messages
+
 ### v0.15.2 - 2026-03-20
 
 - **fix**: `browser_create` now idempotent — returns Ok if webview with same label already exists, preventing false "already exists" errors when overlays (context menu, command palette) toggle browser visibility
