@@ -20,11 +20,12 @@ export interface PanelNavHandle {
 interface PanelGridProps {
   tab: Tab;
   isVisible: boolean;
+  overlayActive?: boolean;
   onActivePanelChanged?: (sessionId: string | null, panelId?: string) => void;
   navRef?: React.MutableRefObject<PanelNavHandle | null>;
 }
 
-export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: PanelGridProps) {
+export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged, navRef }: PanelGridProps) {
   const { setSessionId, clearSessionId, switchPanelConnection } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
   const [zoomedPanelId, setZoomedPanelId] = useState<string | null>(null);
@@ -192,7 +193,7 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
                 tabId={tab.id}
                 browserUrl={panel.connection.browserUrl}
                 isActive={panel.id === activePanelId}
-                isVisible={isVisible && !hidden}
+                isVisible={isVisible && !hidden && !overlayActive && !ctxMenu}
                 onFocus={() => setActivePanelId(panel.id)}
                 onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
               />

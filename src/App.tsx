@@ -980,6 +980,7 @@ export function App() {
               <PanelGrid
                 tab={tab}
                 isVisible={tab.id === activeTabId}
+                overlayActive={paletteOpen || settingsModalOpen || sshModalOpen}
                 onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
                 navRef={tab.id === activeTabId ? panelNavRef : undefined}
               />
