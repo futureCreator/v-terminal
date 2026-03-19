@@ -93,6 +93,12 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.12.5 - 2026-03-19
+
+- **fix**: WSL connections changed from SSH tunnel to direct PTY — `wsl.exe -d {distro} --cd ~` runs directly as a local session, eliminating sshd setup, password prompts, and connection failures
+- **cleanup**: Removed `wsl_ssh_setup.rs` module (sshd provisioning, key generation, port scanning, kill_sshd) — 474 lines deleted
+- **cleanup**: Removed `create_wsl_ssh` method, `wsl_ssh_cache` field, and WSL sshd process cleanup from `SessionManager`
+
 ### v0.12.4 - 2026-03-19
 
 - **fix**: WSL sshd shell exits immediately — added `UsePAM no` to sshd config to prevent PAM-related session failures in WSL environments where PAM is not properly configured
