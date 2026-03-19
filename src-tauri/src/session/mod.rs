@@ -2,7 +2,6 @@ pub mod local_session;
 pub mod manager;
 pub mod ssh_pool;
 pub mod ssh_session;
-pub mod wsl_ssh_setup;
 
 use async_trait::async_trait;
 
