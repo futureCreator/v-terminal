@@ -93,6 +93,14 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.15.1 - 2026-03-20
+
+- **fix**: Browser panel toolbar redesigned for Apple HIG — height increased to 40px, larger 28px touch targets, added ⋮ menu button for connection switching
+- **fix**: Browser panel activation — toolbar click activates panel, URL input focus activates panel, right-click on toolbar opens context menu
+- **fix**: Browser overlay z-order — WebView2 now hidden when context menu, CommandPalette, Settings, or SSH modal is open, preventing native webview from covering React overlays
+- **feat**: Set Google as default browser home page instead of blank page
+- **fix**: Note panel placeholder changed to "Type your markdown note here..."
+
 ### v0.15.0 - 2026-03-20
 
 - **feat**: Browser Panel — native WebView2 browser embedded in the panel grid via Tauri 2 multiwebview; browse the web without leaving the terminal
