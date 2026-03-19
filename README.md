@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.15.5 - 2026-03-20
+
+- **fix**: Browser webview hidden when overlays are active — context menu no longer covered by native WebView2, command palette blur/dim effect now applies uniformly to browser panels; `overlayActive` prop passed from App.tsx to PanelGrid for browser-specific visibility control
+
 ### v0.15.4 - 2026-03-20
 
 - **fix**: Browser panel stays visible when overlays open — removed overlay state (`paletteOpen`, `sshModalOpen`, `settingsModalOpen`, `ctxMenu`) from browser visibility logic; webview now only hides when tab is inactive or panel is zoomed out
