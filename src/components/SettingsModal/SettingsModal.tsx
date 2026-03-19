@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
+import { changeLanguage } from "../../i18n";
 import { useTerminalConfigStore, MIN_FONT_SIZE, MAX_FONT_SIZE, DEFAULT_FONT_SIZE } from "../../store/terminalConfigStore";
 import type { CursorStyle } from "../../store/terminalConfigStore";
 import { useThemeStore } from "../../store/themeStore";
@@ -24,10 +26,10 @@ const FONT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "Iosevka", label: "Iosevka" },
 ];
 
-const CURSOR_OPTIONS: Array<{ value: CursorStyle; label: string }> = [
-  { value: "block", label: "Block" },
-  { value: "underline", label: "Underline" },
-  { value: "bar", label: "Bar" },
+const CURSOR_OPTIONS: Array<{ value: CursorStyle; labelKey: string }> = [
+  { value: "block", labelKey: "settings.block" },
+  { value: "underline", labelKey: "settings.underline" },
+  { value: "bar", labelKey: "settings.bar" },
 ];
 
 interface SettingsModalProps {
@@ -36,6 +38,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("appearance");
   const [closing, setClosing] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -83,7 +86,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const toastPortal = toastVisible
     ? createPortal(
         <Toast
-          message="Welcome page will show on next new tab"
+          message={t('toast.welcomePageReset')}
           visible={toastVisible}
           onHide={() => setToastVisible(false)}
         />,
@@ -108,7 +111,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <path d="M6.8 1.5h2.4l.3 1.8.8.4 1.6-.9 1.7 1.7-.9 1.6.4.8 1.8.3v2.4l-1.8.3-.4.8.9 1.6-1.7 1.7-1.6-.9-.8.4-.3 1.8H6.8l-.3-1.8-.8-.4-1.6.9-1.7-1.7.9-1.6-.4-.8-1.8-.3V6.8l1.8-.3.4-.8-.9-1.6 1.7-1.7 1.6.9.8-.4z"/>
               <circle cx="8" cy="8" r="2.2"/>
             </svg>
-            <span className="settings-title">Settings</span>
+            <span className="settings-title">{t('settings.title')}</span>
           </div>
           <button className="settings-close" onClick={handleClose} aria-label="Close">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -131,7 +134,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <circle cx="7" cy="4" r=".8" fill="currentColor"/>
                 <circle cx="9.5" cy="5.5" r=".8" fill="currentColor"/>
               </svg>
-              Appearance
+              {t('settings.appearance')}
             </button>
             <button
               className={`settings-nav-item${activeTab === "terminal" ? " settings-nav-item--active" : ""}`}
@@ -142,7 +145,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <path d="M3 5.5l2 1.5-2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M7 9h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
               </svg>
-              Terminal
+              {t('settings.terminal')}
             </button>
             <button
               className={`settings-nav-item${activeTab === "browser" ? " settings-nav-item--active" : ""}`}
@@ -153,7 +156,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <ellipse cx="7" cy="7" rx="2.5" ry="5.5" stroke="currentColor" strokeWidth="1" />
                 <line x1="1.5" y1="7" x2="12.5" y2="7" stroke="currentColor" strokeWidth="1" />
               </svg>
-              Browser
+              {t('settings.browser')}
             </button>
           </nav>
 
@@ -170,6 +173,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onFontSizeReset={resetFontSize}
                 onThemeChange={setThemeId}
                 onResetOnboarding={handleResetOnboarding}
+                t={t}
+                i18n={i18n}
               />
             )}
             {activeTab === "terminal" && (
@@ -184,12 +189,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 onLineHeightChange={setLineHeight}
                 onScrollbackChange={setScrollback}
                 onFontSizeChange={setFontSize}
+                t={t}
               />
             )}
             {activeTab === "browser" && (
               <BrowserSettingsTab
                 homePage={homePage}
                 onHomePageChange={setHomePage}
+                t={t}
               />
             )}
           </div>
@@ -213,6 +220,8 @@ interface AppearanceTabProps {
   onFontSizeReset: () => void;
   onThemeChange: (id: string) => void;
   onResetOnboarding: () => void;
+  t: (key: string) => string;
+  i18n: { language: string };
 }
 
 function AppearanceTab({
@@ -225,6 +234,8 @@ function AppearanceTab({
   onFontSizeReset,
   onThemeChange,
   onResetOnboarding,
+  t,
+  i18n,
 }: AppearanceTabProps) {
   const [fontLoaded, setFontLoaded] = useState<boolean | null>(null);
 
@@ -239,9 +250,28 @@ function AppearanceTab({
 
   return (
     <>
+      {/* Language Section */}
+      <div className="settings-section">
+        <div className="settings-section-label">{t('settings.language')}</div>
+        <div className="settings-select-wrap">
+          <select
+            className="settings-select"
+            value={i18n.language}
+            onChange={(e) => changeLanguage(e.target.value)}
+          >
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+          </select>
+          <svg className="settings-select-chevron" width="8" height="5" viewBox="0 0 8 5" fill="none">
+            <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
+      <div className="settings-divider" />
+
       {/* Font Section */}
       <div className="settings-section">
-        <div className="settings-section-label">Font</div>
+        <div className="settings-section-label">{t('settings.font')}</div>
 
         {/* Font Family */}
         <div className="settings-select-wrap">
@@ -371,15 +401,15 @@ function AppearanceTab({
 
       {/* Onboarding Section */}
       <div className="settings-section">
-        <div className="settings-section-label">Onboarding</div>
+        <div className="settings-section-label">{t('settings.onboarding')}</div>
         <button
           className="settings-reset-welcome-btn"
           onClick={onResetOnboarding}
         >
-          Show Welcome Page
+          {t('settings.showWelcomePage')}
         </button>
         <span className="settings-field-sublabel">
-          Show the welcome page again on next new tab
+          {t('settings.showWelcomeDesc')}
         </span>
       </div>
     </>
@@ -399,6 +429,7 @@ interface TerminalTabProps {
   onLineHeightChange: (height: number) => void;
   onScrollbackChange: (lines: number) => void;
   onFontSizeChange: (size: number) => void;
+  t: (key: string) => string;
 }
 
 function TerminalTab({
@@ -410,16 +441,17 @@ function TerminalTab({
   onCursorBlinkChange,
   onLineHeightChange,
   onScrollbackChange,
+  t,
 }: TerminalTabProps) {
   return (
     <>
       {/* Cursor Section */}
       <div className="settings-section">
-        <div className="settings-section-label">Cursor</div>
+        <div className="settings-section-label">{t('settings.cursor')}</div>
 
         {/* Cursor Style */}
         <div className="settings-field">
-          <span className="settings-field-label">Cursor Style</span>
+          <span className="settings-field-label">{t('settings.cursorStyle')}</span>
           <div className="settings-select-wrap">
             <select
               className="settings-select"
@@ -427,7 +459,7 @@ function TerminalTab({
               onChange={(e) => onCursorStyleChange(e.target.value as CursorStyle)}
             >
               {CURSOR_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
               ))}
             </select>
             <svg className="settings-select-chevron" width="8" height="5" viewBox="0 0 8 5" fill="none">
@@ -438,7 +470,7 @@ function TerminalTab({
 
         {/* Cursor Blink */}
         <div className="settings-toggle-row">
-          <span className="settings-toggle-label">Cursor Blink</span>
+          <span className="settings-toggle-label">{t('settings.cursorBlink')}</span>
           <button
             className={`settings-toggle${cursorBlink ? " settings-toggle--on" : ""}`}
             onClick={() => onCursorBlinkChange(!cursorBlink)}
@@ -454,12 +486,12 @@ function TerminalTab({
 
       {/* Display Section */}
       <div className="settings-section">
-        <div className="settings-section-label">Display</div>
+        <div className="settings-section-label">{t('settings.display')}</div>
 
         {/* Line Height */}
         <div className="settings-field">
           <span className="settings-field-label">
-            Line Height
+            {t('settings.lineHeight')}
             <span className="settings-field-sublabel"> (1.0 - 1.6)</span>
           </span>
           <input
@@ -479,7 +511,7 @@ function TerminalTab({
         {/* Scrollback */}
         <div className="settings-field">
           <span className="settings-field-label">
-            Scrollback Lines
+            {t('settings.scrollbackLines')}
             <span className="settings-field-sublabel"> (1000 - 10000)</span>
           </span>
           <input
@@ -505,13 +537,14 @@ function TerminalTab({
 interface BrowserSettingsTabProps {
   homePage: string;
   onHomePageChange: (url: string) => void;
+  t: (key: string) => string;
 }
 
-function BrowserSettingsTab({ homePage, onHomePageChange }: BrowserSettingsTabProps) {
+function BrowserSettingsTab({ homePage, onHomePageChange, t }: BrowserSettingsTabProps) {
   return (
     <>
       <div className="settings-section">
-        <div className="settings-section-label">Home Page</div>
+        <div className="settings-section-label">{t('settings.homePage')}</div>
         <div className="settings-field">
           <input
             className="settings-text-input"
@@ -523,7 +556,7 @@ function BrowserSettingsTab({ homePage, onHomePageChange }: BrowserSettingsTabPr
             autoComplete="off"
           />
           <span className="settings-field-sublabel">
-            Default: google.com
+            {t('settings.defaultHomePage')}
           </span>
         </div>
       </div>

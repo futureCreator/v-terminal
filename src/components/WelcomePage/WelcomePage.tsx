@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { slides } from "./slides";
 import "./WelcomePage.css";
 
@@ -7,6 +8,7 @@ interface WelcomePageProps {
 }
 
 export function WelcomePage({ onDone }: WelcomePageProps) {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [dismissing, setDismissing] = useState(false);
   const isLast = currentSlide === slides.length - 1;
@@ -74,8 +76,8 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
                 </div>
 
                 {/* Text content */}
-                <h1 className="welcome-headline">{slide.headline}</h1>
-                <p className="welcome-description">{slide.description}</p>
+                <h1 className="welcome-headline">{t(slide.headlineKey)}</h1>
+                <p className="welcome-description">{t(slide.descriptionKey)}</p>
 
                 {/* Keycap badges */}
                 {slide.shortcutKeys.length > 0 && (
@@ -98,7 +100,7 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
           <div className="welcome-nav-left">
             {!isLast && (
               <button className="welcome-skip" onClick={dismiss}>
-                Skip
+                {t('welcome.skip')}
               </button>
             )}
           </div>
@@ -116,7 +118,7 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
 
           <div className="welcome-nav-right">
             <button className="welcome-next-btn" onClick={goNext}>
-              {isLast ? "Get Started" : "Next"}
+              {isLast ? t('welcome.getStarted') : t('welcome.next')}
             </button>
           </div>
         </div>
