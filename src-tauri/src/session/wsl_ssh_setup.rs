@@ -246,8 +246,9 @@ fn start_sshd(
                 return Err(format!("{{\"code\":\"WSL_SUDO_REQUIRED\",\"distro\":\"{distro}\"}}"));
             }
             // Read sshd log for detailed error info
-            let (log_content, _, _) = wsl_exec(distro, &format!("tail -5 /tmp/vterminal_sshd_{port}.log 2>/dev/null"));
-            let log_detail = log_content.unwrap_or_default();
+            let log_detail = wsl_exec(distro, &format!("tail -5 /tmp/vterminal_sshd_{port}.log 2>/dev/null"))
+                .map(|(out, _, _)| out)
+                .unwrap_or_default();
             return Err(format!("failed to start sshd: {stderr} | sudo: {sudo_stderr} | log: {log_detail}"));
         }
     }
