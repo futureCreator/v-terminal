@@ -7,7 +7,7 @@ interface BrowserConfig {
 }
 
 const DEFAULTS: BrowserConfig = {
-  homePage: "",
+  homePage: "https://www.google.com",
 };
 
 function loadConfig(): BrowserConfig {
@@ -39,6 +39,6 @@ export const useBrowserConfigStore = create<BrowserConfigStore>((set, get) => ({
 
   getStartUrl: () => {
     const hp = get().homePage.trim();
-    return hp || "about:blank";
+    return hp || "https://www.google.com";
   },
 }));

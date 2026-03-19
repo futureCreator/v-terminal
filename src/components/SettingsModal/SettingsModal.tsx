@@ -523,7 +523,7 @@ function BrowserSettingsTab({ homePage, onHomePageChange }: BrowserSettingsTabPr
             autoComplete="off"
           />
           <span className="settings-field-sublabel">
-            Leave empty for blank page
+            Default: google.com
           </span>
         </div>
       </div>
