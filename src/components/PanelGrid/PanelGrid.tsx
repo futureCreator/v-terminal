@@ -176,7 +176,11 @@ export function PanelGrid({ tab, isVisible, onActivePanelChanged, navRef }: Pane
             }}
           >
             {panel.connection?.type === "note" ? (
-              <NotePanel panelId={panel.id} />
+              <NotePanel
+                panelId={panel.id}
+                isActive={panel.id === activePanelId}
+                onFocus={() => setActivePanelId(panel.id)}
+              />
             ) : (
               <TerminalPane
                 cwd={tab.cwd}

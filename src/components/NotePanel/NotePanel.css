@@ -9,8 +9,14 @@
 
 /* ── Embedded mode — inside PanelGrid ──────────────────────────── */
 .note-panel--embedded {
-  border: none;
-  border-radius: 0;
+  background: var(--bg-terminal);
+  border: 1px solid var(--bg-panel-border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s;
+}
+
+.note-panel--active {
+  border-color: var(--accent);
 }
 
 .note-panel--embedded .note-cm-container {

@@ -93,6 +93,12 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.14.3 - 2026-03-19
+
+- **fix**: Note panel now has a visible border matching terminal panels — added `1px solid var(--bg-panel-border)` with `border-radius` to the embedded note panel container
+- **fix**: Note panel active state — clicking or focusing a note panel highlights it with the accent color border (`border-color: var(--accent)`), consistent with terminal panel activation behavior
+- **fix**: `isActive` and `onFocus` props plumbed from PanelGrid to NotePanel so active panel tracking works across both terminal and note panel types
+
 ### v0.14.2 - 2026-03-19
 
 - **fix**: Todo panel font size now syncs with terminal and note editor — todo item text and input field dynamically follow the global font size setting (Settings → Appearance or Ctrl +/-)
