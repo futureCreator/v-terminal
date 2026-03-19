@@ -1,5 +1,5 @@
 use serde::Serialize;
-use tauri::{AppHandle, Manager, WebviewBuilder, WebviewUrl};
+use tauri::{AppHandle, Emitter, Manager, WebviewBuilder, WebviewUrl};
 use tauri::LogicalPosition;
 use tauri::LogicalSize;
 
@@ -55,7 +55,7 @@ pub async fn browser_create(
     width: f64,
     height: f64,
 ) -> Result<(), String> {
-    let window = app.get_webview_window("main")
+    let window = app.get_window("main")
         .ok_or("Main window not found")?;
 
     let parsed_url = url.parse::<tauri::Url>()
