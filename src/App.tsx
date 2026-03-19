@@ -12,6 +12,7 @@ import { CommandPalette } from "./components/CommandPalette/CommandPalette";
 import type { PaletteSection } from "./components/CommandPalette/CommandPalette";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import type { SidebarTab } from "./components/SidePanel/SidePanel";
+import { LeftBrowserPanel } from "./components/LeftBrowserPanel/LeftBrowserPanel";
 import { WelcomePage } from "./components/WelcomePage/WelcomePage";
 import { useOnboardingStore } from "./store/onboardingStore";
 import type { PanelNavHandle } from "./components/PanelGrid/PanelGrid";
@@ -77,6 +78,9 @@ export function App() {
     }
     return localStorage.getItem("v-terminal:alarm-open") === "true" ? "timers" : "todos";
   });
+  const [browserPanelOpen, setBrowserPanelOpen] = useState(() => {
+    return localStorage.getItem("v-terminal:browser-panel-open") === "true";
+  });
   const activePanelSessionIdRef = useRef<string | null>(null);
   const activePanelIdRef = useRef<string | null>(null);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
@@ -134,12 +138,47 @@ export function App() {
     localStorage.setItem(MIGRATION_KEY, "true");
   }, []);
 
+  // One-time migration: convert stale browser panel connections to local
+  useEffect(() => {
+    const MIGRATION_KEY = "v-terminal:migration-browser-panel-done";
+    if (localStorage.getItem(MIGRATION_KEY)) return;
+
+    const wsRaw = localStorage.getItem("v-terminal:workspace");
+    if (wsRaw) {
+      try {
+        const ws = JSON.parse(wsRaw);
+        let changed = false;
+        if (ws.tabs && Array.isArray(ws.tabs)) {
+          for (const tab of ws.tabs) {
+            if (tab.panels && Array.isArray(tab.panels)) {
+              for (const panel of tab.panels) {
+                if (panel.connection?.type === "browser") {
+                  panel.connection = { type: "local" };
+                  panel.sessionId = null;
+                  changed = true;
+                }
+              }
+            }
+          }
+        }
+        if (changed) {
+          localStorage.setItem("v-terminal:workspace", JSON.stringify(ws));
+        }
+      } catch {}
+    }
+
+    localStorage.setItem(MIGRATION_KEY, "true");
+  }, []);
+
   // Alarm tick engine
   useAlarmTick();
   useClipboardPolling();
 
   const sidebarOpenRef = useRef(sidebarOpen);
   useEffect(() => { sidebarOpenRef.current = sidebarOpen; }, [sidebarOpen]);
+
+  const browserPanelOpenRef = useRef(browserPanelOpen);
+  useEffect(() => { browserPanelOpenRef.current = browserPanelOpen; }, [browserPanelOpen]);
 
   const handleToggleToolkit = useCallback(() => {
     const next = !sidebarOpen;
@@ -150,6 +189,17 @@ export function App() {
   const handleCloseSidebar = useCallback(() => {
     setSidebarOpen(false);
     localStorage.setItem("v-terminal:sidebar-open", "false");
+  }, []);
+
+  const handleToggleBrowserPanel = useCallback(() => {
+    const next = !browserPanelOpen;
+    setBrowserPanelOpen(next);
+    localStorage.setItem("v-terminal:browser-panel-open", String(next));
+  }, [browserPanelOpen]);
+
+  const handleCloseBrowserPanel = useCallback(() => {
+    setBrowserPanelOpen(false);
+    localStorage.setItem("v-terminal:browser-panel-open", "false");
   }, []);
 
   const handleSidebarTabChange = useCallback((tab: SidebarTab) => {
@@ -179,6 +229,13 @@ export function App() {
         const next = !sidebarOpenRef.current;
         setSidebarOpen(next);
         localStorage.setItem("v-terminal:sidebar-open", String(next));
+      }
+      if (e.ctrlKey && e.shiftKey && e.key === "B") {
+        e.preventDefault();
+        e.stopPropagation();
+        const next = !browserPanelOpenRef.current;
+        setBrowserPanelOpen(next);
+        localStorage.setItem("v-terminal:browser-panel-open", String(next));
       }
       // Terminal font size: Ctrl+= / Ctrl+- / Ctrl+0
       if (e.ctrlKey && !e.shiftKey && (e.key === "=" || e.key === "+")) {
@@ -249,12 +306,6 @@ export function App() {
       .map((p) => p.id);
     if (removedNotePanelIds.length > 0) {
       useNoteStore.getState().removeNotes(removedNotePanelIds);
-    }
-    const removedBrowserPanelIds = removed
-      .filter((p) => p.connection?.type === "browser")
-      .map((p) => p.id);
-    for (const id of removedBrowserPanelIds) {
-      ipc.browserDestroy(`browser-${id}`).catch(() => {});
     }
   }, [activeTab, setLayout]);
 
@@ -393,6 +444,23 @@ export function App() {
         action: handleToggleToolkit,
       },
       {
+        id: "view:browser",
+        label: browserPanelOpen ? "Hide Browser" : "Show Browser",
+        description: "Toggle the browser side panel",
+        meta: "Ctrl+Shift+B",
+        icon: (
+          <span className="cp-cmd-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
+              <ellipse cx="7" cy="7" rx="2.5" ry="5.5" stroke="currentColor" strokeWidth="1" />
+              <line x1="1.5" y1="7" x2="12.5" y2="7" stroke="currentColor" strokeWidth="1" />
+            </svg>
+          </span>
+        ),
+        isActive: browserPanelOpen,
+        action: handleToggleBrowserPanel,
+      },
+      {
         id: "ssh:profiles",
         label: "SSH Profiles",
         description: "Manage and connect to saved SSH servers",
@@ -470,7 +538,7 @@ export function App() {
         },
       ] : []),
     ],
-  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen]);
+  }), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen, browserPanelOpen, handleToggleBrowserPanel]);
 
   const tabListPaletteSection = useMemo<PaletteSection>(() => ({
     category: "Tab List",
@@ -769,9 +837,6 @@ export function App() {
           if (connType === "note") {
             useNoteStore.getState().removeNote(activePanelId);
           }
-          if (connType === "browser") {
-            ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
-          }
           switchPanelConnection(activeTab.id, activePanelId, { type: "local" });
         },
       },
@@ -794,34 +859,7 @@ export function App() {
         isActive: connType === "note",
         action: () => {
           if (connType === "note") return;
-          if (connType === "browser") {
-            ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
-          }
           switchPanelConnection(activeTab.id, activePanelId, { type: "note" });
-        },
-      },
-      // Browser
-      {
-        id: "conn:browser",
-        label: "Browser",
-        description: "Open a web browser in this panel",
-        meta: "Web",
-        icon: (
-          <span className="cp-cmd-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2" />
-              <ellipse cx="7" cy="7" rx="2.5" ry="5.5" stroke="currentColor" strokeWidth="1" />
-              <line x1="1.5" y1="7" x2="12.5" y2="7" stroke="currentColor" strokeWidth="1" />
-            </svg>
-          </span>
-        ),
-        isActive: connType === "browser",
-        action: () => {
-          if (connType === "browser") return;
-          if (connType === "note") {
-            useNoteStore.getState().removeNote(activePanelId);
-          }
-          switchPanelConnection(activeTab.id, activePanelId, { type: "browser" });
         },
       },
       // WSL distros
@@ -847,9 +885,6 @@ export function App() {
             // Clean up note data if switching away from note panel
             if (connType === "note") {
               useNoteStore.getState().removeNote(activePanelId);
-            }
-            if (connType === "browser") {
-              ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
             }
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "wsl",
@@ -885,9 +920,6 @@ export function App() {
             if (connType === "note") {
               useNoteStore.getState().removeNote(activePanelId);
             }
-            if (connType === "browser") {
-              ipc.browserDestroy(`browser-${activePanelId}`).catch(() => {});
-            }
             switchPanelConnection(activeTab.id, activePanelId, {
               type: "ssh",
               sshProfileId: profile.id,
@@ -909,12 +941,6 @@ export function App() {
       if (notePanelIds.length > 0) {
         useNoteStore.getState().removeNotes(notePanelIds);
       }
-      const browserPanelIds = tab.panels
-        .filter((p) => p.connection?.type === "browser")
-        .map((p) => p.id);
-      for (const id of browserPanelIds) {
-        ipc.browserDestroy(`browser-${id}`).catch(() => {});
-      }
     }
     removeTab(tabId);
   };
@@ -930,12 +956,6 @@ export function App() {
         .map((p) => p.id);
       if (notePanelIds.length > 0) {
         useNoteStore.getState().removeNotes(notePanelIds);
-      }
-      const browserPanelIds = tab.panels
-        .filter((p) => p.connection?.type === "browser")
-        .map((p) => p.id);
-      for (const id of browserPanelIds) {
-        ipc.browserDestroy(`browser-${id}`).catch(() => {});
       }
     }
     removeTab(tabId);
@@ -965,6 +985,11 @@ export function App() {
         />
       </div>
       <div className="app-content">
+        <LeftBrowserPanel
+          isVisible={browserPanelOpen}
+          overlayActive={paletteOpen || settingsModalOpen || sshModalOpen || showWelcome}
+          onClose={handleCloseBrowserPanel}
+        />
         <div className="app-terminal-area">
         {tabs.map((tab) => (
           <div
