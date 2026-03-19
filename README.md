@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.15.4 - 2026-03-20
+
+- **fix**: Browser panel stays visible when overlays open — removed overlay state (`paletteOpen`, `sshModalOpen`, `settingsModalOpen`, `ctxMenu`) from browser visibility logic; webview now only hides when tab is inactive or panel is zoomed out
+
 ### v0.15.3 - 2026-03-20
 
 - **fix**: Browser error/retry UI only shown when webview creation genuinely failed (`error && !created`) — when webview is temporarily hidden by overlays (context menu, command palette), placeholder area is now blank instead of displaying stale error messages
