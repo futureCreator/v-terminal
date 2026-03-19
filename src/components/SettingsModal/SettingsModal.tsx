@@ -12,7 +12,7 @@ import "./SettingsModal.css";
 type Tab = "appearance" | "terminal";
 
 const FONT_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "JetBrainsMonoNerdFont", label: "JetBrains Mono Nerd" },
+  { value: "JetBrains Mono", label: "JetBrains Mono" },
   { value: "Fira Code", label: "Fira Code" },
   { value: "Cascadia Code", label: "Cascadia Code" },
   { value: "Monaspace Neon", label: "Monaspace Neon" },
@@ -248,7 +248,7 @@ function AppearanceTab({
 
         {/* Font Preview */}
         <div className="settings-font-preview">
-          <code style={{ fontFamily: `"${fontFamily}", "JetBrainsMonoNerdFont", monospace` }}>
+          <code style={{ fontFamily: `"${fontFamily}", "SymbolsNerdFontMono", monospace` }}>
             <span className="settings-preview-keyword">const </span>
             <span className="settings-preview-fn">greet</span>
             <span className="settings-preview-text"> = (</span>

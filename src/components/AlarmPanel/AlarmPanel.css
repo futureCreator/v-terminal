@@ -78,7 +78,7 @@
 .pomodoro-time {
   font-size: 28px;
   font-weight: 600;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   color: var(--label-primary);
   line-height: 1;
   letter-spacing: -0.02em;
@@ -278,7 +278,7 @@
 .pomodoro-stepper-value {
   width: 42px;
   text-align: center;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 13px;
   font-weight: 600;
   color: var(--label-primary);
@@ -318,7 +318,7 @@
   color: var(--label-primary);
   font-size: 12px;
   font-weight: 500;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   text-align: center;
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s;
@@ -456,7 +456,7 @@
 .timer-time {
   font-size: 13px;
   font-weight: 600;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   color: var(--label-primary);
   flex-shrink: 0;
 }
@@ -553,7 +553,7 @@
 .recurring-time {
   font-size: 22px;
   font-weight: 600;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   color: var(--label-primary);
   flex-shrink: 0;
   line-height: 1;
@@ -752,7 +752,7 @@
   color: var(--label-primary);
   font-size: 18px;
   font-weight: 600;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   padding: 0 10px;
   outline: none;
   transition: border-color 0.15s;

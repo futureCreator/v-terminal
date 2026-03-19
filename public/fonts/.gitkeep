@@ -1,6 +1,8 @@
-Place JetBrains Mono Nerd Font TTF files here:
-  - JetBrainsMonoNerdFont-Regular.ttf
-  - JetBrainsMonoNerdFont-Bold.ttf
-  - JetBrainsMonoNerdFont-Italic.ttf
-
-Download from: https://www.nerdfonts.com/font-downloads (search "JetBrainsMono")
+Font files in this directory:
+  - JetBrainsMono-Regular.ttf
+  - JetBrainsMono-Bold.ttf
+  - JetBrainsMono-Italic.ttf
+  - SymbolsNerdFontMono-Regular.ttf (Nerd Font icons only)
+  - NanumGothicCoding-Regular.ttf
+  - NanumGothicCoding-Bold.ttf
+  - PretendardVariable.woff2

@@ -4,7 +4,8 @@ export async function ensureFontLoaded(): Promise<void> {
   if (defaultLoaded) return;
   try {
     await Promise.all([
-      document.fonts.load('14px "JetBrainsMonoNerdFont"'),
+      document.fonts.load('14px "JetBrains Mono"'),
+      document.fonts.load('14px "SymbolsNerdFontMono"').catch(() => {}),
       document.fonts.load('14px "Nanum Gothic Coding"').catch(() => {}),
     ]);
     defaultLoaded = true;

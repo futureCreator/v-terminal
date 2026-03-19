@@ -20,7 +20,7 @@ export const mdHighlight = HighlightStyle.define([
   { tag: tags.strong, fontWeight: "600" },
   { tag: tags.emphasis, fontStyle: "italic" },
   { tag: tags.strikethrough, textDecoration: "line-through", opacity: "0.6" },
-  { tag: tags.monospace, fontFamily: '"JetBrains Mono", "JetBrainsMonoNerdFont", monospace' },
+  { tag: tags.monospace, fontFamily: '"JetBrains Mono", monospace' },
   { tag: tags.url, textDecoration: "underline" },
   { tag: tags.link, textDecoration: "underline" },
   { tag: [tags.processingInstruction, tags.contentSeparator], opacity: "0.4" },

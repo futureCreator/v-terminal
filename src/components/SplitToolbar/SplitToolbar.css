@@ -397,7 +397,7 @@
   color: var(--label-primary);
   font-size: 12px;
   font-weight: 600;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   text-align: center;
   cursor: pointer;
   border-radius: var(--radius-sm);

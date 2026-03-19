@@ -7,28 +7,37 @@
   font-display: swap;
 }
 
-/* ─── Font: JetBrains Mono Nerd ─────────────────────────────────── */
+/* ─── Font: JetBrains Mono ─────────────────────────────────────── */
 @font-face {
-  font-family: "JetBrainsMonoNerdFont";
-  src: url("/fonts/JetBrainsMonoNerdFont-Regular.ttf") format("truetype");
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "JetBrainsMonoNerdFont";
-  src: url("/fonts/JetBrainsMonoNerdFont-Bold.ttf") format("truetype");
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "JetBrainsMonoNerdFont";
-  src: url("/fonts/JetBrainsMonoNerdFont-Italic.ttf") format("truetype");
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Italic.ttf") format("truetype");
   font-weight: 400;
   font-style: italic;
+  font-display: swap;
+}
+
+/* ─── Font: Symbols Nerd Font Mono (icons only, no alphanumerics) ── */
+@font-face {
+  font-family: "SymbolsNerdFontMono";
+  src: url("/fonts/SymbolsNerdFontMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 

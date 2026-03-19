@@ -11,7 +11,7 @@ A fast, native terminal emulator built with Tauri + React + xterm.js. Designed f
 | State | Zustand 4 |
 | Backend | Tauri 2, Rust |
 | PTY | portable-pty (local), russh (SSH) |
-| Fonts | Pretendard (UI), JetBrains Mono Nerd Font (terminal) |
+| Fonts | Pretendard (UI), JetBrains Mono (terminal), Symbols Nerd Font Mono (icons) |
 
 ## Features
 
@@ -92,6 +92,14 @@ pnpm daemon:stop     # Stop daemon
 ```
 
 ## Changelog
+
+### v0.13.0 - 2026-03-19
+
+- **refactor**: Terminal font changed from JetBrains Mono Nerd Font to plain JetBrains Mono — lighter, cleaner default font without bundled Nerd Font glyphs
+- **feat**: Symbols Nerd Font Mono added as dedicated icon fallback — only contains Nerd Font glyphs (Powerline, file icons, etc.) with no alphanumeric characters, preventing fallback font pollution
+- **cleanup**: Removed 96 unused JetBrains Mono Nerd Font variant files (113MB → 0.8MB for terminal fonts, 92% reduction in font bundle size)
+- **refactor**: All CSS `font-family` declarations updated to reference `"JetBrains Mono"` directly instead of `"JetBrainsMonoNerdFont"`
+- **refactor**: Terminal font fallback chain changed to `user font → SymbolsNerdFontMono → Nanum Gothic Coding → monospace`
 
 ### v0.12.5 - 2026-03-19
 

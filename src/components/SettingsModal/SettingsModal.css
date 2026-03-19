@@ -296,7 +296,7 @@
   color: var(--label-primary);
   font-size: 13px;
   font-weight: 600;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   text-align: center;
   cursor: pointer;
   border-radius: var(--radius-sm);
@@ -519,7 +519,7 @@
   border-radius: var(--radius-sm);
   color: var(--label-primary);
   font-size: 13px;
-  font-family: "JetBrains Mono", "JetBrainsMonoNerdFont", monospace;
+  font-family: "JetBrains Mono", monospace;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }

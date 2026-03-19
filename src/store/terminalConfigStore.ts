@@ -20,7 +20,7 @@ export interface TerminalConfig {
 
 const DEFAULTS: TerminalConfig = {
   fontSize: DEFAULT_FONT_SIZE,
-  fontFamily: "JetBrainsMonoNerdFont",
+  fontFamily: "JetBrains Mono",
   cursorStyle: "block",
   cursorBlink: true,
   lineHeight: 1.2,

@@ -153,7 +153,7 @@ export function TerminalPane({
 
       const xtermTheme = resolveThemeDefinition(themeRef.current).xterm;
       const term = new Terminal({
-        fontFamily: `"${fontFamilyRef.current}", "JetBrainsMonoNerdFont", "Nanum Gothic Coding", monospace`,
+        fontFamily: `"${fontFamilyRef.current}", "SymbolsNerdFontMono", "Nanum Gothic Coding", monospace`,
         fontSize: fontSizeRef.current,
         lineHeight: lineHeightRef.current,
         theme: xtermTheme,
@@ -475,7 +475,7 @@ export function TerminalPane({
       if (cancelled) return;
 
       term.options.fontSize = fontSize;
-      term.options.fontFamily = `"${fontFamily}", "JetBrainsMonoNerdFont", "Nanum Gothic Coding", monospace`;
+      term.options.fontFamily = `"${fontFamily}", "SymbolsNerdFontMono", "Nanum Gothic Coding", monospace`;
       term.options.lineHeight = lineHeight;
 
       // Force renderer to pick up the new font by clearing the texture atlas
