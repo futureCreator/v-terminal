@@ -2,7 +2,7 @@ mod commands;
 mod session;
 
 use session::manager::SessionManager;
-use commands::{session_commands, wsl_commands};
+use commands::{session_commands, wsl_commands, browser_commands};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -40,6 +40,15 @@ pub fn run() {
             session_commands::session_resize,
             session_commands::session_kill,
             wsl_commands::get_wsl_distros,
+            browser_commands::browser_create,
+            browser_commands::browser_navigate,
+            browser_commands::browser_go_back,
+            browser_commands::browser_go_forward,
+            browser_commands::browser_reload,
+            browser_commands::browser_resize,
+            browser_commands::browser_destroy,
+            browser_commands::browser_get_current_url,
+            browser_commands::browser_url_report,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -27,10 +27,11 @@ export interface SshProfile {
 }
 
 export interface PanelConnection {
-  type: 'local' | 'ssh' | 'wsl' | 'note';
+  type: 'local' | 'ssh' | 'wsl' | 'note' | 'browser';
   sshProfileId?: string;
   shellProgram?: string;
   shellArgs?: string[];
   wslDistro?: string;
   label?: string;
+  browserUrl?: string;
 }
