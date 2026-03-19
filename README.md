@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.15.2 - 2026-03-20
+
+- **fix**: `browser_create` now idempotent — returns Ok if webview with same label already exists, preventing false "already exists" errors when overlays (context menu, command palette) toggle browser visibility
+- **fix**: `browser_resize` now graceful — returns Ok if webview doesn't exist instead of erroring, handling cases where webview is not yet created or was already destroyed
+
 ### v0.15.1 - 2026-03-20
 
 - **fix**: Browser panel toolbar redesigned for Apple HIG — height increased to 40px, larger 28px touch targets, added ⋮ menu button for connection switching
