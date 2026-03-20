@@ -57,6 +57,7 @@
   <ItemGroup>
     <ClCompile Include="test_main.cpp" />
     <ClCompile Include="JsonStoreTests.cpp" />
+    <ClCompile Include="SettingsTests.cpp" />
   </ItemGroup>
 
   <ItemGroup>
