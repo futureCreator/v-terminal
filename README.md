@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.19.2 - 2026-03-20
+
+- **fix**: Todo panel unnecessary scrollbar — `.todo-section` used `height: 100%` inside a flex container with padding, causing overflow; changed to `flex: 1` + `min-height: 0` for correct sizing
+
 ### v0.19.1 - 2026-03-20
 
 - **fix**: PanelGrid crash when `tab.layout` is invalid (e.g., stale localStorage data) — `getGridConfig` now falls back to single-panel grid config instead of returning `undefined`
