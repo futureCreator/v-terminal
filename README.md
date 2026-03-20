@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.19.3 - 2026-03-20
+
+- **fix**: Todo panel scroll bug — root cause was `.todo-empty` (`height: 100%`) plus always-rendered ghost input row exceeding container; also fixed `flex-shrink: 0` completed section competing for space
+- **refactor**: Todo panel minimal redesign — removed counter bar, empty state icon, entry/checkmark-draw animations; single scroll container replaces split layout; checkbox 22→16px, row height 44→34px; completed section uses conditional render instead of max-height accordion; fixed button-in-button semantic error
+
 ### v0.19.2 - 2026-03-20
 
 - **fix**: Todo panel unnecessary scrollbar — `.todo-section` used `height: 100%` inside a flex container with padding, causing overflow; changed to `flex: 1` + `min-height: 0` for correct sizing

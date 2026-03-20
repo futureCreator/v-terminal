@@ -41,82 +41,32 @@
   border-radius: var(--radius-sm);
 }
 
-/* ── Todo Section (Reminders-style, full panel) ────────────────── */
+/* ── Todo Section ─────────────────────────────────────────────── */
 .todo-section {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
 }
 
-/* ── Counter bar ───────────────────────────────────────────────── */
-.todo-counter-bar {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 12px 16px 8px;
-  flex-shrink: 0;
-  transition: opacity 0.2s ease;
-}
-
-.todo-counter-bar--hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.todo-counter-remaining {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--label-secondary);
-  letter-spacing: 0.2px;
-  font-family: "Pretendard", sans-serif;
-}
-
-.todo-counter-fraction {
-  font-size: 12px;
-  color: var(--label-disabled);
-  font-family: "JetBrains Mono", monospace;
-}
-
-/* ── Empty state ───────────────────────────────────────────────── */
-.todo-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 100%;
-  color: var(--label-tertiary);
-}
-
-.todo-empty-icon {
-  color: var(--label-tertiary);
-}
-
-.todo-empty-text {
-  font-size: 13px;
-  font-family: "Pretendard", sans-serif;
-}
-
-/* ── Todo list (scrollable) ────────────────────────────────────── */
-.todo-list {
+.todo-scroll {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  padding: 4px 0;
   scrollbar-width: thin;
   scrollbar-color: var(--bg-tertiary) transparent;
-  padding: 2px 0;
 }
 
-.todo-list::-webkit-scrollbar {
-  width: 4px;
+.todo-scroll::-webkit-scrollbar {
+  width: 3px;
 }
 
-.todo-list::-webkit-scrollbar-track {
+.todo-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.todo-list::-webkit-scrollbar-thumb {
+.todo-scroll::-webkit-scrollbar-thumb {
   background: var(--bg-tertiary);
   border-radius: 2px;
 }
@@ -125,112 +75,54 @@
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 4px 16px;
-  margin: 0 4px;
+  gap: 8px;
+  min-height: 34px;
+  padding: 3px 12px;
   position: relative;
-  border-radius: var(--radius-md);
-  transition: background 0.12s ease;
 }
 
-.todo-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.todo-item:hover .todo-delete {
+.todo-item:hover .todo-rm {
   opacity: 1;
 }
 
-/* ── Item animations ──────────────────────────────────────────── */
-@keyframes todo-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes todo-exit {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-}
-
-.todo-item--enter {
-  animation: todo-enter 0.2s ease both;
-}
-
-/* fade-out animation when checking */
-.todo-item--fading {
-  opacity: 0.4;
-  transition: opacity 0.3s ease;
-}
-
-/* slide-out animation when deleting */
-.todo-item--removing {
-  animation: todo-exit 0.2s ease both;
-  pointer-events: none;
-}
-
-/* ── Circular checkbox (Reminders-style) ───────────────────────── */
-.todo-checkbox {
+/* ── Checkbox ──────────────────────────────────────────────────── */
+.todo-check {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   border: none;
   background: none;
   padding: 0;
   cursor: pointer;
   color: var(--label-tertiary);
-  transition: color 0.15s, transform 0.15s ease;
+  transition: color 0.12s;
 }
 
-.todo-checkbox:hover {
+.todo-check:hover {
   color: var(--accent);
-  transform: scale(1.1);
 }
 
-/* ── Checkmark draw-in animation ──────────────────────────────── */
-@keyframes checkmark-draw {
-  from {
-    stroke-dashoffset: 20;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.todo-checkmark {
-  stroke-dasharray: 20;
-  stroke-dashoffset: 0;
-  animation: checkmark-draw 0.3s ease both;
+.todo-check--ghost {
+  pointer-events: none;
+  color: var(--label-disabled);
 }
 
 /* ── Todo text ─────────────────────────────────────────────────── */
 .todo-text {
   flex: 1;
-  font-size: 14px;
+  font-size: 13px;
   font-family: "Pretendard", sans-serif;
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--label-primary);
   outline: none;
   word-break: break-word;
   min-width: 0;
   cursor: text;
-  border-radius: var(--radius-xs);
-  padding: 2px 4px;
+  padding: 1px 3px;
+  border-radius: 3px;
 }
 
 .todo-text:focus {
@@ -238,17 +130,17 @@
 }
 
 .todo-item--done .todo-text {
-  color: var(--label-tertiary);
+  color: var(--label-disabled);
   text-decoration: line-through;
 }
 
 /* ── Delete button ─────────────────────────────────────────────── */
-.todo-delete {
+.todo-rm {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   border: none;
   background: none;
@@ -256,142 +148,130 @@
   cursor: pointer;
   color: var(--label-tertiary);
   opacity: 0;
-  transition: opacity 0.12s, color 0.12s, background 0.12s;
+  transition: opacity 0.1s, color 0.1s;
   border-radius: 50%;
 }
 
-.todo-delete:hover {
+.todo-rm:hover {
   color: var(--destructive);
-  background: var(--bg-tertiary);
 }
 
-/* ── Inline input row (ghost / active) ────────────────────────── */
-.todo-inline-row {
+/* ── Ghost input row ───────────────────────────────────────────── */
+.todo-ghost {
   cursor: pointer;
-  opacity: 0.4;
-  transition: opacity 0.15s ease;
+  opacity: 0.35;
+  transition: opacity 0.12s;
 }
 
-.todo-inline-row:hover {
-  opacity: 0.6;
-  background: rgba(255, 255, 255, 0.02);
+.todo-ghost:hover {
+  opacity: 0.5;
 }
 
-.todo-inline-row--active {
+.todo-ghost--active {
   opacity: 1;
   cursor: default;
 }
 
-.todo-inline-row--active:hover {
+.todo-ghost--active:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.04);
 }
 
-.todo-inline-checkbox {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  color: var(--label-disabled);
-}
-
-.todo-inline-placeholder {
+.todo-placeholder {
   flex: 1;
-  font-size: 14px;
+  font-size: 13px;
   font-family: "Pretendard", sans-serif;
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--label-disabled);
-  font-style: italic;
-  padding: 2px 4px;
+  padding: 1px 3px;
   user-select: none;
 }
 
-.todo-inline-input {
+.todo-input {
   background: var(--bg-tertiary);
 }
 
-/* ── Completed section ─────────────────────────────────────────── */
-.todo-completed-section {
-  flex-shrink: 0;
+/* ── State transitions ──────────────────────────────────────────── */
+.todo-item--fading {
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.todo-item--removing {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+/* ── Completed section ──────────────────────────────────────────── */
+.todo-done {
+  margin-top: 4px;
   border-top: 1px solid var(--separator);
 }
 
-.todo-completed-toggle {
+.todo-done-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 16px;
+  padding-right: 4px;
+}
+
+.todo-done-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  padding: 8px 12px;
   border: none;
   background: none;
   cursor: pointer;
   user-select: none;
+  border-radius: 0;
 }
 
-.todo-completed-toggle:hover {
+.todo-done-toggle:hover {
   background: var(--bg-tertiary);
 }
 
-.todo-completed-chevron {
+.todo-done-chevron {
   color: var(--label-tertiary);
   transition: transform 0.15s ease;
   flex-shrink: 0;
 }
 
-.todo-completed-chevron--open {
+.todo-done-chevron--open {
   transform: rotate(90deg);
 }
 
-.todo-completed-label {
-  font-size: 12px;
+.todo-done-label {
+  font-size: 11px;
   font-weight: 500;
   color: var(--label-tertiary);
   font-family: "Pretendard", sans-serif;
 }
 
-.todo-completed-badge {
-  font-size: 11px;
+.todo-done-count {
+  font-size: 10px;
   color: var(--label-disabled);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 1px 6px;
-  border-radius: 8px;
   font-family: "JetBrains Mono", monospace;
 }
 
-.todo-clear-all {
-  margin-left: auto;
+.todo-done-clear {
   font-size: 11px;
   color: var(--label-disabled);
   border: none;
   background: none;
   cursor: pointer;
-  padding: 0;
+  padding: 4px 8px;
   font-family: "Pretendard", sans-serif;
+  border-radius: 3px;
+  flex-shrink: 0;
 }
 
-.todo-clear-all:hover {
+.todo-done-clear:hover {
   color: var(--destructive);
 }
 
-/* ── Completed list — accordion transition ─────────────────────── */
-.todo-completed-list {
-  padding: 0 0 6px;
-  max-height: 500px;
-  overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
-  opacity: 1;
-}
-
-.todo-completed-list--collapsed {
-  max-height: 0;
-  opacity: 0;
-  padding: 0;
-}
-
-.todo-completed-list .todo-item {
-  opacity: 0.4;
+.todo-item--done {
+  opacity: 0.5;
 }
 
 /* ── Note panel background patterns ────────────────────────────── */

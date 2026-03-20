@@ -5,11 +5,10 @@ import { useTerminalConfigStore } from "../../store/terminalConfigStore";
 
 export function TodoSection() {
   const { t } = useTranslation();
-  const [completedCollapsed, setCompletedCollapsed] = useState(true);
+  const [completedOpen, setCompletedOpen] = useState(false);
   const [fadingId, setFadingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
   const inlineInputRef = useRef<HTMLSpanElement>(null);
 
   const todos = useTodoStore((s) => s.todos);
@@ -17,11 +16,9 @@ export function TodoSection() {
     useTodoStore();
   const fontSize = useTerminalConfigStore((s) => s.fontSize);
 
-  const activeTodos = todos.filter((t) => !t.completed);
-  const completedTodos = todos.filter((t) => t.completed);
-  const total = todos.length;
-  const completed = completedTodos.length;
-  const remaining = activeTodos.length;
+  const activeTodos = todos.filter((todo) => !todo.completed);
+  const completedTodos = todos.filter((todo) => todo.completed);
+  const completedCount = completedTodos.length;
 
   const handleBlurEdit = useCallback(
     (todoId: string, text: string) => {
@@ -43,7 +40,7 @@ export function TodoSection() {
         setTimeout(() => {
           toggleTodo(todoId);
           setFadingId(null);
-        }, 300);
+        }, 200);
       } else {
         toggleTodo(todoId);
       }
@@ -57,12 +54,11 @@ export function TodoSection() {
       setTimeout(() => {
         removeTodo(todoId);
         setRemovingId(null);
-      }, 200);
+      }, 150);
     },
     [removeTodo],
   );
 
-  // Focus the inline input when isAddingNew becomes true
   useEffect(() => {
     if (isAddingNew && inlineInputRef.current) {
       inlineInputRef.current.focus();
@@ -90,7 +86,6 @@ export function TodoSection() {
           addTodo(text);
           e.currentTarget.textContent = "";
         }
-        // Keep focus for rapid entry
       } else if (e.key === "Escape") {
         e.preventDefault();
         e.currentTarget.textContent = "";
@@ -101,59 +96,35 @@ export function TodoSection() {
   );
 
   const handleKeyDown = useCallback(
-    (todoId: string, e: React.KeyboardEvent) => {
+    (_todoId: string, e: React.KeyboardEvent) => {
       if (e.key === "Enter") {
         e.preventDefault();
         (e.currentTarget as HTMLElement).blur();
-        // After committing current edit, focus the inline input
         setIsAddingNew(true);
       }
     },
     [],
   );
 
-  const handleGhostRowClick = useCallback(() => {
+  const handleGhostClick = useCallback(() => {
     setIsAddingNew(true);
   }, []);
 
   return (
     <div className="todo-section">
-      {/* Counter bar — always rendered for stable layout */}
-      <div className={`todo-counter-bar${total === 0 ? " todo-counter-bar--hidden" : ""}`}>
-        <span className="todo-counter-remaining">
-          {t('todo.remaining', { count: remaining })}
-        </span>
-        <span className="todo-counter-fraction">
-          {completed}/{total}
-        </span>
-      </div>
-
-      {/* Todo list — always rendered for stable layout */}
-      <div className="todo-list" ref={listRef}>
-        {activeTodos.length === 0 && !isAddingNew && (
-          <div className="todo-empty">
-            <svg className="todo-empty-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M8 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <line x1="8" y1="15" x2="16" y2="15" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              <line x1="8" y1="18" x2="13" y2="18" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-            <span className="todo-empty-text">{t('todo.empty')}</span>
-          </div>
-        )}
-
+      <div className="todo-scroll">
         {activeTodos.map((todo) => (
           <div
             key={todo.id}
-            className={`todo-item todo-item--enter${fadingId === todo.id ? " todo-item--fading" : ""}${removingId === todo.id ? " todo-item--removing" : ""}`}
+            className={`todo-item${fadingId === todo.id ? " todo-item--fading" : ""}${removingId === todo.id ? " todo-item--removing" : ""}`}
           >
             <button
-              className="todo-checkbox"
+              className="todo-check"
               onClick={() => handleCheck(todo.id)}
-              aria-label={t('todo.markComplete')}
+              aria-label={t("todo.markComplete")}
             >
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <circle cx="11" cy="11" r="10" stroke="currentColor" strokeWidth="1.5"/>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" />
               </svg>
             </button>
             <span
@@ -170,14 +141,13 @@ export function TodoSection() {
               {todo.text}
             </span>
             <button
-              className="todo-delete"
+              className="todo-rm"
               onClick={() => handleRemove(todo.id)}
-              aria-label={t('todo.delete')}
-              title={t('todo.delete')}
+              aria-label={t("todo.delete")}
             >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
                 <path
-                  d="M2 2l6 6M8 2l-6 6"
+                  d="M1.5 1.5l5 5M6.5 1.5l-5 5"
                   stroke="currentColor"
                   strokeWidth="1.2"
                   strokeLinecap="round"
@@ -187,20 +157,26 @@ export function TodoSection() {
           </div>
         ))}
 
-        {/* Inline input row — ghost or active */}
         <div
-          className={`todo-item todo-inline-row${isAddingNew ? " todo-inline-row--active" : ""}`}
-          onClick={!isAddingNew ? handleGhostRowClick : undefined}
+          className={`todo-item todo-ghost${isAddingNew ? " todo-ghost--active" : ""}`}
+          onClick={!isAddingNew ? handleGhostClick : undefined}
         >
-          <div className="todo-inline-checkbox">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <circle cx="11" cy="11" r="10" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3"/>
+          <div className="todo-check todo-check--ghost">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle
+                cx="8"
+                cy="8"
+                r="7"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeDasharray="3 2.5"
+              />
             </svg>
           </div>
           {isAddingNew ? (
             <span
               ref={inlineInputRef}
-              className="todo-text todo-inline-input"
+              className="todo-text todo-input"
               contentEditable
               suppressContentEditableWarning
               spellCheck={false}
@@ -209,109 +185,110 @@ export function TodoSection() {
               onKeyDown={handleInlineInputKeyDown}
             />
           ) : (
-            <span className="todo-inline-placeholder" style={{ fontSize: `${fontSize}px` }}>
-              {t('todo.newTaskPlaceholder')}
+            <span
+              className="todo-placeholder"
+              style={{ fontSize: `${fontSize}px` }}
+            >
+              {t("todo.newTaskPlaceholder")}
             </span>
           )}
         </div>
-      </div>
 
-      {/* Completed section — progressive disclosure */}
-      {completed > 0 && (
-        <div className="todo-completed-section">
-          <button
-            className="todo-completed-toggle"
-            onClick={() => setCompletedCollapsed((c) => !c)}
-            aria-expanded={!completedCollapsed}
-          >
-            <svg
-              className={`todo-completed-chevron${completedCollapsed ? "" : " todo-completed-chevron--open"}`}
-              width="10"
-              height="10"
-              viewBox="0 0 10 10"
-              fill="none"
-            >
-              <path
-                d="M3 2L7 5L3 8"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span className="todo-completed-label">
-              {t('todo.completedSection')}
-            </span>
-            <span className="todo-completed-badge">{completed}</span>
-            <button
-              className="todo-clear-all"
-              onClick={(e) => {
-                e.stopPropagation();
-                clearCompleted();
-              }}
-            >
-              {t('todo.clearAll')}
-            </button>
-          </button>
-
-          <div className={`todo-completed-list${completedCollapsed ? " todo-completed-list--collapsed" : ""}`}>
-            {completedTodos.map((todo) => (
-              <div key={todo.id} className="todo-item todo-item--done">
-                <button
-                  className="todo-checkbox"
-                  onClick={() => toggleTodo(todo.id)}
-                  aria-label={t('todo.markIncomplete')}
+        {completedCount > 0 && (
+          <div className="todo-done">
+            <div className="todo-done-bar">
+              <button
+                className="todo-done-toggle"
+                onClick={() => setCompletedOpen((o) => !o)}
+                aria-expanded={completedOpen}
+              >
+                <svg
+                  className={`todo-done-chevron${completedOpen ? " todo-done-chevron--open" : ""}`}
+                  width="8"
+                  height="8"
+                  viewBox="0 0 8 8"
+                  fill="none"
                 >
-                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                    <circle cx="11" cy="11" r="10" fill="var(--accent)"/>
-                    <path
-                      className="todo-checkmark"
-                      d="M7 11.5L10 14.5 15.5 8"
-                      stroke="white"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-                <span
-                  className="todo-text"
-                  contentEditable
-                  suppressContentEditableWarning
-                  spellCheck={false}
-                  style={{ fontSize: `${fontSize}px` }}
-                  onBlur={(e) =>
-                    handleBlurEdit(todo.id, e.currentTarget.textContent ?? "")
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      (e.currentTarget as HTMLElement).blur();
-                    }
-                  }}
-                >
-                  {todo.text}
+                  <path
+                    d="M2 1L6 4L2 7"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="todo-done-label">
+                  {t("todo.completedSection")}
                 </span>
-                <button
-                  className="todo-delete"
-                  onClick={() => handleRemove(todo.id)}
-                  aria-label={t('todo.delete')}
-                  title={t('todo.delete')}
+                <span className="todo-done-count">{completedCount}</span>
+              </button>
+              <button className="todo-done-clear" onClick={clearCompleted}>
+                {t("todo.clearAll")}
+              </button>
+            </div>
+
+            {completedOpen &&
+              completedTodos.map((todo) => (
+                <div
+                  key={todo.id}
+                  className={`todo-item todo-item--done${removingId === todo.id ? " todo-item--removing" : ""}`}
                 >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path
-                      d="M2 2l6 6M8 2l-6 6"
-                      stroke="currentColor"
-                      strokeWidth="1.2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ))}
+                  <button
+                    className="todo-check"
+                    onClick={() => toggleTodo(todo.id)}
+                    aria-label={t("todo.markIncomplete")}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="7" fill="var(--accent)" />
+                      <path
+                        d="M5 8.2L7 10.2L11 5.8"
+                        stroke="white"
+                        strokeWidth="1.3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <span
+                    className="todo-text"
+                    contentEditable
+                    suppressContentEditableWarning
+                    spellCheck={false}
+                    style={{ fontSize: `${fontSize}px` }}
+                    onBlur={(e) =>
+                      handleBlurEdit(
+                        todo.id,
+                        e.currentTarget.textContent ?? "",
+                      )
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        (e.currentTarget as HTMLElement).blur();
+                      }
+                    }}
+                  >
+                    {todo.text}
+                  </span>
+                  <button
+                    className="todo-rm"
+                    onClick={() => handleRemove(todo.id)}
+                    aria-label={t("todo.delete")}
+                  >
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path
+                        d="M1.5 1.5l5 5M6.5 1.5l-5 5"
+                        stroke="currentColor"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
