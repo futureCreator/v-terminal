@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.19.1 - 2026-03-20
+
+- **fix**: PanelGrid crash when `tab.layout` is invalid (e.g., stale localStorage data) — `getGridConfig` now falls back to single-panel grid config instead of returning `undefined`
+
 ### v0.19.0 - 2026-03-20
 
 - **feat**: TodoSection Apple HIG polish — item height 32→44px, checkbox 18→22px, text 13→14px, counter bar semibold, row hover with 8px radius, delete button circular hover, checkmark draw-in animation, new item fade-in/slide, delete slide-out, completed section accordion transition

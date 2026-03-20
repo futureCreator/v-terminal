@@ -16,7 +16,7 @@ export function getGridConfig(layout: Layout): GridConfig {
     5: { columns: 3, rows: 2, gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr" },
     6: { columns: 3, rows: 2, gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr" },
   };
-  return configs[layout];
+  return configs[layout] ?? configs[1];
 }
 
 export function panelCount(layout: Layout): number {
