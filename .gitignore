@@ -33,3 +33,18 @@ SPEC.md
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# C++ / MSBuild
+x64/
+ARM64/
+Debug/
+Release/
+*.user
+*.suo
+*.db
+*.opendb
+.vs/
+packages/
+Generated Files/
+*.vcxproj.filters
+vcpkg_installed/
