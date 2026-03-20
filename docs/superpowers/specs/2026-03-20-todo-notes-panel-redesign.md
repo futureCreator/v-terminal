@@ -22,9 +22,16 @@
 #### 1.2 상단 카운터 바
 
 collapsible 헤더 자리에 카운터 바를 배치한다:
-- 좌측: `"{remaining} remaining"` (11px, label-tertiary)
+- 좌측: `"{remaining} remaining"` (11px, label-tertiary) — i18n: `t('todo.remaining', { count })`
 - 우측: `"{completed}/{total}"` (11px, JetBrains Mono, label-disabled)
 - 할 일이 0개일 때는 카운터 바를 숨긴다
+
+#### 1.2.1 빈 상태 (Empty State)
+
+할 일이 0개일 때 패널 중앙에 빈 상태 안내를 표시한다:
+- 체크리스트 아이콘 (24x24px, label-tertiary)
+- `"No tasks yet"` 텍스트 (13px, label-tertiary) — i18n: `t('todo.empty')`
+- 하단 "+ New Todo" 버튼은 빈 상태에서도 항상 표시
 
 #### 1.3 원형 체크박스
 
@@ -35,10 +42,10 @@ collapsible 헤더 자리에 카운터 바를 배치한다:
 #### 1.4 Progressive Disclosure — Completed 섹션
 
 완료된 항목을 인라인에서 분리하여 별도 섹션으로 이동:
-- 리스트 하단에 `"Completed"` 토글 (chevron + 라벨)
+- 리스트 하단에 `"Completed"` 토글 (chevron + 라벨) — i18n: `t('todo.completedSection')`
 - 기본 접힌 상태 (완료 항목 숨김)
 - 펼치면 완료 항목 표시 (opacity: 0.4, line-through)
-- 토글 우측에 `"Clear All"` 링크 (10px, label-disabled, 클릭 시 완료 항목 일괄 삭제)
+- 토글 우측에 `"Clear All"` 링크 (10px, label-disabled, 클릭 시 완료 항목 일괄 삭제) — i18n: `t('todo.clearAll')`
 - 완료 항목이 0개면 Completed 섹션 자체를 숨긴다
 
 #### 1.5 하단 "+ New Todo" 버튼
@@ -47,20 +54,24 @@ collapsible 헤더 자리에 카운터 바를 배치한다:
 - 하단 고정, border-top separator
 - 좌측: 파란 원 안 + 아이콘 (16x16px, accent fill)
 - 우측: "New Todo" 텍스트 (13px, accent color)
-- 클릭 시 리스트 하단에 새 항목이 추가되며 인라인 편집 모드 진입
+- 클릭 시 리스트 하단(Completed 섹션 위)에 빈 텍스트의 새 항목이 추가되며 contentEditable에 자동 포커스
+- blur 시 텍스트가 비어있으면 항목 삭제 (기존 `handleBlurEdit` 동작 유지)
+- Enter 키로 편집 확정 후, 연속 추가를 위해 또 다른 새 항목 자동 생성
 - i18n: `t('todo.newTodo')` 키 사용
 
 #### 1.6 아이템 인터랙션 유지
 
 - 인라인 편집: 텍스트 클릭 → contentEditable (기존 유지)
 - 삭제: 아이템 hover 시 우측에 X 버튼 노출 (기존 유지)
-- 체크: 원형 체크박스 클릭 → 완료 처리 후 Completed 섹션으로 이동
+- 체크: 원형 체크박스 클릭 → 300ms opacity 페이드 아웃 후 Completed 섹션으로 이동 (Apple HIG의 meaningful motion)
+- fontSize 바인딩: 터미널 폰트 크기 설정(`terminalConfigStore.fontSize`)이 투두 텍스트에도 적용되는 기존 동작 유지
 
 #### 1.7 상태 관리 변경
 
 - `collapsed` state 제거 (collapsible 없어짐)
-- `completedCollapsed` state 추가 (Completed 섹션 접힘/펼침, 기본값: true)
+- `completedCollapsed` state 추가 (Completed 섹션 접힘/펼침, 기본값: true, 컴포넌트 로컬 state — 탭 전환 시 리셋되어도 무방)
 - 기존 `useTodoStore` 인터페이스는 변경 없음
+- 기존 `.todo-section`의 `max-height: 50%` 제약 제거 (SidePanel에서 단독으로 전체 영역 사용)
 
 ### 2. Notes Panel Redesign
 
@@ -68,9 +79,8 @@ collapsible 헤더 자리에 카운터 바를 배치한다:
 
 노트 패널의 배경색을 터미널(#1c1c1e)에서 elevated(#232325)로 변경하여 시각적으로 구분한다.
 
-- `.note-panel--embedded`의 background를 `--bg-note`로 변경
-- `--bg-note: #232325` CSS 변수를 theme.css에 추가
-- CodeMirror 에디터의 배경도 동일하게 적용
+- `.note-panel--embedded`의 background를 `--bg-elevated`(#242426)로 변경 (기존 theme 변수 재활용)
+- CodeMirror 에디터의 배경도 동일하게 `--bg-elevated` 적용
 
 #### 2.2 패딩 확대
 
@@ -90,11 +100,14 @@ CodeMirror 에디터 영역의 패딩을 확대한다:
 | `grid` | `linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px` | 모눈종이 격자 (기본값) |
 | `dots` | `radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 16px 16px` | 점 격자 |
 
+> **Note:** 패턴 CSS 값은 다크 테마 전용 (`rgba(255,255,255,...)` 기반). 라이트 테마 지원 시 별도 CSS 변수화 필요. 현재는 다크 테마만 지원하므로 하드코딩 유지.
+
 #### 2.4 상태 관리
 
-`noteConfigStore` (새로 생성 또는 기존 noteStore 확장):
+새 파일 `src/store/noteConfigStore.ts` 생성 (`browserConfigStore.ts` 패턴 참조):
 - `backgroundStyle: "none" | "ruled" | "grid" | "dots"` (기본값: `"grid"`)
 - localStorage 키: `v-terminal:note-config`
+- `noteStore.ts`(문서 콘텐츠 관리)와는 별도 관심사이므로 독립 파일로 생성
 
 ### 3. Settings Integration
 
@@ -119,11 +132,10 @@ SettingsModal의 AppearanceTab 하단에 "Notes" 섹션을 추가한다:
 | `src/components/NotePanel/NotePanel.css` | Todo 관련 스타일 전면 재작성, 노트 패널 배경/패딩 변경 |
 | `src/components/NotePanel/NotePanel.tsx` | 배경 패턴 CSS 적용 (noteConfigStore 연동) |
 | `src/components/NotePanel/NoteEditor.tsx` | CodeMirror 배경색/패딩 변경 |
-| `src/components/SettingsModal/AppearanceTab.tsx` | Notes 섹션 추가 |
-| `src/styles/theme.css` | `--bg-note: #232325` 변수 추가 |
-| `src/store/noteConfigStore.ts` | 새 파일: backgroundStyle 상태 관리 |
-| `src/locales/en/translation.json` | 새 i18n 키 추가 |
-| `src/locales/ko/translation.json` | 새 i18n 키 추가 |
+| `src/components/SettingsModal/SettingsModal.tsx` | AppearanceTab 함수 내 Notes 섹션 추가 |
+| `src/store/noteConfigStore.ts` | 새 파일: backgroundStyle 상태 관리 (browserConfigStore 패턴) |
+| `src/locales/en.json` | todo.remaining, todo.empty, todo.completedSection, todo.clearAll, todo.newTodo, settings.notes, settings.notesBgStyle 등 키 추가 |
+| `src/locales/ko.json` | 위와 동일한 키의 한국어 번역 추가 |
 
 ## Out of Scope
 
