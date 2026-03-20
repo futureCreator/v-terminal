@@ -23,7 +23,13 @@
     "defaultHomePage": "기본값: google.com",
     "onboarding": "온보딩",
     "showWelcomePage": "환영 페이지 표시",
-    "showWelcomeDesc": "다음 새 탭에서 환영 페이지를 다시 표시합니다"
+    "showWelcomeDesc": "다음 새 탭에서 환영 페이지를 다시 표시합니다",
+    "notes": "노트",
+    "notesBgStyle": "배경 스타일",
+    "notesBgNone": "없음",
+    "notesBgRuled": "줄 노트",
+    "notesBgGrid": "격자",
+    "notesBgDots": "점 격자"
   },
   "command": {
     "newTab": "새 탭",
@@ -193,7 +199,12 @@
     "clearCompleted": "완료 항목 삭제",
     "markComplete": "완료로 표시",
     "markIncomplete": "미완료로 표시",
-    "delete": "삭제"
+    "delete": "삭제",
+    "remaining": "{{count}}개 남음",
+    "empty": "할 일이 없습니다",
+    "completedSection": "완료됨",
+    "clearAll": "모두 삭제",
+    "newTodo": "새 할 일"
   },
   "note": {
     "placeholder": "마크다운 메모를 입력하세요...",

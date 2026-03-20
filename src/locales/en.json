@@ -23,7 +23,13 @@
     "defaultHomePage": "Default: google.com",
     "onboarding": "Onboarding",
     "showWelcomePage": "Show Welcome Page",
-    "showWelcomeDesc": "Show the welcome page again on next new tab"
+    "showWelcomeDesc": "Show the welcome page again on next new tab",
+    "notes": "Notes",
+    "notesBgStyle": "Background Style",
+    "notesBgNone": "None",
+    "notesBgRuled": "Ruled",
+    "notesBgGrid": "Grid",
+    "notesBgDots": "Dots"
   },
   "command": {
     "newTab": "New Tab",
@@ -193,7 +199,12 @@
     "clearCompleted": "Clear completed",
     "markComplete": "Mark complete",
     "markIncomplete": "Mark incomplete",
-    "delete": "Delete"
+    "delete": "Delete",
+    "remaining": "{{count}} remaining",
+    "empty": "No tasks yet",
+    "completedSection": "Completed",
+    "clearAll": "Clear All",
+    "newTodo": "New Todo"
   },
   "note": {
     "placeholder": "Type your markdown note here...",
