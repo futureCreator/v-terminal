@@ -49,7 +49,19 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClCompile Include="placeholder.cpp" />
+    <ClInclude Include="TodoStore.h" />
+    <ClInclude Include="PomodoroTimer.h" />
+    <ClInclude Include="CountdownTimer.h" />
+    <ClInclude Include="AlarmManager.h" />
+    <ClInclude Include="ClipboardHistory.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="TodoStore.cpp" />
+    <ClCompile Include="PomodoroTimer.cpp" />
+    <ClCompile Include="CountdownTimer.cpp" />
+    <ClCompile Include="AlarmManager.cpp" />
+    <ClCompile Include="ClipboardHistory.cpp" />
   </ItemGroup>
 
   <ItemGroup>

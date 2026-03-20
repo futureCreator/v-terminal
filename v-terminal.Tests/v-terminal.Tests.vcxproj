@@ -64,6 +64,12 @@
     <ClCompile Include="VtParserTests.cpp" />
     <ClCompile Include="SessionManagerTests.cpp" />
     <ClCompile Include="WslHelperTests.cpp" />
+    <ClCompile Include="FuzzyMatchTests.cpp" />
+    <ClCompile Include="TodoStoreTests.cpp" />
+    <ClCompile Include="PomodoroTimerTests.cpp" />
+    <ClCompile Include="CountdownTimerTests.cpp" />
+    <ClCompile Include="AlarmManagerTests.cpp" />
+    <ClCompile Include="ClipboardHistoryTests.cpp" />
   </ItemGroup>
 
   <ItemGroup>
