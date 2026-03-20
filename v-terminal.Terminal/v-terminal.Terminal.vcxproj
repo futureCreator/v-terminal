@@ -50,10 +50,12 @@
 
   <ItemGroup>
     <ClInclude Include="ConPtyProcess.h" />
+    <ClInclude Include="TerminalBuffer.h" />
   </ItemGroup>
 
   <ItemGroup>
     <ClCompile Include="ConPtyProcess.cpp" />
+    <ClCompile Include="TerminalBuffer.cpp" />
   </ItemGroup>
 
   <ItemGroup>

@@ -60,6 +60,7 @@
     <ClCompile Include="SettingsTests.cpp" />
     <ClCompile Include="EventBusTests.cpp" />
     <ClCompile Include="ConPtyProcessTests.cpp" />
+    <ClCompile Include="TerminalBufferTests.cpp" />
   </ItemGroup>
 
   <ItemGroup>
