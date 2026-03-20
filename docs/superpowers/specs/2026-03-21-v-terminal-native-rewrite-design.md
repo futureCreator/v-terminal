@@ -106,6 +106,7 @@ SwapChainPanel (WinUI 3 XAML)
 - **리스크:** microsoft/terminal 레포에서 VT 파서만 분리하는 것은 의존성이 깊어 난이도가 높을 수 있음
 - **폴백 1:** `Microsoft.Terminal.Control` NuGet 패키지 활용 (더 넓은 범위지만 통합이 쉬움)
 - **폴백 2:** libvterm (경량 C 라이브러리) 또는 vtparse로 VT 파싱 처리
+- **전환 기준:** 1순위 접근이 1주 내 정적 라이브러리 빌드에 실패하면 폴백 1로 전환
 - VT100/VT220/xterm 시퀀스를 직접 구현하지 않는 것이 원칙
 
 ### TerminalBuffer
@@ -207,7 +208,7 @@ ISession (인터페이스)
 - `libssh2_channel_request_pty("xterm-256color")`로 PTY 할당
 - SSH 프로필은 JSON 파일로 관리 (`ssh_profiles.json`)
 - 패스워드 인증 시 다이얼로그로 입력 받음
-- **커넥션 풀링:** 동일 호스트에 여러 패널 연결 시 하나의 TCP 연결을 공유하고 채널만 추가 할당. `SshConnectionPool`이 호스트:포트:유저 키로 연결 관리.
+- **커넥션 풀링:** 동일 호스트에 여러 패널 연결 시 하나의 TCP 연결을 공유하고 채널만 추가 할당. `SshConnectionPool`이 호스트:포트:유저 키로 연결 관리. 마지막 채널이 닫히면 TCP 연결도 해제.
 - **스레딩:** libssh2는 세션 단위 스레드 안전하지 않으므로, SSH 연결당 전용 I/O 스레드 할당. 데이터는 스레드 안전 큐로 UI 스레드에 전달.
 
 ### WSL 세션
