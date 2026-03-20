@@ -1,0 +1,20 @@
+<UserControl
+    x:Class="VTerminal.PanelGrid"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!--
+        The PanelGrid is a dynamic Grid whose RowDefinitions/ColumnDefinitions
+        are rebuilt when the layout preset changes.
+
+        TerminalPane and NotePane children are added/removed programmatically
+        in the code-behind based on the active LayoutPreset.
+    -->
+    <Grid x:Name="PanelContainer">
+        <!-- RowDefinitions and ColumnDefinitions are set dynamically in code-behind -->
+        <!-- Children (TerminalPane / NotePane) are added dynamically -->
+    </Grid>
+</UserControl>

@@ -1,0 +1,43 @@
+<UserControl
+    x:Class="VTerminal.NotePane"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <!-- Background pattern overlay (ruled/grid/dots) -->
+        <Canvas x:Name="BackgroundPattern" />
+
+        <!-- Note editor -->
+        <RichEditBox x:Name="NoteEditor"
+                     AcceptsReturn="True"
+                     IsSpellCheckEnabled="True"
+                     TextWrapping="Wrap"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     Padding="16"
+                     TextChanged="OnTextChanged"
+                     GotFocus="OnEditorGotFocus"
+                     LostFocus="OnEditorLostFocus">
+        </RichEditBox>
+
+        <!-- Context menu for connection switching -->
+        <Grid.ContextFlyout>
+            <MenuFlyout>
+                <MenuFlyoutItem x:Uid="ContextLocalShell" Text="Local Shell" Click="OnSwitchLocal" />
+                <MenuFlyoutSubItem x:Uid="ContextSsh" Text="SSH" x:Name="SshSubMenu">
+                    <!-- Dynamically populated -->
+                </MenuFlyoutSubItem>
+                <MenuFlyoutSubItem x:Uid="ContextWsl" Text="WSL" x:Name="WslSubMenu">
+                    <!-- Dynamically populated -->
+                </MenuFlyoutSubItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Uid="ContextNote" Text="Note" IsEnabled="False" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Uid="ContextZoom" Text="Zoom" Click="OnZoomToggle" />
+            </MenuFlyout>
+        </Grid.ContextFlyout>
+    </Grid>
+</UserControl>

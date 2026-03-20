@@ -1,0 +1,54 @@
+<UserControl
+    x:Class="VTerminal.TerminalPane"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <!-- Terminal rendering surface -->
+        <SwapChainPanel x:Name="TerminalSwapChain"
+                        SizeChanged="OnSwapChainSizeChanged"
+                        PointerPressed="OnPointerPressed"
+                        PointerMoved="OnPointerMoved"
+                        PointerReleased="OnPointerReleased">
+            <SwapChainPanel.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem x:Uid="ContextLocalShell" Text="Local Shell" Click="OnSwitchLocal" />
+                    <MenuFlyoutSubItem x:Uid="ContextSsh" Text="SSH" x:Name="SshSubMenu">
+                        <!-- Dynamically populated from SSH profiles -->
+                    </MenuFlyoutSubItem>
+                    <MenuFlyoutSubItem x:Uid="ContextWsl" Text="WSL" x:Name="WslSubMenu">
+                        <!-- Dynamically populated from WSL distros -->
+                    </MenuFlyoutSubItem>
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem x:Uid="ContextNote" Text="Note" Click="OnSwitchNote" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem x:Uid="ContextZoom" Text="Zoom" Click="OnZoomToggle" />
+                </MenuFlyout>
+            </SwapChainPanel.ContextFlyout>
+        </SwapChainPanel>
+
+        <!-- Error/restart overlay, hidden by default -->
+        <StackPanel x:Name="ErrorOverlay" Visibility="Collapsed"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                    Padding="24" CornerRadius="8" Spacing="12">
+            <FontIcon Glyph="&#xE783;" FontSize="32"
+                      HorizontalAlignment="Center"
+                      Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            <TextBlock x:Name="ErrorText"
+                       x:Uid="TerminalError"
+                       Text="Process exited"
+                       TextAlignment="Center"
+                       Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <Button x:Uid="RestartButton" Content="Restart" Click="OnRestartClick"
+                    HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <!-- Focus indicator border -->
+        <Border x:Name="FocusBorder" BorderThickness="2"
+                BorderBrush="Transparent" IsHitTestVisible="False" />
+    </Grid>
+</UserControl>

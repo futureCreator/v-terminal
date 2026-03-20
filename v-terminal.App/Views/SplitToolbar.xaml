@@ -1,0 +1,94 @@
+<UserControl
+    x:Class="VTerminal.SplitToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Height="36" Padding="8,0"
+          Background="{ThemeResource SystemControlBackgroundChromeMediumLowBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />     <!-- Layout buttons -->
+            <ColumnDefinition Width="Auto" />  <!-- Broadcast + Toolkit toggles -->
+        </Grid.ColumnDefinitions>
+
+        <!-- Layout preset buttons -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2"
+                    VerticalAlignment="Center">
+            <!-- Preset 1: Single -->
+            <Button x:Name="Layout1Btn" Click="OnLayout1Click"
+                    Width="32" Height="28" Padding="0"
+                    Background="Transparent" BorderThickness="0"
+                    ToolTipService.ToolTip="Single Panel">
+                <FontIcon Glyph="&#xE737;" FontSize="14" />
+            </Button>
+
+            <!-- Preset 2: Split horizontal -->
+            <Button x:Name="Layout2Btn" Click="OnLayout2Click"
+                    Width="32" Height="28" Padding="0"
+                    Background="Transparent" BorderThickness="0"
+                    ToolTipService.ToolTip="2 Panels (Left/Right)">
+                <FontIcon Glyph="&#xE745;" FontSize="14" />
+            </Button>
+
+            <!-- Preset 3: 1+2 layout -->
+            <Button x:Name="Layout3Btn" Click="OnLayout3Click"
+                    Width="32" Height="28" Padding="0"
+                    Background="Transparent" BorderThickness="0"
+                    ToolTipService.ToolTip="3 Panels (1+2)">
+                <FontIcon Glyph="&#xE746;" FontSize="14" />
+            </Button>
+
+            <!-- Preset 4: 2x2 grid -->
+            <Button x:Name="Layout4Btn" Click="OnLayout4Click"
+                    Width="32" Height="28" Padding="0"
+                    Background="Transparent" BorderThickness="0"
+                    ToolTipService.ToolTip="4 Panels (2x2)">
+                <FontIcon Glyph="&#xE8A9;" FontSize="14" />
+            </Button>
+
+            <!-- Preset 5: 1+4 layout -->
+            <Button x:Name="Layout5Btn" Click="OnLayout5Click"
+                    Width="32" Height="28" Padding="0"
+                    Background="Transparent" BorderThickness="0"
+                    ToolTipService.ToolTip="5 Panels (1+2x2)">
+                <FontIcon Glyph="&#xE747;" FontSize="14" />
+            </Button>
+
+            <!-- Preset 6: 3x2 grid -->
+            <Button x:Name="Layout6Btn" Click="OnLayout6Click"
+                    Width="32" Height="28" Padding="0"
+                    Background="Transparent" BorderThickness="0"
+                    ToolTipService.ToolTip="6 Panels (3x2)">
+                <FontIcon Glyph="&#xE80A;" FontSize="14" />
+            </Button>
+        </StackPanel>
+
+        <!-- Right side: Broadcast toggle + Toolkit toggle -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
+                    VerticalAlignment="Center">
+            <!-- Broadcast toggle -->
+            <ToggleButton x:Name="BroadcastToggle"
+                          x:Uid="BroadcastToggle"
+                          Click="OnBroadcastToggle"
+                          Width="32" Height="28" Padding="0"
+                          Background="Transparent" BorderThickness="0"
+                          ToolTipService.ToolTip="Broadcast Input to All Panels">
+                <FontIcon Glyph="&#xEC05;" FontSize="14" />
+            </ToggleButton>
+
+            <AppBarSeparator />
+
+            <!-- Toolkit sidebar toggle -->
+            <ToggleButton x:Name="ToolkitToggle"
+                          x:Uid="ToolkitToggle"
+                          Click="OnToolkitToggle"
+                          Width="32" Height="28" Padding="0"
+                          Background="Transparent" BorderThickness="0"
+                          ToolTipService.ToolTip="Toggle Toolkit Sidebar (Ctrl+Shift+N)">
+                <FontIcon Glyph="&#xE70B;" FontSize="14" />
+            </ToggleButton>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,47 @@
+<UserControl
+    x:Class="VTerminal.SidePanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:VTerminal"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Width="280">
+
+    <Grid Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+          BorderThickness="1,0,0,0"
+          BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />  <!-- Tab switcher header -->
+            <RowDefinition Height="*" />     <!-- Content area -->
+        </Grid.RowDefinitions>
+
+        <!-- Tab switcher -->
+        <Grid Grid.Row="0" Padding="8" Height="44">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="TodosTabButton" Grid.Column="0"
+                    x:Uid="SidePanelTodos"
+                    Content="Todos"
+                    Click="OnTodosTabClick"
+                    HorizontalAlignment="Stretch"
+                    Background="{ThemeResource SystemControlHighlightListAccentLowBrush}"
+                    Margin="0,0,2,0" />
+
+            <Button x:Name="TimersTabButton" Grid.Column="1"
+                    x:Uid="SidePanelTimers"
+                    Content="Timers"
+                    Click="OnTimersTabClick"
+                    HorizontalAlignment="Stretch"
+                    Background="Transparent"
+                    Margin="2,0,0,0" />
+        </Grid>
+
+        <!-- Content area -->
+        <local:TodoView x:Name="TodoContent" Grid.Row="1" />
+        <local:TimersView x:Name="TimersContent" Grid.Row="1" Visibility="Collapsed" />
+    </Grid>
+</UserControl>

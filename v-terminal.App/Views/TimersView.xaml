@@ -1,0 +1,160 @@
+<UserControl
+    x:Class="VTerminal.TimersView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="16" Padding="8">
+
+            <!-- ===== Pomodoro Section ===== -->
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="PomodoroHeader" Text="Pomodoro"
+                           Style="{StaticResource SubtitleTextBlockStyle}" />
+
+                <!-- Progress ring area -->
+                <Grid HorizontalAlignment="Center" Width="160" Height="160">
+                    <ProgressRing x:Name="PomodoroRing"
+                                  IsIndeterminate="False"
+                                  Width="140" Height="140"
+                                  Value="100" />
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock x:Name="PomodoroTimeText"
+                                   Text="25:00"
+                                   FontSize="28" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock x:Name="PomodoroPhaseText"
+                                   x:Uid="PomodoroFocus"
+                                   Text="Focus"
+                                   FontSize="12" Opacity="0.6"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Session dots -->
+                <StackPanel x:Name="SessionDots" Orientation="Horizontal"
+                            HorizontalAlignment="Center" Spacing="6" />
+
+                <!-- Controls -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                    <Button x:Name="PomodoroStartBtn"
+                            x:Uid="PomodoroStart"
+                            Content="Start"
+                            Click="OnPomodoroStartClick" />
+                    <Button x:Name="PomodoroPauseBtn"
+                            x:Uid="PomodoroPause"
+                            Content="Pause"
+                            Click="OnPomodoroPauseClick"
+                            IsEnabled="False" />
+                    <Button x:Name="PomodoroResetBtn"
+                            x:Uid="PomodoroReset"
+                            Content="Reset"
+                            Click="OnPomodoroResetClick" />
+                </StackPanel>
+
+                <!-- Pomodoro settings (expandable) -->
+                <Expander x:Uid="PomodoroSettings" Header="Settings"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch">
+                    <StackPanel Spacing="8" Padding="0,8">
+                        <NumberBox x:Name="FocusMinutesBox"
+                                   x:Uid="PomodoroFocusMinutes"
+                                   Header="Focus (minutes)"
+                                   Minimum="5" Maximum="60"
+                                   Value="25" SmallChange="5"
+                                   ValueChanged="OnPomodoroSettingsChanged" />
+                        <NumberBox x:Name="BreakMinutesBox"
+                                   x:Uid="PomodoroBreakMinutes"
+                                   Header="Break (minutes)"
+                                   Minimum="5" Maximum="25"
+                                   Value="5" SmallChange="5"
+                                   ValueChanged="OnPomodoroSettingsChanged" />
+                        <NumberBox x:Name="LongBreakMinutesBox"
+                                   x:Uid="PomodoroLongBreakMinutes"
+                                   Header="Long Break (minutes)"
+                                   Minimum="10" Maximum="120"
+                                   Value="15" SmallChange="5"
+                                   ValueChanged="OnPomodoroSettingsChanged" />
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+
+            <MenuFlyoutSeparator />
+
+            <!-- ===== Countdown Timers Section ===== -->
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="CountdownHeader" Text="Countdown Timers"
+                           Style="{StaticResource SubtitleTextBlockStyle}" />
+
+                <!-- Add new timer -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TimerLabelInput" Grid.Column="0"
+                             x:Uid="TimerLabelPlaceholder"
+                             PlaceholderText="Timer name" />
+                    <NumberBox x:Name="TimerMinutesInput" Grid.Column="1"
+                               x:Uid="TimerMinutesPlaceholder"
+                               PlaceholderText="Min"
+                               Minimum="1" Maximum="999"
+                               Value="5" Width="80"
+                               Margin="4,0" />
+                    <Button Grid.Column="2" Content="+"
+                            Click="OnAddTimerClick" Width="36" />
+                </Grid>
+
+                <!-- Active timers list -->
+                <StackPanel x:Name="TimersList" Spacing="4" />
+            </StackPanel>
+
+            <MenuFlyoutSeparator />
+
+            <!-- ===== Recurring Alarms Section ===== -->
+            <StackPanel Spacing="8">
+                <TextBlock x:Uid="AlarmsHeader" Text="Recurring Alarms"
+                           Style="{StaticResource SubtitleTextBlockStyle}" />
+
+                <!-- Add new alarm -->
+                <StackPanel Spacing="4">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="AlarmLabelInput" Grid.Column="0"
+                                 x:Uid="AlarmLabelPlaceholder"
+                                 PlaceholderText="Alarm label" />
+                        <TimePicker x:Name="AlarmTimePicker" Grid.Column="1"
+                                    ClockIdentifier="24HourClock"
+                                    Margin="4,0,0,0" />
+                    </Grid>
+
+                    <!-- Weekday toggles -->
+                    <StackPanel Orientation="Horizontal" Spacing="2"
+                                HorizontalAlignment="Center">
+                        <ToggleButton x:Name="MonToggle" Content="M" Width="32" Height="32" Padding="0" />
+                        <ToggleButton x:Name="TueToggle" Content="T" Width="32" Height="32" Padding="0" />
+                        <ToggleButton x:Name="WedToggle" Content="W" Width="32" Height="32" Padding="0" />
+                        <ToggleButton x:Name="ThuToggle" Content="T" Width="32" Height="32" Padding="0" />
+                        <ToggleButton x:Name="FriToggle" Content="F" Width="32" Height="32" Padding="0" />
+                        <ToggleButton x:Name="SatToggle" Content="S" Width="32" Height="32" Padding="0" />
+                        <ToggleButton x:Name="SunToggle" Content="S" Width="32" Height="32" Padding="0" />
+                    </StackPanel>
+
+                    <Button x:Uid="AlarmAddButton" Content="Add Alarm"
+                            Click="OnAddAlarmClick"
+                            HorizontalAlignment="Stretch" />
+                </StackPanel>
+
+                <!-- Alarms list -->
+                <StackPanel x:Name="AlarmsList" Spacing="4" />
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -9,10 +9,44 @@
     Title="v-terminal">
 
     <Grid>
-        <TextBlock
-            Text="v-terminal"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Style="{StaticResource TitleTextBlockStyle}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32" />   <!-- TitleBar -->
+            <RowDefinition Height="36" />   <!-- TabBar -->
+            <RowDefinition Height="36" />   <!-- SplitToolbar -->
+            <RowDefinition Height="*" />    <!-- Content -->
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: Custom Title Bar -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="32" VerticalAlignment="Top"
+              Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />  <!-- App icon -->
+                <ColumnDefinition Width="*" />     <!-- Title / Drag region -->
+                <ColumnDefinition Width="Auto" />  <!-- System window buttons area -->
+            </Grid.ColumnDefinitions>
+            <Image Source="/Assets/Square44x44Logo.png" Width="16" Height="16"
+                   Margin="12,0,8,0" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" Text="v-terminal" VerticalAlignment="Center"
+                       Margin="0,0,0,0"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+        </Grid>
+
+        <!-- Row 1: Tab Bar -->
+        <local:TabBar x:Name="TabBarControl" Grid.Row="1" />
+
+        <!-- Row 2: Split Toolbar -->
+        <local:SplitToolbar x:Name="SplitToolbarControl" Grid.Row="2" />
+
+        <!-- Row 3: Content Area (PanelGrid + optional SidePanel) -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />       <!-- PanelGrid -->
+                <ColumnDefinition Width="Auto" />    <!-- SidePanel (toolkit) -->
+            </Grid.ColumnDefinitions>
+            <local:PanelGrid x:Name="PanelGridControl" Grid.Column="0" />
+            <local:SidePanel x:Name="SidePanelControl" Grid.Column="1"
+                             Visibility="Collapsed" />
+        </Grid>
     </Grid>
 </Window>

@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ===== Tab Bar ===== -->
+  <data name="NewTabButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>New Tab (Ctrl+Shift+T)</value>
+  </data>
+  <data name="NewTabButton.Content" xml:space="preserve">
+    <value>+</value>
+  </data>
+
+  <!-- ===== Split Toolbar ===== -->
+  <data name="BroadcastToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Broadcast Input to All Panels</value>
+  </data>
+  <data name="ToolkitToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Toggle Toolkit Sidebar (Ctrl+Shift+N)</value>
+  </data>
+
+  <!-- ===== Terminal Pane Context Menu ===== -->
+  <data name="ContextLocalShell.Text" xml:space="preserve">
+    <value>Local Shell</value>
+  </data>
+  <data name="ContextSsh.Text" xml:space="preserve">
+    <value>SSH</value>
+  </data>
+  <data name="ContextWsl.Text" xml:space="preserve">
+    <value>WSL</value>
+  </data>
+  <data name="ContextNote.Text" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="ContextZoom.Text" xml:space="preserve">
+    <value>Zoom</value>
+  </data>
+
+  <!-- ===== Terminal Pane ===== -->
+  <data name="TerminalError.Text" xml:space="preserve">
+    <value>Process exited</value>
+  </data>
+  <data name="RestartButton.Content" xml:space="preserve">
+    <value>Restart</value>
+  </data>
+
+  <!-- ===== Side Panel ===== -->
+  <data name="SidePanelTodos.Content" xml:space="preserve">
+    <value>Todos</value>
+  </data>
+  <data name="SidePanelTimers.Content" xml:space="preserve">
+    <value>Timers</value>
+  </data>
+
+  <!-- ===== Todo View ===== -->
+  <data name="TodoInputPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Add a task...</value>
+  </data>
+  <data name="TodoAddButton.Content" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="TodoClearCompleted.Content" xml:space="preserve">
+    <value>Clear completed</value>
+  </data>
+
+  <!-- ===== Timers View: Pomodoro ===== -->
+  <data name="PomodoroHeader.Text" xml:space="preserve">
+    <value>Pomodoro</value>
+  </data>
+  <data name="PomodoroFocus.Text" xml:space="preserve">
+    <value>Focus</value>
+  </data>
+  <data name="PomodoroStart.Content" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="PomodoroPause.Content" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="PomodoroReset.Content" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="PomodoroSettings.Header" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="PomodoroFocusMinutes.Header" xml:space="preserve">
+    <value>Focus (minutes)</value>
+  </data>
+  <data name="PomodoroBreakMinutes.Header" xml:space="preserve">
+    <value>Break (minutes)</value>
+  </data>
+  <data name="PomodoroLongBreakMinutes.Header" xml:space="preserve">
+    <value>Long Break (minutes)</value>
+  </data>
+
+  <!-- ===== Timers View: Countdown ===== -->
+  <data name="CountdownHeader.Text" xml:space="preserve">
+    <value>Countdown Timers</value>
+  </data>
+  <data name="TimerLabelPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Timer name</value>
+  </data>
+  <data name="TimerMinutesPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Min</value>
+  </data>
+
+  <!-- ===== Timers View: Alarms ===== -->
+  <data name="AlarmsHeader.Text" xml:space="preserve">
+    <value>Recurring Alarms</value>
+  </data>
+  <data name="AlarmLabelPlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Alarm label</value>
+  </data>
+  <data name="AlarmAddButton.Content" xml:space="preserve">
+    <value>Add Alarm</value>
+  </data>
+
+  <!-- ===== Settings Dialog ===== -->
+  <data name="SettingsDialogTitle.Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsAppearanceTab.Header" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsTerminalTab.Header" xml:space="preserve">
+    <value>Terminal</value>
+  </data>
+  <data name="SettingsGeneralTab.Header" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="SettingsTheme.Header" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="ThemeAuto.Content" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="ThemeLight.Content" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ThemeDark.Content" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsLanguage.Header" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="SettingsNoteBackground.Header" xml:space="preserve">
+    <value>Note Background</value>
+  </data>
+  <data name="NoteBgNone.Content" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="NoteBgRuled.Content" xml:space="preserve">
+    <value>Ruled</value>
+  </data>
+  <data name="NoteBgGrid.Content" xml:space="preserve">
+    <value>Grid</value>
+  </data>
+  <data name="NoteBgDots.Content" xml:space="preserve">
+    <value>Dots</value>
+  </data>
+  <data name="SettingsFont.Header" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="SettingsFontSize.Header" xml:space="preserve">
+    <value>Font Size</value>
+  </data>
+  <data name="SettingsCursorStyle.Header" xml:space="preserve">
+    <value>Cursor Style</value>
+  </data>
+  <data name="CursorBlock.Content" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="CursorUnderline.Content" xml:space="preserve">
+    <value>Underline</value>
+  </data>
+  <data name="CursorBar.Content" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="SettingsCursorBlink.Header" xml:space="preserve">
+    <value>Cursor Blink</value>
+  </data>
+  <data name="SettingsLineHeight.Header" xml:space="preserve">
+    <value>Line Height</value>
+  </data>
+  <data name="SettingsScrollback.Header" xml:space="preserve">
+    <value>Scrollback Lines</value>
+  </data>
+  <data name="SettingsGeneralDescription.Text" xml:space="preserve">
+    <value>General application settings</value>
+  </data>
+  <data name="SettingsResetOnboarding.Content" xml:space="preserve">
+    <value>Reset Welcome Page</value>
+  </data>
+
+  <!-- ===== SSH Profile Dialog ===== -->
+  <data name="SshProfileDialogTitle.Title" xml:space="preserve">
+    <value>SSH Profiles</value>
+  </data>
+  <data name="SshAddProfile.Content" xml:space="preserve">
+    <value>+</value>
+  </data>
+  <data name="SshDeleteProfile.Content" xml:space="preserve">
+    <value>-</value>
+  </data>
+  <data name="SshProfileName.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SshProfileHost.Header" xml:space="preserve">
+    <value>Host</value>
+  </data>
+  <data name="SshProfilePort.Header" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="SshProfileUsername.Header" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="SshProfileIdentityFile.Header" xml:space="preserve">
+    <value>Identity File (optional)</value>
+  </data>
+  <data name="SshBrowseIdentity.Content" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="SshTestConnection.Content" xml:space="preserve">
+    <value>Test Connection</value>
+  </data>
+
+  <!-- ===== Welcome Page ===== -->
+  <data name="WelcomeSlide1Title.Text" xml:space="preserve">
+    <value>Everything at your fingertips</value>
+  </data>
+  <data name="WelcomeSlide1Desc.Text" xml:space="preserve">
+    <value>Press Ctrl+K to open the Command Palette. Search commands, switch tabs, change layouts, and access clipboard history — all from one place.</value>
+  </data>
+  <data name="WelcomeSlide2Title.Text" xml:space="preserve">
+    <value>Your workspace, your way</value>
+  </data>
+  <data name="WelcomeSlide2Desc.Text" xml:space="preserve">
+    <value>Choose from 6 panel layouts. Each panel can run a local shell, SSH connection, WSL session, or be a markdown note. Mix and match freely.</value>
+  </data>
+  <data name="WelcomeSlide3Title.Text" xml:space="preserve">
+    <value>Stay focused</value>
+  </data>
+  <data name="WelcomeSlide3Desc.Text" xml:space="preserve">
+    <value>Built-in notes, todo list, Pomodoro timer, and recurring alarms. Press Ctrl+Shift+N to toggle the toolkit sidebar. No need to leave your terminal.</value>
+  </data>
+  <data name="WelcomeSkip.Content" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="WelcomeBack.Content" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="WelcomeNext.Content" xml:space="preserve">
+    <value>Next</value>
+  </data>
+
+  <!-- ===== Command Palette ===== -->
+  <data name="CommandPalettePlaceholder.PlaceholderText" xml:space="preserve">
+    <value>Type a command...</value>
+  </data>
+
+  <!-- ===== Common Commands ===== -->
+  <data name="CmdNewTab" xml:space="preserve">
+    <value>New Tab</value>
+  </data>
+  <data name="CmdCloseTab" xml:space="preserve">
+    <value>Close Tab</value>
+  </data>
+  <data name="CmdNextTab" xml:space="preserve">
+    <value>Next Tab</value>
+  </data>
+  <data name="CmdPrevTab" xml:space="preserve">
+    <value>Previous Tab</value>
+  </data>
+  <data name="CmdToggleBroadcast" xml:space="preserve">
+    <value>Toggle Broadcast</value>
+  </data>
+  <data name="CmdToggleToolkit" xml:space="preserve">
+    <value>Toggle Toolkit</value>
+  </data>
+  <data name="CmdSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="CmdSshProfiles" xml:space="preserve">
+    <value>SSH Profile Manager</value>
+  </data>
+  <data name="CmdZoomPanel" xml:space="preserve">
+    <value>Zoom Panel</value>
+  </data>
+  <data name="CmdNextPanel" xml:space="preserve">
+    <value>Next Panel</value>
+  </data>
+  <data name="CmdPrevPanel" xml:space="preserve">
+    <value>Previous Panel</value>
+  </data>
+  <data name="CmdLocalShell" xml:space="preserve">
+    <value>Connect: Local Shell</value>
+  </data>
+  <data name="CmdSshConnect" xml:space="preserve">
+    <value>Connect: SSH</value>
+  </data>
+  <data name="CmdWslConnect" xml:space="preserve">
+    <value>Connect: WSL</value>
+  </data>
+  <data name="CmdNotePanel" xml:space="preserve">
+    <value>Connect: Note</value>
+  </data>
+  <data name="CmdClipboardClear" xml:space="preserve">
+    <value>Clear Clipboard History</value>
+  </data>
+
+</root>

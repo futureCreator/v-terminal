@@ -1,0 +1,121 @@
+<UserControl
+    x:Class="VTerminal.WelcomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+          Padding="48">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />     <!-- Content slides -->
+            <RowDefinition Height="Auto" />  <!-- Navigation dots -->
+            <RowDefinition Height="Auto" />  <!-- Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- Slide content area -->
+        <Grid Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center"
+              MaxWidth="600">
+            <!-- Slide 1: Command Palette intro -->
+            <StackPanel x:Name="Slide1" Spacing="16" HorizontalAlignment="Center">
+                <FontIcon Glyph="&#xE773;" FontSize="64"
+                          HorizontalAlignment="Center"
+                          Foreground="{ThemeResource SystemAccentColor}" />
+                <TextBlock x:Uid="WelcomeSlide1Title"
+                           Text="Everything at your fingertips"
+                           Style="{StaticResource TitleTextBlockStyle}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center" />
+                <TextBlock x:Uid="WelcomeSlide1Desc"
+                           Text="Press Ctrl+K to open the Command Palette. Search commands, switch tabs, change layouts, and access clipboard history — all from one place."
+                           Style="{StaticResource BodyTextBlockStyle}"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           Opacity="0.7" MaxWidth="480" />
+                <Border Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                        CornerRadius="8" Padding="16,8" HorizontalAlignment="Center">
+                    <TextBlock Text="Ctrl + K"
+                               FontFamily="Cascadia Mono"
+                               FontSize="18"
+                               HorizontalAlignment="Center" />
+                </Border>
+            </StackPanel>
+
+            <!-- Slide 2: Workspace layouts -->
+            <StackPanel x:Name="Slide2" Spacing="16" HorizontalAlignment="Center"
+                        Visibility="Collapsed">
+                <FontIcon Glyph="&#xE8A9;" FontSize="64"
+                          HorizontalAlignment="Center"
+                          Foreground="{ThemeResource SystemAccentColor}" />
+                <TextBlock x:Uid="WelcomeSlide2Title"
+                           Text="Your workspace, your way"
+                           Style="{StaticResource TitleTextBlockStyle}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center" />
+                <TextBlock x:Uid="WelcomeSlide2Desc"
+                           Text="Choose from 6 panel layouts. Each panel can run a local shell, SSH connection, WSL session, or be a markdown note. Mix and match freely."
+                           Style="{StaticResource BodyTextBlockStyle}"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           Opacity="0.7" MaxWidth="480" />
+            </StackPanel>
+
+            <!-- Slide 3: Productivity tools -->
+            <StackPanel x:Name="Slide3" Spacing="16" HorizontalAlignment="Center"
+                        Visibility="Collapsed">
+                <FontIcon Glyph="&#xE70B;" FontSize="64"
+                          HorizontalAlignment="Center"
+                          Foreground="{ThemeResource SystemAccentColor}" />
+                <TextBlock x:Uid="WelcomeSlide3Title"
+                           Text="Stay focused"
+                           Style="{StaticResource TitleTextBlockStyle}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center" />
+                <TextBlock x:Uid="WelcomeSlide3Desc"
+                           Text="Built-in notes, todo list, Pomodoro timer, and recurring alarms. Press Ctrl+Shift+N to toggle the toolkit sidebar. No need to leave your terminal."
+                           Style="{StaticResource BodyTextBlockStyle}"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           Opacity="0.7" MaxWidth="480" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Navigation dots -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal"
+                    HorizontalAlignment="Center" Spacing="8" Margin="0,24,0,24">
+            <Ellipse x:Name="Dot1" Width="8" Height="8"
+                     Fill="{ThemeResource SystemAccentColor}" />
+            <Ellipse x:Name="Dot2" Width="8" Height="8"
+                     Fill="{ThemeResource SystemControlForegroundBaseLowBrush}" />
+            <Ellipse x:Name="Dot3" Width="8" Height="8"
+                     Fill="{ThemeResource SystemControlForegroundBaseLowBrush}" />
+        </StackPanel>
+
+        <!-- Navigation buttons -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="SkipButton" Grid.Column="0"
+                    x:Uid="WelcomeSkip"
+                    Content="Skip"
+                    Click="OnSkipClick"
+                    Background="Transparent"
+                    BorderThickness="0" />
+
+            <Button x:Name="BackButton" Grid.Column="1"
+                    x:Uid="WelcomeBack"
+                    Content="Back"
+                    Click="OnBackClick"
+                    Visibility="Collapsed"
+                    Margin="0,0,8,0" />
+
+            <Button x:Name="NextButton" Grid.Column="2"
+                    x:Uid="WelcomeNext"
+                    Content="Next"
+                    Click="OnNextClick"
+                    Style="{StaticResource AccentButtonStyle}" />
+        </Grid>
+    </Grid>
+</UserControl>
