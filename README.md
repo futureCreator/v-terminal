@@ -23,7 +23,7 @@ A fast, native terminal emulator built with Tauri + React + xterm.js. Designed f
 - **Auto-reconnect** — exponential backoff reconnection with live status indicator in the title bar
 
 ### Layouts & Tabs
-- **Multi-panel grids** — 1, 2, 3, 4, 6, 9 panels per tab
+- **Multi-panel grids** — 1, 2, 2-row, 3, 4, 3-column, 6 panels per tab
 - **Panel zoom** — toggle any panel to full-screen within the tab
 - **Broadcast mode** — send keystrokes to all panels simultaneously
 - **Tab context menu** — send to background vs. kill process
@@ -92,6 +92,12 @@ pnpm daemon:stop     # Stop daemon
 ```
 
 ## Changelog
+
+### v0.18.1 - 2026-03-20
+
+- **refactor**: Layout options reorganized — removed 4-column (`"4c"`) and 3×3 (`9`) layouts; added 2-row (`"2r"`, top/bottom split) and 3-column (`"3c"`) layouts
+- **refactor**: Layout order updated to: 1 Panel → 2 Panels → 2 Rows → 3 Panels → 4 Panels → 3 Columns → 6 Panels
+- **i18n**: Added `rows2` and `columns3` translation keys (en + ko); removed `columns4` and `panels9`
 
 ### v0.18.0 - 2026-03-20
 

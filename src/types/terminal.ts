@@ -1,4 +1,4 @@
-export type Layout = 1 | 2 | 3 | 4 | "4c" | 6 | 9;
+export type Layout = 1 | 2 | "2r" | 3 | 4 | "3c" | 6;
 
 export interface Panel {
   id: string;

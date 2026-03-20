@@ -110,6 +110,13 @@ function LayoutIcon({ layout }: { layout: Layout }) {
           <rect x="15" y="2" width="11" height="16" rx="1.5" {...s} />
         </svg>
       );
+    case "2r":
+      return (
+        <svg width="28" height="20" viewBox="0 0 28 20">
+          <rect x="2" y="2" width="24" height="7" rx="1.5" {...s} />
+          <rect x="2" y="11" width="24" height="7" rx="1.5" {...s} />
+        </svg>
+      );
     case 3:
       return (
         <svg width="28" height="20" viewBox="0 0 28 20">
@@ -127,13 +134,12 @@ function LayoutIcon({ layout }: { layout: Layout }) {
           <rect x="15" y="11" width="11" height="7" rx="1.2" {...s} />
         </svg>
       );
-    case "4c":
+    case "3c":
       return (
         <svg width="28" height="20" viewBox="0 0 28 20">
-          <rect x="1" y="2" width="5.5" height="16" rx="1" {...s} />
-          <rect x="8" y="2" width="5.5" height="16" rx="1" {...s} />
-          <rect x="15" y="2" width="5.5" height="16" rx="1" {...s} />
-          <rect x="22" y="2" width="5.5" height="16" rx="1" {...s} />
+          <rect x="1" y="2" width="7.5" height="16" rx="1" {...s} />
+          <rect x="10.25" y="2" width="7.5" height="16" rx="1" {...s} />
+          <rect x="19.5" y="2" width="7.5" height="16" rx="1" {...s} />
         </svg>
       );
     case 6:
@@ -147,30 +153,12 @@ function LayoutIcon({ layout }: { layout: Layout }) {
           <rect x="19.5" y="11" width="7.5" height="7" rx="1" {...s} />
         </svg>
       );
-    case 9:
-      return (
-        <svg width="28" height="20" viewBox="0 0 28 20">
-          {[0, 1, 2].map((col) =>
-            [0, 1, 2].map((row) => (
-              <rect
-                key={`${col}-${row}`}
-                x={1 + col * 9}
-                y={1 + row * 6.3}
-                width="7.5"
-                height="5"
-                rx="0.8"
-                {...s}
-              />
-            ))
-          )}
-        </svg>
-      );
   }
 }
 
 /* ── Constants ──────────────────────────────────────────────────── */
 
-const LAYOUT_OPTIONS: Layout[] = [1, 2, 3, 4, "4c", 6, 9];
+const LAYOUT_OPTIONS: Layout[] = [1, 2, "2r", 3, 4, "3c", 6];
 
 /* ── PanelConfigGrid (per-panel mode) ───────────────────────────── */
 

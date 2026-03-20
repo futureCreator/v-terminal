@@ -169,6 +169,11 @@ const LAYOUT_OPTIONS: Array<{ value: Layout; labelKey: string; icon: React.React
     icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="7" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="1" width="7" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
   },
   {
+    value: "2r",
+    labelKey: "command.rows2",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="16" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" /><rect x="1" y="7.5" width="16" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
+  },
+  {
     value: 3,
     labelKey: "command.panels3",
     icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="7" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="1" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="7.5" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
@@ -179,19 +184,14 @@ const LAYOUT_OPTIONS: Array<{ value: Layout; labelKey: string; icon: React.React
     icon: <Icon><svg width="16" height="12" viewBox="0 0 18 14" fill="none"><rect x="1" y="1" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="1" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="1" y="7.5" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="10" y="7.5" width="7" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.2" /></svg></Icon>,
   },
   {
-    value: "4c",
-    labelKey: "command.columns4",
-    icon: <Icon><svg width="16" height="12" viewBox="0 0 22 14" fill="none"><rect x="1" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="6.25" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="11.5" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="16.75" y="1" width="4.25" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /></svg></Icon>,
+    value: "3c",
+    labelKey: "command.columns3",
+    icon: <Icon><svg width="16" height="12" viewBox="0 0 20 14" fill="none"><rect x="1" y="1" width="5" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="7.5" y="1" width="5" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="14" y="1" width="5" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" /></svg></Icon>,
   },
   {
     value: 6,
     labelKey: "command.panels6",
     icon: <Icon><svg width="16" height="12" viewBox="0 0 20 14" fill="none"><rect x="1" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="7.5" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="14" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="1" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="7.5" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /><rect x="14" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" /></svg></Icon>,
-  },
-  {
-    value: 9,
-    labelKey: "command.panels9",
-    icon: <Icon><svg width="14" height="14" viewBox="0 0 20 16" fill="none">{[0, 1, 2].map((col) => [0, 1, 2].map((row) => (<rect key={`${col}-${row}`} x={1 + col * 6.5} y={1 + row * 4.8} width="5" height="3.6" rx="0.8" stroke="currentColor" strokeWidth="1" />)))}</svg></Icon>,
   },
 ];
 
