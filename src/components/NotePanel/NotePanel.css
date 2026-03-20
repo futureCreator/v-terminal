@@ -9,7 +9,7 @@
 
 /* ── Embedded mode — inside PanelGrid ──────────────────────────── */
 .note-panel--embedded {
-  background: var(--bg-terminal);
+  background: var(--bg-elevated);
   border: 1px solid var(--bg-panel-border);
   border-radius: var(--radius-sm);
   transition: border-color 0.15s;
@@ -36,103 +36,68 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: var(--bg-terminal);
+  background: var(--bg-elevated);
   border: 1px solid var(--bg-panel-border);
   border-radius: var(--radius-sm);
 }
 
-/* ── Todo Section ───────────────────────────────────────────────── */
+/* ── Todo Section (Reminders-style, full panel) ────────────────── */
 .todo-section {
-  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  max-height: 50%;
-  background: var(--bg-terminal);
-  border: 1px solid var(--bg-panel-border);
-  border-radius: var(--radius-sm);
+  height: 100%;
   overflow: hidden;
 }
 
-.todo-header {
+/* ── Counter bar ───────────────────────────────────────────────── */
+.todo-counter-bar {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 14px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  user-select: none;
-  flex-shrink: 0;
-  width: 100%;
-  text-align: left;
-}
-
-.todo-header:hover {
-  background: var(--bg-tertiary);
-}
-
-.todo-chevron {
-  color: var(--label-tertiary);
-  transition: transform 0.15s ease;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 14px 6px;
   flex-shrink: 0;
 }
 
-.todo-chevron--open {
-  transform: rotate(90deg);
-}
-
-.todo-header-label {
-  font-size: 12px;
-  font-weight: 600;
+.todo-counter-remaining {
+  font-size: 11px;
   color: var(--label-tertiary);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  letter-spacing: 0.3px;
   font-family: "Pretendard", sans-serif;
 }
 
-.todo-header-count {
+.todo-counter-fraction {
   font-size: 11px;
-  font-weight: 500;
-  color: var(--label-secondary);
+  color: var(--label-disabled);
   font-family: "JetBrains Mono", monospace;
-  margin-left: auto;
 }
 
-.todo-clear-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--label-tertiary);
-  border-radius: var(--radius-xs);
-  transition: color 0.12s, background 0.12s;
-  flex-shrink: 0;
-  margin-left: 4px;
-}
-
-.todo-clear-btn:hover {
-  color: var(--destructive);
-  background: var(--bg-tertiary);
-}
-
-/* ── Todo body (scrollable) ─────────────────────────────────────── */
-.todo-body {
+/* ── Empty state ───────────────────────────────────────────────── */
+.todo-empty {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--label-tertiary);
 }
 
+.todo-empty-icon {
+  color: var(--label-tertiary);
+}
+
+.todo-empty-text {
+  font-size: 13px;
+  font-family: "Pretendard", sans-serif;
+}
+
+/* ── Todo list (scrollable) ────────────────────────────────────── */
 .todo-list {
+  flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--bg-tertiary) transparent;
+  padding: 4px 0;
 }
 
 .todo-list::-webkit-scrollbar {
@@ -148,13 +113,13 @@
   border-radius: 2px;
 }
 
-/* ── Todo item ──────────────────────────────────────────────────── */
+/* ── Todo item ─────────────────────────────────────────────────── */
 .todo-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 28px;
-  padding: 2px 14px;
+  gap: 10px;
+  min-height: 32px;
+  padding: 3px 14px;
   position: relative;
 }
 
@@ -162,12 +127,19 @@
   opacity: 1;
 }
 
+/* fade-out animation when checking */
+.todo-item--fading {
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+/* ── Circular checkbox (Reminders-style) ───────────────────────── */
 .todo-checkbox {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   border: none;
   background: none;
@@ -181,6 +153,7 @@
   color: var(--accent);
 }
 
+/* ── Todo text ─────────────────────────────────────────────────── */
 .todo-text {
   flex: 1;
   font-size: 13px;
@@ -204,6 +177,7 @@
   text-decoration: line-through;
 }
 
+/* ── Delete button ─────────────────────────────────────────────── */
 .todo-delete {
   display: flex;
   align-items: center;
@@ -226,31 +200,118 @@
   background: var(--bg-tertiary);
 }
 
-/* ── Todo input ─────────────────────────────────────────────────── */
-.todo-input-wrap {
-  padding: 4px 14px 8px;
+/* ── Completed section ─────────────────────────────────────────── */
+.todo-completed-section {
+  flex-shrink: 0;
+  border-top: 1px solid var(--separator);
+}
+
+.todo-completed-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.todo-completed-toggle:hover {
+  background: var(--bg-tertiary);
+}
+
+.todo-completed-chevron {
+  color: var(--label-tertiary);
+  transition: transform 0.15s ease;
   flex-shrink: 0;
 }
 
-.todo-input {
-  width: 100%;
-  height: 26px;
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--label-primary);
-  font-size: 13px;
+.todo-completed-chevron--open {
+  transform: rotate(90deg);
+}
+
+.todo-completed-label {
+  font-size: 11px;
+  color: var(--label-tertiary);
   font-family: "Pretendard", sans-serif;
-  padding: 0 8px;
-  outline: none;
-  transition: border-color 0.15s;
-  box-sizing: border-box;
 }
 
-.todo-input::placeholder {
+.todo-clear-all {
+  margin-left: auto;
+  font-size: 10px;
   color: var(--label-disabled);
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: "Pretendard", sans-serif;
 }
 
-.todo-input:focus {
-  border-color: var(--accent);
+.todo-clear-all:hover {
+  color: var(--destructive);
+}
+
+.todo-completed-list {
+  padding: 0 0 6px;
+}
+
+.todo-completed-list .todo-item {
+  opacity: 0.4;
+}
+
+/* ── New Todo button (bottom-anchored) ─────────────────────────── */
+.todo-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-top: 1px solid var(--separator);
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.todo-new-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.todo-new-btn-text {
+  font-size: 13px;
+  color: var(--accent);
+  font-family: "Pretendard", sans-serif;
+}
+
+/* ── Note panel background patterns ────────────────────────────── */
+/* Note: pattern values use hardcoded rgba(255,255,255,...) for dark theme only.
+   Light theme support will require CSS variable alternatives. */
+
+.note-panel--bg-ruled .note-cm-container,
+.note-panel--bg-ruled .cm-editor {
+  background-image: repeating-linear-gradient(
+    transparent, transparent 22px,
+    rgba(255,255,255,0.04) 22px, rgba(255,255,255,0.04) 23px
+  );
+}
+
+.note-panel--bg-grid .note-cm-container,
+.note-panel--bg-grid .cm-editor {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.note-panel--bg-dots .note-cm-container,
+.note-panel--bg-dots .cm-editor {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* ── Note panel padding override ───────────────────────────────── */
+.note-panel--embedded .cm-editor .cm-content {
+  padding: 20px 24px;
 }
