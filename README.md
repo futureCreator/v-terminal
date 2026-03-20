@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.19.4 - 2026-03-20
+
+- **chore**: Removed `docs/superpowers/`, `CLAUDE.md`, `SPEC.md` from git tracking — files kept locally but excluded via `.gitignore`
+
 ### v0.19.3 - 2026-03-20
 
 - **fix**: Todo panel scroll bug — root cause was `.todo-empty` (`height: 100%`) plus always-rendered ghost input row exceeding container; also fixed `flex-shrink: 0` completed section competing for space
