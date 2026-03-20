@@ -78,35 +78,30 @@ export function TodoSection() {
 
   return (
     <div className="todo-section">
-      {/* Counter bar — hidden when empty */}
-      {total > 0 && (
-        <div className="todo-counter-bar">
-          <span className="todo-counter-remaining">
-            {t('todo.remaining', { count: remaining })}
-          </span>
-          <span className="todo-counter-fraction">
-            {completed}/{total}
-          </span>
-        </div>
-      )}
+      {/* Counter bar — always rendered for stable layout */}
+      <div className={`todo-counter-bar${total === 0 ? " todo-counter-bar--hidden" : ""}`}>
+        <span className="todo-counter-remaining">
+          {t('todo.remaining', { count: remaining })}
+        </span>
+        <span className="todo-counter-fraction">
+          {completed}/{total}
+        </span>
+      </div>
 
-      {/* Empty state */}
-      {total === 0 && (
-        <div className="todo-empty">
-          <svg className="todo-empty-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M8 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <line x1="8" y1="15" x2="16" y2="15" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            <line x1="8" y1="18" x2="13" y2="18" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-          </svg>
-          <span className="todo-empty-text">{t('todo.empty')}</span>
-        </div>
-      )}
-
-      {/* Active todo list */}
-      {activeTodos.length > 0 && (
-        <div className="todo-list" ref={listRef}>
-          {activeTodos.map((todo) => (
+      {/* Todo list — always rendered for stable layout */}
+      <div className="todo-list" ref={listRef}>
+        {activeTodos.length === 0 ? (
+          <div className="todo-empty">
+            <svg className="todo-empty-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M8 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="8" y1="15" x2="16" y2="15" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <line x1="8" y1="18" x2="13" y2="18" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+            <span className="todo-empty-text">{t('todo.empty')}</span>
+          </div>
+        ) : (
+          activeTodos.map((todo) => (
             <div
               key={todo.id}
               className={`todo-item${fadingId === todo.id ? " todo-item--fading" : ""}`}
@@ -149,9 +144,9 @@ export function TodoSection() {
                 </svg>
               </button>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
 
       {/* Completed section — progressive disclosure */}
       {completed > 0 && (

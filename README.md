@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.18.2 - 2026-03-20
+
+- **fix**: Todo input layout jump — counter bar and todo list container now always rendered (opacity fade instead of conditional mount/unmount) to prevent vertical layout shift when adding the first todo item
+
 ### v0.18.1 - 2026-03-20
 
 - **refactor**: Layout options reorganized — removed 4-column (`"4c"`) and 3×3 (`9`) layouts; added 2-row (`"2r"`, top/bottom split) and 3-column (`"3c"`) layouts
