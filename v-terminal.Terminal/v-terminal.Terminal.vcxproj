@@ -52,12 +52,14 @@
     <ClInclude Include="ConPtyProcess.h" />
     <ClInclude Include="TerminalBuffer.h" />
     <ClInclude Include="VtParser.h" />
+    <ClInclude Include="TerminalRenderer.h" />
   </ItemGroup>
 
   <ItemGroup>
     <ClCompile Include="ConPtyProcess.cpp" />
     <ClCompile Include="TerminalBuffer.cpp" />
     <ClCompile Include="VtParser.cpp" />
+    <ClCompile Include="TerminalRenderer.cpp" />
   </ItemGroup>
 
   <ItemGroup>
