@@ -16,7 +16,20 @@ Windows 네이티브 터미널 애플리케이션으로 재작성. 기존 Tauri/
 
 - 내장 브라우저 (Tauri WebView) — Chrome 확장 프로그램 활용이 더 적합
 - 폰트 크기 단축키 (Ctrl++/-/0) — 설정에서 직접 수정
-- 커맨드 팔레트 `@` 접두어 (백그라운드 탭 복원) — 레이아웃 축소 시 세션 kill 하므로 불필요
+- 백그라운드 탭 복원 기능 — 레이아웃 축소 시 세션 kill 하므로 불필요
+- 기존 15개 커스텀 테마 (Apple, Catppuccin, Solarized 등) — Fluent Design 라이트/다크로 단순화. 추후 확장 가능.
+
+## 커맨드 팔레트 접두어 변경
+
+기존 v0.19.4와 접두어 매핑이 변경됨:
+
+| 기능 | v0.19.4 | v2 (네이티브) |
+|------|---------|---------------|
+| 탭 목록 | `>` (탭 명령) | `!` (탭 전환) |
+| 연결 전환 | `#` | `@` |
+| 레이아웃 | `%` | `#` |
+| 클립보드 | `!` | `$` |
+| 백그라운드 탭 | `@` | 제거 |
 
 ## 프로젝트 구조
 
@@ -59,7 +72,7 @@ v-terminal.sln
 └── v-terminal.Core/          # 공통 유틸리티
     ├── Settings.h/cpp            # JSON 설정 읽기/쓰기
     ├── JsonStore.h/cpp           # 범용 JSON 파일 영속성
-    ├── EventBus.h/cpp            # 컴포넌트 간 이벤트 통신
+    ├── EventBus.h/cpp            # 컴포넌트 간 이벤트 통신 (DispatcherQueue 기반 UI 스레드 디스패치)
     └── Types.h                   # 공통 타입 정의
 ```
 
@@ -89,8 +102,11 @@ SwapChainPanel (WinUI 3 XAML)
 
 ### VtParser
 
-- microsoft/terminal의 `Microsoft::Console::VirtualTerminal` 파서를 정적 라이브러리로 빌드하여 링크
-- VT100/VT220/xterm 시퀀스 처리를 직접 구현하지 않음
+- **1순위:** microsoft/terminal의 `Microsoft::Console::VirtualTerminal` 파서를 정적 라이브러리로 빌드하여 링크
+- **리스크:** microsoft/terminal 레포에서 VT 파서만 분리하는 것은 의존성이 깊어 난이도가 높을 수 있음
+- **폴백 1:** `Microsoft.Terminal.Control` NuGet 패키지 활용 (더 넓은 범위지만 통합이 쉬움)
+- **폴백 2:** libvterm (경량 C 라이브러리) 또는 vtparse로 VT 파싱 처리
+- VT100/VT220/xterm 시퀀스를 직접 구현하지 않는 것이 원칙
 
 ### TerminalBuffer
 
@@ -103,6 +119,10 @@ SwapChainPanel (WinUI 3 XAML)
 - DirectWrite로 글리프 렌더링 (JetBrains Mono 등)
 - Direct2D로 배경색/커서/선택 영역 그리기
 - `SwapChainPanel`에 출력하여 WinUI 3 XAML 트리에 통합
+- **글리프 캐싱:** 자주 사용되는 글리프를 텍스처 아틀라스에 캐싱하여 재렌더링 비용 절감
+- **리거처 지원:** DirectWrite의 OpenType 리거처 기능 활용 (Fira Code, JetBrains Mono 등 코딩 폰트)
+- **CJK 처리:** 전각 문자는 2셀 너비로 처리. DirectWrite의 GlyphRun으로 정확한 배치
+- **더티 리전 추적:** 변경된 셀 영역만 재렌더링 (전체 화면 다시 그리기 방지)
 
 ### 입력 흐름
 
@@ -135,14 +155,14 @@ MainWindow
 
 ### 레이아웃 프리셋
 
-| 프리셋 | Grid 구성 |
-|--------|-----------|
-| 1 | 1x1 |
-| 2 | 1x2 (좌/우) |
-| 3 | 1열 좌 + 2행 우 |
-| 4 | 2x2 |
-| 5 | 1열 좌 + 2x2 우 |
-| 6 | 3x2 |
+| 프리셋 | Grid 구성 | 비율 |
+|--------|-----------|------|
+| 1 | 1x1 | 100% |
+| 2 | 1x2 (좌/우) | 50%/50% |
+| 3 | 1열 좌 + 2행 우 | 좌 50%, 우 50% (상하 50%/50%) |
+| 4 | 2x2 | 각 50%/50% |
+| 5 | 1열 좌 + 2x2 우 | 좌 50%, 우 50% (2x2 각 50%/50%) |
+| 6 | 3x2 | 각 33.3%/33.3%/33.3% x 50%/50% |
 
 ### 레이아웃 전환 시
 
@@ -187,6 +207,8 @@ ISession (인터페이스)
 - `libssh2_channel_request_pty("xterm-256color")`로 PTY 할당
 - SSH 프로필은 JSON 파일로 관리 (`ssh_profiles.json`)
 - 패스워드 인증 시 다이얼로그로 입력 받음
+- **커넥션 풀링:** 동일 호스트에 여러 패널 연결 시 하나의 TCP 연결을 공유하고 채널만 추가 할당. `SshConnectionPool`이 호스트:포트:유저 키로 연결 관리.
+- **스레딩:** libssh2는 세션 단위 스레드 안전하지 않으므로, SSH 연결당 전용 I/O 스레드 할당. 데이터는 스레드 안전 큐로 UI 스레드에 전달.
 
 ### WSL 세션
 
@@ -213,12 +235,21 @@ ISession (인터페이스)
 
 ```json
 {
+  "version": 1,
+  "windowState": {
+    "x": 100,
+    "y": 100,
+    "width": 1280,
+    "height": 720,
+    "maximized": false
+  },
   "tabs": [
     {
       "label": "Terminal 1",
       "layout": 3,
+      "cwd": "C:\\Users\\user",
       "panels": [
-        { "type": "local", "sessionConfig": {} },
+        { "type": "local", "cwd": "C:\\Users\\user\\project" },
         { "type": "note", "noteContent": "## 메모\n- 할일 ..." },
         { "type": "ssh", "sshProfileId": "abc-123" }
       ]
@@ -226,6 +257,10 @@ ISession (인터페이스)
   ]
 }
 ```
+
+- `version` — 스키마 버전. 향후 구조 변경 시 마이그레이션에 사용.
+- `windowState` — 앱 종료 시 창 위치/크기 저장, 재시작 시 복원.
+- `cwd` — 탭/패널별 작업 디렉토리.
 
 ### 읽기/쓰기 패턴
 
@@ -359,3 +394,37 @@ SettingsDialog (ContentDialog)
 └── General 탭
     └── 온보딩 초기화 버튼
 ```
+
+## 스레딩 모델
+
+```
+UI 스레드 (WinUI 3 DispatcherQueue)
+├── XAML 렌더링, 이벤트 처리, ViewModel 업데이트
+├── EventBus → DispatcherQueue.TryEnqueue()로 UI 스레드 디스패치
+│
+ConPTY I/O 스레드 (세션당 1개)
+├── 파이프 비동기 읽기 → VtParser → TerminalBuffer 업데이트
+├── 버퍼 변경 시 UI 스레드에 렌더링 요청
+│
+SSH I/O 스레드 (SSH 연결당 1개)
+├── libssh2 소켓 읽기/쓰기
+├── 커넥션 풀: 동일 연결의 채널들은 같은 스레드에서 처리
+│
+타이머 스레드 (1개)
+└── 포모도로, 카운트다운, 알람 틱 처리 → UI 스레드에 업데이트 전달
+```
+
+## 에러 처리
+
+- **ConPTY 생성 실패:** 패널에 에러 메시지 표시, 재시도 버튼 제공
+- **SSH 연결 실패:** 인증 실패 시 패스워드 재입력 다이얼로그. 네트워크 오류 시 에러 표시 + 재연결 버튼.
+- **JSON 파일 손상:** 파싱 실패 시 기본값으로 초기화. 기존 파일은 `.bak`으로 백업.
+- **프로세스 비정상 종료:** 세션 exit 이벤트로 감지, 패널에 "프로세스가 종료되었습니다" 표시 + 재시작 버튼.
+
+## 빌드 요구사항
+
+- **Windows SDK:** 10.0.22621.0 이상
+- **C++ 표준:** C++20
+- **패키지 매니저:** vcpkg (libssh2, nlohmann-json 등)
+- **microsoft/terminal 코어:** git submodule 또는 소스 복사 후 정적 라이브러리 빌드
+- **배포:** MSIX 패키지
