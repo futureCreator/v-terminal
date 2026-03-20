@@ -93,6 +93,14 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.0 - 2026-03-21
+
+- **fix**: Idle unresponsiveness — terminal no longer freezes or goes blank after prolonged idle or system sleep
+- **fix**: Zombie process prevention — `kill_process_tree` now waits for `taskkill`/`kill` to complete instead of fire-and-forget; `child.wait()` added to reap terminated processes
+- **fix**: Reader thread leak — `Drop` impl added to `LocalSession` to abort the PTY reader task and kill the process when sessions are dropped; `kill()` also aborts the reader task
+- **fix**: Event flooding on resume — terminal data is buffered (up to 1MB) while the page is hidden and flushed in a single batch when visible, preventing UI freeze from thousands of queued events
+- **fix**: WebGL context recovery — WebGL renderer is now re-created on visibility change if it was lost during idle; previous behavior only cleared the texture atlas which didn't help when the GPU context was fully evicted
+
 ### v0.19.4 - 2026-03-20
 
 - **chore**: Removed `docs/superpowers/`, `CLAUDE.md`, `SPEC.md` from git tracking — files kept locally but excluded via `.gitignore`

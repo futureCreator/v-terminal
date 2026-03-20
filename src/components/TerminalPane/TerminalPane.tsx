@@ -121,6 +121,10 @@ export function TerminalPane({
     let unlistenSshStatus: (() => void) | null = null;
     let visibilityHandler: (() => void) | null = null;
     let focusHandler: (() => void) | null = null;
+    let webglAddonInstance: WebglAddon | null = null;
+    let hiddenBuffer: Uint8Array[] = [];
+    let hiddenBufferSize = 0;
+    const MAX_HIDDEN_BUFFER = 1024 * 1024; // 1MB cap
 
     const init = async () => {
       await ensureFontLoaded();
@@ -155,6 +159,7 @@ export function TerminalPane({
         const webglAddon = new WebglAddon();
         webglAddon.onContextLoss(() => {
           webglAddon.dispose();
+          webglAddonInstance = null;
           try {
             term.loadAddon(new CanvasAddon());
           } catch {
@@ -162,6 +167,7 @@ export function TerminalPane({
           }
         });
         term.loadAddon(webglAddon);
+        webglAddonInstance = webglAddon;
       } catch {
         try {
           term.loadAddon(new CanvasAddon());
@@ -347,9 +353,16 @@ export function TerminalPane({
       focusHandler = () => onFocus();
       term.textarea?.addEventListener("focus", focusHandler);
 
-      // Output: session → terminal
+      // Output: session → terminal (buffer data while hidden to prevent flooding on resume)
       unlistenData = await ipc.onSessionData(sessionId!, (data) => {
         if (disposed) return;
+        if (document.visibilityState === "hidden") {
+          if (hiddenBufferSize < MAX_HIDDEN_BUFFER) {
+            hiddenBuffer.push(data);
+            hiddenBufferSize += data.length;
+          }
+          return;
+        }
         term.write(data);
       });
 
@@ -380,15 +393,47 @@ export function TerminalPane({
         observerRef.current = observer;
       }
 
-      // Recovery after system sleep/idle: force re-render when page becomes visible.
-      // Windows GPU drivers may evict WebGL resources during prolonged idle, leaving
-      // the terminal canvas blank even after onContextLoss recovery.
+      // Recovery after system sleep/idle: flush buffered data, restore WebGL
+      // renderer, and force re-render when page becomes visible.
       visibilityHandler = () => {
         if (document.visibilityState === "visible" && !disposed) {
           setTimeout(() => {
             if (disposed || !termRef.current) return;
-            termRef.current.clearTextureAtlas();
-            termRef.current.refresh(0, termRef.current.rows - 1);
+            const t = termRef.current;
+
+            // Flush data buffered while the page was hidden
+            if (hiddenBuffer.length > 0) {
+              const total = Math.min(hiddenBufferSize, MAX_HIDDEN_BUFFER);
+              const merged = new Uint8Array(total);
+              let off = 0;
+              for (const chunk of hiddenBuffer) {
+                if (off + chunk.length > total) break;
+                merged.set(chunk, off);
+                off += chunk.length;
+              }
+              hiddenBuffer = [];
+              hiddenBufferSize = 0;
+              t.write(merged.subarray(0, off));
+            }
+
+            // Attempt to restore WebGL renderer if it was lost during idle
+            if (!webglAddonInstance) {
+              try {
+                const newWebgl = new WebglAddon();
+                newWebgl.onContextLoss(() => {
+                  newWebgl.dispose();
+                  webglAddonInstance = null;
+                  try { t.loadAddon(new CanvasAddon()); } catch {}
+                });
+                t.loadAddon(newWebgl);
+                webglAddonInstance = newWebgl;
+              } catch {
+                // Canvas/DOM fallback already active
+              }
+            }
+
+            t.clearTextureAtlas();
+            t.refresh(0, t.rows - 1);
           }, 150);
         }
       };

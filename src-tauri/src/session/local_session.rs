@@ -12,7 +12,7 @@ pub struct LocalSession {
     writer: StdMutex<Box<dyn Write + Send>>,
     master: Box<dyn MasterPty + Send>,
     child: StdMutex<Box<dyn Child + Send + Sync>>,
-    _reader_task: JoinHandle<()>,
+    reader_task: JoinHandle<()>,
 }
 
 // Safety: all mutable fields (writer, child) are wrapped in std::sync::Mutex.
@@ -108,7 +108,7 @@ impl LocalSession {
             master: pair.master,
             writer: StdMutex::new(writer),
             child: StdMutex::new(child),
-            _reader_task: reader_task,
+            reader_task,
         })
     }
 
@@ -118,6 +118,8 @@ impl LocalSession {
                 kill_process_tree(pid);
             }
             let _ = child.kill();
+            // Reap the process to prevent zombie processes
+            let _ = child.wait();
         }
     }
 }
@@ -145,7 +147,15 @@ impl Session for LocalSession {
 
     async fn kill(&self) -> Result<(), String> {
         self.kill_process();
+        self.reader_task.abort();
         Ok(())
+    }
+}
+
+impl Drop for LocalSession {
+    fn drop(&mut self) {
+        self.kill_process();
+        self.reader_task.abort();
     }
 }
 
@@ -153,16 +163,17 @@ fn kill_process_tree(pid: u32) {
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
-        // spawn (fire-and-forget) instead of output (blocking wait)
+        // Wait for taskkill to complete so the process tree is fully terminated
+        // before the PTY reader loop detects EOF.
         let _ = std::process::Command::new("taskkill")
             .args(["/F", "/T", "/PID", &pid.to_string()])
             .creation_flags(0x08000000) // CREATE_NO_WINDOW
-            .spawn();
+            .output();
     }
     #[cfg(not(windows))]
     {
         let _ = std::process::Command::new("kill")
             .args(["-9", &pid.to_string()])
-            .spawn();
+            .output();
     }
 }
