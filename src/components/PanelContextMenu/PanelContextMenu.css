@@ -98,3 +98,21 @@
   flex-shrink: 0;
   margin-left: auto;
 }
+
+/* ── Destructive item ────────────────────────────────────────── */
+.panel-ctx-item--destructive {
+  color: var(--destructive);
+}
+
+.panel-ctx-item--destructive .panel-ctx-item-icon {
+  color: var(--destructive);
+}
+
+.panel-ctx-item--destructive:hover {
+  background: var(--destructive);
+  color: #fff;
+}
+
+.panel-ctx-item--destructive:hover .panel-ctx-item-icon {
+  color: #fff;
+}

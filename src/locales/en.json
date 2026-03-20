@@ -64,7 +64,7 @@
     "rows2": "2 Rows",
     "panels3": "3 Panels",
     "panels4": "4 Panels",
-    "columns3": "3 Columns",
+    "panels5": "5 Panels",
     "panels6": "6 Panels",
     "splitLayout": "Split the current tab into {{layout}}",
     "clearClipboardHistory": "Clear Clipboard History",
@@ -150,6 +150,10 @@
     "closeTab": "Close Tab",
     "renameTab": "Rename Tab"
   },
+  "panel": {
+    "closePanel": "Close Panel",
+    "addPanel": "Add Panel"
+  },
   "window": {
     "minimize": "Minimize",
     "maximize": "Maximize",
@@ -203,8 +207,9 @@
     "remaining": "{{count}} remaining",
     "empty": "No tasks yet",
     "completedSection": "Completed",
-    "clearAll": "Clear All",
-    "newTodo": "New Todo"
+    "clearAll": "Clear",
+    "newTodo": "New Todo",
+    "newTaskPlaceholder": "New task..."
   },
   "note": {
     "placeholder": "Type your markdown note here...",

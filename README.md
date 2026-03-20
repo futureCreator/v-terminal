@@ -23,7 +23,7 @@ A fast, native terminal emulator built with Tauri + React + xterm.js. Designed f
 - **Auto-reconnect** — exponential backoff reconnection with live status indicator in the title bar
 
 ### Layouts & Tabs
-- **Multi-panel grids** — 1, 2, 2-row, 3, 4, 3-column, 6 panels per tab
+- **Multi-panel grids** — 1, 2, 3, 4, 5, 6 panels per tab
 - **Panel zoom** — toggle any panel to full-screen within the tab
 - **Broadcast mode** — send keystrokes to all panels simultaneously
 - **Tab context menu** — send to background vs. kill process
@@ -92,6 +92,16 @@ pnpm daemon:stop     # Stop daemon
 ```
 
 ## Changelog
+
+### v0.19.0 - 2026-03-20
+
+- **feat**: TodoSection Apple HIG polish — item height 32→44px, checkbox 18→22px, text 13→14px, counter bar semibold, row hover with 8px radius, delete button circular hover, checkmark draw-in animation, new item fade-in/slide, delete slide-out, completed section accordion transition
+- **feat**: Inline todo input — bottom "New Todo" button replaced with inline ghost row at end of list ("New task..." placeholder), click to activate, Enter for rapid chaining, Escape to cancel
+- **feat**: 5-panel layout — left panel full height + right 2×2 grid; replaces "2 Rows" and "3 Columns" alternate layouts
+- **feat**: Simplified layout system — `Layout` type changed from `1|2|"2r"|3|4|"3c"|6` to `1|2|3|4|5|6` (linear 1–6 panel progression)
+- **feat**: Panel context menu — "Add Panel" (when < 6) and "Close Panel" actions; closing last panel closes the tab
+- **feat**: Completed section pill badge showing count, accordion animation for expand/collapse
+- **i18n**: Added `panels5`, `panel.closePanel`, `panel.addPanel`, `todo.newTaskPlaceholder`; changed `todo.clearAll` to "Clear"/"지우기"; removed `rows2`, `columns3`
 
 ### v0.18.2 - 2026-03-20
 

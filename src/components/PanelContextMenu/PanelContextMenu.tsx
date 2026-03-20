@@ -11,6 +11,8 @@ interface PanelContextMenuProps {
   wslDistros: string[];
   sshProfiles: SshProfile[];
   onSwitchConnection: (connection: PanelConnection) => void;
+  onClosePanel?: () => void;
+  onAddPanel?: () => void;
   onClose: () => void;
 }
 
@@ -21,6 +23,8 @@ export function PanelContextMenu({
   wslDistros,
   sshProfiles,
   onSwitchConnection,
+  onClosePanel,
+  onAddPanel,
   onClose,
 }: PanelContextMenuProps) {
   const { t } = useTranslation();
@@ -174,6 +178,33 @@ export function PanelContextMenu({
           </button>
         );
       })()}
+
+      {/* Panel actions */}
+      {(onAddPanel || onClosePanel) && <div className="panel-ctx-divider" />}
+      {onAddPanel && (
+        <button
+          className="panel-ctx-item"
+          onClick={onAddPanel}
+          role="menuitem"
+        >
+          <svg className="panel-ctx-item-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          <span className="panel-ctx-item-label">{t('panel.addPanel')}</span>
+        </button>
+      )}
+      {onClosePanel && (
+        <button
+          className="panel-ctx-item panel-ctx-item--destructive"
+          onClick={onClosePanel}
+          role="menuitem"
+        >
+          <svg className="panel-ctx-item-icon" width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          <span className="panel-ctx-item-label">{t('panel.closePanel')}</span>
+        </button>
+      )}
 
     </div>,
     document.body

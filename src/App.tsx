@@ -37,6 +37,7 @@ import {
   buildConnectionSection,
 } from "./lib/paletteCommands";
 import type { Layout } from "./types/terminal";
+import { layoutForCount } from "./lib/layoutMath";
 import "./styles/theme.css";
 import "./styles/globals.css";
 import "./App.css";
@@ -188,6 +189,42 @@ export function App() {
   const handleCloseCurrentTab = useCallback(() => {
     if (activeTab) removeTab(activeTab.id);
   }, [activeTab, removeTab]);
+
+  const handleClosePanel = useCallback((panelId: string) => {
+    if (!activeTab) return;
+    const count = activeTab.panels.length;
+    if (count <= 1) {
+      // Close the tab when it's the last panel
+      const tab = activeTab;
+      cleanupNotePanels(tab.panels);
+      tab.panels
+        .filter((p) => p.sessionId !== null)
+        .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
+      removeTab(tab.id);
+      return;
+    }
+    // Find and cleanup the panel being closed
+    const panel = activeTab.panels.find((p) => p.id === panelId);
+    if (panel) {
+      if (panel.sessionId) ipc.sessionKill(panel.sessionId).catch(() => {});
+      if (panel.connection?.type === "note") cleanupNotePanels([panel]);
+    }
+    // Remove the panel directly and change layout
+    const newLayout = layoutForCount(count - 1);
+    const newPanels = activeTab.panels.filter((p) => p.id !== panelId);
+    useTabStore.setState((s) => ({
+      tabs: s.tabs.map((t) =>
+        t.id === activeTab.id ? { ...t, layout: newLayout, panels: newPanels } : t
+      ),
+    }));
+  }, [activeTab, removeTab]);
+
+  const handleAddPanel = useCallback(() => {
+    if (!activeTab) return;
+    const count = activeTab.panels.length;
+    if (count >= 6) return;
+    handleLayoutChange(layoutForCount(count + 1));
+  }, [activeTab, handleLayoutChange]);
 
   const handleTogglePanelZoom = useCallback(() => {
     panelNavRef.current?.toggleZoom();
@@ -350,6 +387,8 @@ export function App() {
                 overlayActive={paletteOpen || settingsModalOpen || sshModalOpen}
                 onActivePanelChanged={tab.id === activeTabId ? handleActivePanelChanged : undefined}
                 navRef={tab.id === activeTabId ? panelNavRef : undefined}
+                onClosePanel={handleClosePanel}
+                onAddPanel={handleAddPanel}
               />
             )}
           </div>

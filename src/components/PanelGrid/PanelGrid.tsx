@@ -22,9 +22,11 @@ interface PanelGridProps {
   overlayActive?: boolean;
   onActivePanelChanged?: (sessionId: string | null, panelId?: string) => void;
   navRef?: React.MutableRefObject<PanelNavHandle | null>;
+  onClosePanel?: (panelId: string) => void;
+  onAddPanel?: () => void;
 }
 
-export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged, navRef }: PanelGridProps) {
+export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged, navRef, onClosePanel, onAddPanel }: PanelGridProps) {
   const { setSessionId, clearSessionId, switchPanelConnection } = useTabStore();
   const [activePanelId, setActivePanelId] = useState<string>(tab.panels[0]?.id ?? "");
   const [zoomedPanelId, setZoomedPanelId] = useState<string | null>(null);
@@ -172,7 +174,7 @@ export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged,
             className="panel-ctx-wrapper"
             onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
             style={{
-              ...(tab.layout === 3 && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
+              ...((tab.layout === 3 || tab.layout === 5) && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
               ...(hidden ? { display: "none" } : {}),
             }}
           >
@@ -214,6 +216,8 @@ export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged,
           wslDistros={wslDistros}
           sshProfiles={sshProfiles}
           onSwitchConnection={handleSwitchConnection}
+          onClosePanel={onClosePanel ? () => { onClosePanel(ctxMenu.panelId); setCtxMenu(null); } : undefined}
+          onAddPanel={onAddPanel && tab.panels.length < 6 ? () => { onAddPanel(); setCtxMenu(null); } : undefined}
           onClose={() => setCtxMenu(null)}
         />
       )}

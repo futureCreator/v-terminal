@@ -64,7 +64,7 @@
     "rows2": "2 행",
     "panels3": "3 패널",
     "panels4": "4 패널",
-    "columns3": "3 열",
+    "panels5": "5 패널",
     "panels6": "6 패널",
     "splitLayout": "현재 탭을 {{layout}}(으)로 분할",
     "clearClipboardHistory": "클립보드 기록 지우기",
@@ -150,6 +150,10 @@
     "closeTab": "탭 닫기",
     "renameTab": "탭 이름 변경"
   },
+  "panel": {
+    "closePanel": "패널 닫기",
+    "addPanel": "패널 추가"
+  },
   "window": {
     "minimize": "최소화",
     "maximize": "최대화",
@@ -203,8 +207,9 @@
     "remaining": "{{count}}개 남음",
     "empty": "할 일이 없습니다",
     "completedSection": "완료됨",
-    "clearAll": "모두 삭제",
-    "newTodo": "새 할 일"
+    "clearAll": "지우기",
+    "newTodo": "새 할 일",
+    "newTaskPlaceholder": "새 할 일..."
   },
   "note": {
     "placeholder": "마크다운 메모를 입력하세요...",

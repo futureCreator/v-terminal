@@ -25,16 +25,6 @@ const LAYOUTS: Array<{ value: Layout; labelKey: string; icon: React.ReactNode }>
     ),
   },
   {
-    value: "2r",
-    labelKey: "command.rows2",
-    icon: (
-      <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
-        <rect x="1" y="1" width="16" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-        <rect x="1" y="7.5" width="16" height="5.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-      </svg>
-    ),
-  },
-  {
     value: 3,
     labelKey: "command.panels3",
     icon: (
@@ -58,13 +48,15 @@ const LAYOUTS: Array<{ value: Layout; labelKey: string; icon: React.ReactNode }>
     ),
   },
   {
-    value: "3c",
-    labelKey: "command.columns3",
+    value: 5,
+    labelKey: "command.panels5",
     icon: (
       <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
         <rect x="1" y="1" width="5" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" />
-        <rect x="7.5" y="1" width="5" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" />
-        <rect x="14" y="1" width="5" height="12" rx="1" stroke="currentColor" strokeWidth="1.1" />
+        <rect x="7.5" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" />
+        <rect x="14" y="1" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" />
+        <rect x="7.5" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" />
+        <rect x="14" y="7.5" width="5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.1" />
       </svg>
     ),
   },
