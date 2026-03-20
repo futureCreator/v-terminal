@@ -25,10 +25,8 @@ Thumbs.db
 
 # Superpowers
 .superpowers/
-docs/superpowers/
 
 # Project-local docs
-CLAUDE.md
 SPEC.md
 
 # Logs
