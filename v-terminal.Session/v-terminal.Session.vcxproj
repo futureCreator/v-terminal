@@ -49,7 +49,14 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClCompile Include="placeholder.cpp" />
+    <ClInclude Include="ISession.h" />
+    <ClInclude Include="LocalSession.h" />
+    <ClInclude Include="SessionManager.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="LocalSession.cpp" />
+    <ClCompile Include="SessionManager.cpp" />
   </ItemGroup>
 
   <ItemGroup>
