@@ -61,6 +61,7 @@
     <ClCompile Include="EventBusTests.cpp" />
     <ClCompile Include="ConPtyProcessTests.cpp" />
     <ClCompile Include="TerminalBufferTests.cpp" />
+    <ClCompile Include="VtParserTests.cpp" />
   </ItemGroup>
 
   <ItemGroup>
