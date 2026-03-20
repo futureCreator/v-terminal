@@ -93,6 +93,19 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.18.0 - 2026-03-20
+
+- **feat**: Todo tab redesigned to macOS Reminders style — collapsible header removed, circular checkboxes, progressive disclosure for completed items, bottom-anchored "+ New Todo" button with rapid entry (Enter to chain)
+- **feat**: Empty state for Todo tab — checklist icon and "No tasks yet" message when no todos exist
+- **feat**: Completed items section — completed todos separated into a collapsible "Completed" section with "Clear All" link, 300ms fade-out animation on check
+- **feat**: Counter bar — "N remaining" + "completed/total" fraction replaces the old collapsible header
+- **feat**: Notes panel elevated background — `--bg-elevated` (#242426) separates note panels visually from terminal panels
+- **feat**: Notes panel padding increased from ~4px to 20px/24px for a more spacious editing experience
+- **feat**: Notes background patterns — 4 selectable styles (None, Ruled lines, Grid, Dot grid) with Grid as default
+- **feat**: Notes background style selector in Settings → Appearance tab — mini preview buttons with live switching
+- **feat**: `noteConfigStore` (Zustand + localStorage) for persisting note background preference
+- **i18n**: Added 11 new translation keys for todo redesign and note settings (en + ko)
+
 ### v0.17.0 - 2026-03-20
 
 - **feat**: Internationalization (i18n) — full multilanguage support with English and Korean using `react-i18next`
