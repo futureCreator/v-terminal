@@ -36,7 +36,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)v-terminal.Core;$(SolutionDir)v-terminal.Terminal;$(SolutionDir)v-terminal.Session;$(SolutionDir)v-terminal.Toolkit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\v-terminal.Core;$(ProjectDir)..\v-terminal.Terminal;$(ProjectDir)..\v-terminal.Session;$(ProjectDir)..\v-terminal.Toolkit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -46,7 +46,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)v-terminal.Core;$(SolutionDir)v-terminal.Terminal;$(SolutionDir)v-terminal.Session;$(SolutionDir)v-terminal.Toolkit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\v-terminal.Core;$(ProjectDir)..\v-terminal.Terminal;$(ProjectDir)..\v-terminal.Session;$(ProjectDir)..\v-terminal.Toolkit;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -56,6 +56,7 @@
 
   <ItemGroup>
     <ClCompile Include="test_main.cpp" />
+    <ClCompile Include="JsonStoreTests.cpp" />
   </ItemGroup>
 
   <ItemGroup>

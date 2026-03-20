@@ -50,10 +50,11 @@
 
   <ItemGroup>
     <ClInclude Include="Types.h" />
+    <ClInclude Include="JsonStore.h" />
   </ItemGroup>
 
   <ItemGroup>
-    <ClCompile Include="placeholder.cpp" />
+    <ClCompile Include="JsonStore.cpp" />
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
