@@ -9,6 +9,7 @@ import { THEME_GROUPS } from "../../themes/definitions";
 import { ensureSpecificFontLoaded } from "../../lib/fontLoader";
 import { useOnboardingStore } from "../../store/onboardingStore";
 import { useBrowserConfigStore } from "../../store/browserConfigStore";
+import { useNoteConfigStore, type NoteBackgroundStyle } from "../../store/noteConfigStore";
 import { Toast } from "../Toast/Toast";
 import "./SettingsModal.css";
 
@@ -238,6 +239,7 @@ function AppearanceTab({
   i18n,
 }: AppearanceTabProps) {
   const [fontLoaded, setFontLoaded] = useState<boolean | null>(null);
+  const noteConfig = useNoteConfigStore();
 
   useEffect(() => {
     setFontLoaded(null);
@@ -395,6 +397,63 @@ function AppearanceTab({
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="settings-divider" />
+
+      {/* Notes Section */}
+      <div className="settings-section">
+        <div className="settings-section-label">{t('settings.notes')}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '13px', color: 'var(--label-primary)' }}>
+            {t('settings.notesBgStyle')}
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {([
+              { value: "none", label: t('settings.notesBgNone') },
+              { value: "ruled", label: t('settings.notesBgRuled') },
+              { value: "grid", label: t('settings.notesBgGrid') },
+              { value: "dots", label: t('settings.notesBgDots') },
+            ] as { value: NoteBackgroundStyle; label: string }[]).map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => noteConfig.setBackgroundStyle(opt.value)}
+                title={opt.label}
+                style={{
+                  width: '40px',
+                  height: '32px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-elevated)',
+                  border: noteConfig.backgroundStyle === opt.value
+                    ? '2px solid var(--accent)'
+                    : '1px solid var(--bg-panel-border)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  backgroundImage:
+                    opt.value === "ruled"
+                      ? 'repeating-linear-gradient(transparent, transparent 6px, rgba(255,255,255,0.04) 6px, rgba(255,255,255,0.04) 7px)'
+                      : opt.value === "grid"
+                      ? 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)'
+                      : opt.value === "dots"
+                      ? 'radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)'
+                      : 'none',
+                  backgroundSize:
+                    opt.value === "grid" ? '8px 8px'
+                    : opt.value === "dots" ? '6px 6px'
+                    : undefined,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+        <div style={{
+          fontSize: '11px',
+          color: 'var(--label-disabled)',
+          textAlign: 'right',
+          marginTop: '4px',
+        }}>
+          {t('settings.notesBgNone')} · {t('settings.notesBgRuled')} · {t('settings.notesBgGrid')} · {t('settings.notesBgDots')}
+        </div>
       </div>
 
       <div className="settings-divider" />
