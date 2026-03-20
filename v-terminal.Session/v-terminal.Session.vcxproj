@@ -52,11 +52,19 @@
     <ClInclude Include="ISession.h" />
     <ClInclude Include="LocalSession.h" />
     <ClInclude Include="SessionManager.h" />
+    <ClInclude Include="SshConnectionPool.h" />
+    <ClInclude Include="SshSession.h" />
+    <ClInclude Include="WslHelper.h" />
+    <ClInclude Include="WslSession.h" />
   </ItemGroup>
 
   <ItemGroup>
     <ClCompile Include="LocalSession.cpp" />
     <ClCompile Include="SessionManager.cpp" />
+    <ClCompile Include="SshConnectionPool.cpp" />
+    <ClCompile Include="SshSession.cpp" />
+    <ClCompile Include="WslHelper.cpp" />
+    <ClCompile Include="WslSession.cpp" />
   </ItemGroup>
 
   <ItemGroup>

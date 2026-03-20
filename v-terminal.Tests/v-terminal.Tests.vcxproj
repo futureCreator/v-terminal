@@ -63,6 +63,7 @@
     <ClCompile Include="TerminalBufferTests.cpp" />
     <ClCompile Include="VtParserTests.cpp" />
     <ClCompile Include="SessionManagerTests.cpp" />
+    <ClCompile Include="WslHelperTests.cpp" />
   </ItemGroup>
 
   <ItemGroup>
