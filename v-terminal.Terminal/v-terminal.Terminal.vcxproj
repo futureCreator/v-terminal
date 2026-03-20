@@ -49,7 +49,11 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClCompile Include="placeholder.cpp" />
+    <ClInclude Include="ConPtyProcess.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="ConPtyProcess.cpp" />
   </ItemGroup>
 
   <ItemGroup>

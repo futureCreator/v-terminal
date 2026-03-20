@@ -59,6 +59,7 @@
     <ClCompile Include="JsonStoreTests.cpp" />
     <ClCompile Include="SettingsTests.cpp" />
     <ClCompile Include="EventBusTests.cpp" />
+    <ClCompile Include="ConPtyProcessTests.cpp" />
   </ItemGroup>
 
   <ItemGroup>
