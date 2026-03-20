@@ -52,11 +52,13 @@
     <ClInclude Include="Types.h" />
     <ClInclude Include="JsonStore.h" />
     <ClInclude Include="Settings.h" />
+    <ClInclude Include="EventBus.h" />
   </ItemGroup>
 
   <ItemGroup>
     <ClCompile Include="JsonStore.cpp" />
     <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="EventBus.cpp" />
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
