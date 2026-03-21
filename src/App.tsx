@@ -278,7 +278,12 @@ export function App() {
     onTogglePanelZoom: handleTogglePanelZoom,
     onPrevPanel: () => panelNavRef.current?.prevPanel(),
     onNextPanel: () => panelNavRef.current?.nextPanel(),
-  }, t), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, activeTab, tabs, sidebarOpen, browserPanelOpen, handleToggleBrowserPanel, t]);
+    onAddPanel: handleAddPanel,
+    onCloseActivePanel: () => {
+      const pid = activePanelIdRef.current;
+      if (pid) handleClosePanel(pid);
+    },
+  }, t), [handleNewTab, handleToggleBroadcast, handleCloseCurrentTab, handleTogglePanelZoom, handlePrevTab, handleNextTab, handleToggleToolkit, handleAddPanel, handleClosePanel, activeTab, tabs, sidebarOpen, browserPanelOpen, handleToggleBrowserPanel, t]);
 
   const tabListPaletteSection = useMemo(
     () => buildTabListSection(tabs, activeTabId, setActiveTab, t),

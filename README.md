@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.1 - 2026-03-22
+
+- **feat**: Command palette panel management — added "Add Panel" and "Close Panel" commands to the command palette for quick panel add/remove without context menu
+- **docs**: Added v-terminal native rewrite design spec and implementation plan
+
 ### v0.20.0 - 2026-03-21
 
 - **fix**: Idle unresponsiveness — terminal no longer freezes or goes blank after prolonged idle or system sleep
