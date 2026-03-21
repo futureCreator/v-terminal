@@ -32,6 +32,8 @@ interface TabCommandsParams {
   onTogglePanelZoom: () => void;
   onPrevPanel: () => void;
   onNextPanel: () => void;
+  onAddPanel: () => void;
+  onCloseActivePanel: () => void;
 }
 
 export function buildTabSection(p: TabCommandsParams, t: TFunction): PaletteSection {
@@ -107,6 +109,24 @@ export function buildTabSection(p: TabCommandsParams, t: TFunction): PaletteSect
       icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M3.05 3.05l1.06 1.06M9.89 9.89l1.06 1.06M10.95 3.05l-1.06 1.06M4.11 9.89l-1.06 1.06" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg></Icon>,
       action: p.onOpenSettings,
     },
+    ...(p.panelCount < 6 ? [
+      {
+        id: "panel:add",
+        label: t('command.addPanel'),
+        description: t('command.addPanelDesc'),
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="7.5" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2 1.5" /><path d="M10.25 5v4M8.25 7h4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg></Icon>,
+        action: p.onAddPanel,
+      },
+    ] : []),
+    ...(p.panelCount > 1 ? [
+      {
+        id: "panel:close",
+        label: t('command.closeActivePanel'),
+        description: t('command.closeActivePanelDesc'),
+        icon: <Icon><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" /><rect x="7.5" y="1" width="5.5" height="12" rx="1" stroke="currentColor" strokeWidth="1.2" opacity="0.35" /><path d="M9 5.5l2.5 2.5M11.5 5.5L9 8" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg></Icon>,
+        action: p.onCloseActivePanel,
+      },
+    ] : []),
     ...(p.panelCount > 1 ? [
       {
         id: "panel:zoom",
