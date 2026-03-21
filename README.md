@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.2 - 2026-03-22
+
+- **refactor**: Command palette prefixes reassigned — `!` tabs, `@` connection, `#` layout, `$` clipboard; removed unused `background` mode
+- **style**: Browser panel mobile-width sizing — changed from fixed 40% to `width: 22%; min-width: 375px` for mobile-like viewport
+
 ### v0.20.1 - 2026-03-22
 
 - **feat**: Command palette panel management — added "Add Panel" and "Close Panel" commands to the command palette for quick panel add/remove without context menu
