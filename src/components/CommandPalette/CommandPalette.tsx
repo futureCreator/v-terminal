@@ -61,23 +61,20 @@ function highlightText(text: string, indices: number[]): React.ReactNode {
 
 /* ── Prefix mode ────────────────────────────────────────────────── */
 
-type PrefixMode = "all" | "tabs" | "layout" | "connection" | "background" | "clipboard";
+type PrefixMode = "all" | "tabs" | "layout" | "connection" | "clipboard";
 
 function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
   const trimmed = raw.trimStart();
-  if (trimmed.startsWith(">")) {
+  if (trimmed.startsWith("!")) {
     return { mode: "tabs", query: trimmed.slice(1).trimStart() };
   }
-  if (trimmed.startsWith("#")) {
+  if (trimmed.startsWith("@")) {
     return { mode: "connection", query: trimmed.slice(1).trimStart() };
   }
-  if (trimmed.startsWith("%")) {
+  if (trimmed.startsWith("#")) {
     return { mode: "layout", query: trimmed.slice(1).trimStart() };
   }
-  if (trimmed.startsWith("@")) {
-    return { mode: "background", query: trimmed.slice(1).trimStart() };
-  }
-  if (trimmed.startsWith("!")) {
+  if (trimmed.startsWith("$")) {
     return { mode: "clipboard", query: trimmed.slice(1).trimStart() };
   }
   return { mode: "all", query: trimmed };
@@ -128,8 +125,6 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
       pool = pool.filter((c) => c.category === t('command.categorySwitchConnection'));
     } else if (mode === "layout") {
       pool = pool.filter((c) => c.category === t('command.categoryLayout'));
-    } else if (mode === "background") {
-      pool = pool.filter((c) => c.category === "Background");
     } else if (mode === "clipboard") {
       pool = pool.filter((c) => c.category === t('command.categoryClipboard'));
     }
@@ -397,7 +392,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
   };
 
   // Mode indicator for prefix
-  const modeLabel = mode === "tabs" ? t('commandPalette.hintTabs') : mode === "connection" ? t('commandPalette.hintConnect') : mode === "layout" ? t('commandPalette.hintLayout') : mode === "background" ? t('commandPalette.hintBackground') : mode === "clipboard" ? t('commandPalette.hintClipboard') : null;
+  const modeLabel = mode === "tabs" ? t('commandPalette.hintTabs') : mode === "connection" ? t('commandPalette.hintConnect') : mode === "layout" ? t('commandPalette.hintLayout') : mode === "clipboard" ? t('commandPalette.hintClipboard') : null;
 
   return createPortal(
     <div
@@ -420,7 +415,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
           <input
             ref={inputRef}
             className="cp-input"
-            placeholder={mode === "tabs" ? t('commandPalette.switchToTab') : mode === "connection" ? t('commandPalette.switchConnection') : mode === "layout" ? t('commandPalette.changeLayout') : mode === "background" ? t('commandPalette.restoreBackground') : mode === "clipboard" ? t('commandPalette.searchClipboard') : t('commandPalette.searchCommands')}
+            placeholder={mode === "tabs" ? t('commandPalette.switchToTab') : mode === "connection" ? t('commandPalette.switchConnection') : mode === "layout" ? t('commandPalette.changeLayout') : mode === "clipboard" ? t('commandPalette.searchClipboard') : t('commandPalette.searchCommands')}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActiveIndex(0); onQueryChange?.(e.target.value); }}
             onKeyDown={handleKeyDown}
@@ -450,11 +445,10 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
 
         {/* Footer hint */}
         <div className="cp-footer">
-          <span className="cp-hint"><kbd>&gt;</kbd> {t('commandPalette.hintTabs')}</span>
-          <span className="cp-hint"><kbd>@</kbd> {t('commandPalette.hintBackground')}</span>
-          <span className="cp-hint"><kbd>#</kbd> {t('commandPalette.hintConnect')}</span>
-          <span className="cp-hint"><kbd>%</kbd> {t('commandPalette.hintLayout')}</span>
-          <span className="cp-hint"><kbd>!</kbd> {t('commandPalette.hintClipboard')}</span>
+          <span className="cp-hint"><kbd>!</kbd> {t('commandPalette.hintTabs')}</span>
+          <span className="cp-hint"><kbd>@</kbd> {t('commandPalette.hintConnect')}</span>
+          <span className="cp-hint"><kbd>#</kbd> {t('commandPalette.hintLayout')}</span>
+          <span className="cp-hint"><kbd>$</kbd> {t('commandPalette.hintClipboard')}</span>
         </div>
       </div>
     </div>,
