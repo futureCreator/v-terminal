@@ -24,4 +24,8 @@
 #include <winrt/Microsoft.UI.Xaml.Navigation.h>
 #include <winrt/Microsoft.UI.Xaml.Shapes.h>
 #include <winrt/Microsoft.UI.Dispatching.h>
-#include <wil/cppwinrt_helpers.h>
+// WIL helpers - optional, available via NuGet Microsoft.Windows.ImplementationLibrary
+// #include <wil/cppwinrt_helpers.h>
+
+// Include implementation headers for XAML type registration
+#include "Views/MainWindow.xaml.h"

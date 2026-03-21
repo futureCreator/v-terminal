@@ -1,0 +1,160 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.App\\v-terminal.App.vcxproj": {}
+  },
+  "projects": {
+    "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.App\\v-terminal.App.vcxproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.App\\v-terminal.App.vcxproj",
+        "projectName": "v-terminal.App",
+        "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.App\\v-terminal.App.vcxproj",
+        "packagesPath": "C:\\Users\\black\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.App\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "UsingMicrosoftNETSdk": false,
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\black\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "native"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "native": {
+            "projectReferences": {
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj"
+              },
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Session\\v-terminal.Session.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Session\\v-terminal.Session.vcxproj"
+              },
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Terminal\\v-terminal.Terminal.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Terminal\\v-terminal.Terminal.vcxproj"
+              },
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Toolkit\\v-terminal.Toolkit.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Toolkit\\v-terminal.Toolkit.vcxproj"
+              }
+            }
+          }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "native": {
+          "dependencies": {
+            "Microsoft.Windows.CppWinRT": {
+              "target": "Package",
+              "version": "[2.0.240405.15, )"
+            },
+            "Microsoft.Windows.SDK.BuildTools": {
+              "target": "Package",
+              "version": "[10.0.26100.1742, )"
+            },
+            "Microsoft.WindowsAppSDK": {
+              "target": "Package",
+              "version": "[1.6.240829007, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win10-x64": {
+          "#import": []
+        }
+      }
+    },
+    "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj": {
+      "restore": {
+        "projectUniqueName": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj",
+        "projectName": "v-terminal.Core",
+        "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj",
+        "UsingMicrosoftNETSdk": false,
+        "frameworks": {
+          "native": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "native": {}
+      }
+    },
+    "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Session\\v-terminal.Session.vcxproj": {
+      "restore": {
+        "projectUniqueName": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Session\\v-terminal.Session.vcxproj",
+        "projectName": "v-terminal.Session",
+        "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Session\\v-terminal.Session.vcxproj",
+        "UsingMicrosoftNETSdk": false,
+        "frameworks": {
+          "native": {
+            "projectReferences": {
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj"
+              },
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Terminal\\v-terminal.Terminal.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Terminal\\v-terminal.Terminal.vcxproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "native": {}
+      }
+    },
+    "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Terminal\\v-terminal.Terminal.vcxproj": {
+      "restore": {
+        "projectUniqueName": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Terminal\\v-terminal.Terminal.vcxproj",
+        "projectName": "v-terminal.Terminal",
+        "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Terminal\\v-terminal.Terminal.vcxproj",
+        "UsingMicrosoftNETSdk": false,
+        "frameworks": {
+          "native": {
+            "projectReferences": {
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "native": {}
+      }
+    },
+    "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Toolkit\\v-terminal.Toolkit.vcxproj": {
+      "restore": {
+        "projectUniqueName": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Toolkit\\v-terminal.Toolkit.vcxproj",
+        "projectName": "v-terminal.Toolkit",
+        "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Toolkit\\v-terminal.Toolkit.vcxproj",
+        "UsingMicrosoftNETSdk": false,
+        "frameworks": {
+          "native": {
+            "projectReferences": {
+              "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj": {
+                "projectPath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.Core\\v-terminal.Core.vcxproj"
+              }
+            }
+          }
+        }
+      },
+      "frameworks": {
+        "native": {}
+      }
+    }
+  }
+}

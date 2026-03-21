@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "bBbJm8s/+3A=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\black\\Dev\\v-terminal\\v-terminal.App\\v-terminal.App.vcxproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\black\\.nuget\\packages\\microsoft.web.webview2\\1.0.2651.64\\microsoft.web.webview2.1.0.2651.64.nupkg.sha512",
+    "C:\\Users\\black\\.nuget\\packages\\microsoft.windows.cppwinrt\\2.0.240405.15\\microsoft.windows.cppwinrt.2.0.240405.15.nupkg.sha512",
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages\\microsoft.windows.sdk.buildtools\\10.0.26100.1742\\microsoft.windows.sdk.buildtools.10.0.26100.1742.nupkg.sha512",
+    "C:\\Users\\black\\.nuget\\packages\\microsoft.windowsappsdk\\1.6.240829007\\microsoft.windowsappsdk.1.6.240829007.nupkg.sha512"
+  ],
+  "logs": []
+}
