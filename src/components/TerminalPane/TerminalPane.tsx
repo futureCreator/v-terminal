@@ -6,6 +6,7 @@ import { WebLinksAddon } from "@xterm/addon-web-links";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { CanvasAddon } from "@xterm/addon-canvas";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ipc } from "../../lib/tauriIpc";
 import { ensureFontLoaded, ensureSpecificFontLoaded } from "../../lib/fontLoader";
 import { useThemeStore, resolveThemeDefinition } from "../../store/themeStore";
@@ -119,6 +120,7 @@ export function TerminalPane({
     let unlistenData: (() => void) | null = null;
     let unlistenExit: (() => void) | null = null;
     let unlistenSshStatus: (() => void) | null = null;
+    let unlistenWindowFocus: (() => void) | null = null;
     let visibilityHandler: (() => void) | null = null;
     let focusHandler: (() => void) | null = null;
     let webglAddonInstance: WebglAddon | null = null;
@@ -162,6 +164,9 @@ export function TerminalPane({
           webglAddonInstance = null;
           try {
             term.loadAddon(new CanvasAddon());
+            // Force re-render after fallback to Canvas so content is not lost
+            term.clearTextureAtlas();
+            term.refresh(0, term.rows - 1);
           } catch {
             // DOM renderer remains as final fallback
           }
@@ -438,6 +443,58 @@ export function TerminalPane({
         }
       };
       document.addEventListener("visibilitychange", visibilityHandler);
+
+      // Tauri window focus handler — complements visibilitychange which may not
+      // fire when the user simply switches to another window without minimizing.
+      // This ensures the terminal re-renders properly after any focus loss.
+      const appWindow = getCurrentWindow();
+      appWindow.onFocusChanged(({ payload: focused }) => {
+        if (!focused || disposed || !termRef.current) return;
+        const t = termRef.current;
+        // Short delay to let the renderer and GPU context stabilize
+        setTimeout(() => {
+          if (disposed || !termRef.current) return;
+
+          // Flush any data that was buffered while hidden
+          if (hiddenBuffer.length > 0) {
+            const total = Math.min(hiddenBufferSize, MAX_HIDDEN_BUFFER);
+            const merged = new Uint8Array(total);
+            let off = 0;
+            for (const chunk of hiddenBuffer) {
+              if (off + chunk.length > total) break;
+              merged.set(chunk, off);
+              off += chunk.length;
+            }
+            hiddenBuffer = [];
+            hiddenBufferSize = 0;
+            t.write(merged.subarray(0, off));
+          }
+
+          // Restore WebGL renderer if it was lost while unfocused
+          if (!webglAddonInstance) {
+            try {
+              const newWebgl = new WebglAddon();
+              newWebgl.onContextLoss(() => {
+                newWebgl.dispose();
+                webglAddonInstance = null;
+                try {
+                  t.loadAddon(new CanvasAddon());
+                  t.clearTextureAtlas();
+                  t.refresh(0, t.rows - 1);
+                } catch {}
+              });
+              t.loadAddon(newWebgl);
+              webglAddonInstance = newWebgl;
+            } catch {
+              // Canvas/DOM fallback already active
+            }
+          }
+
+          // Force full re-render to recover from any rendering artifacts
+          t.clearTextureAtlas();
+          t.refresh(0, t.rows - 1);
+        }, 100);
+      }).then((fn) => { unlistenWindowFocus = fn; });
     };
 
     init();
@@ -447,6 +504,7 @@ export function TerminalPane({
       unlistenData?.();
       unlistenExit?.();
       unlistenSshStatus?.();
+      unlistenWindowFocus?.();
       if (visibilityHandler) {
         document.removeEventListener("visibilitychange", visibilityHandler);
       }
