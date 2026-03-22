@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.3 - 2026-03-22
+
+- **fix**: Terminal content disappearing after window focus loss — added Tauri `onFocusChanged` handler to complement `visibilitychange` event, and improved WebGL context loss recovery with immediate Canvas fallback re-render
+
 ### v0.20.2 - 2026-03-22
 
 - **refactor**: Command palette prefixes reassigned — `!` tabs, `@` connection, `#` layout, `$` clipboard; removed unused `background` mode
