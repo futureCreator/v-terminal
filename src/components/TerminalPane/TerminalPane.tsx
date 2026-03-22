@@ -154,6 +154,16 @@ export function TerminalPane({
       }
 
       term.open(containerRef.current);
+
+      // Defer fit() to the next animation frame so the CSS grid/flex layout
+      // is fully resolved. On app startup with restored tabs, the container
+      // dimensions may not be final when this effect runs synchronously,
+      // causing fit() to calculate incorrect rows/cols (content overflow).
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      if (disposed || !containerRef.current) {
+        term.dispose();
+        return;
+      }
       fitAddon.fit();
 
       // Renderer: WebGL → Canvas → DOM fallback

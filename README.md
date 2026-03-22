@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.4 - 2026-03-22
+
+- **fix**: Terminal content overflowing below visible area on restored sessions at app startup — deferred `fitAddon.fit()` to next animation frame so CSS grid/flex layout is fully resolved before calculating terminal dimensions
+
 ### v0.20.3 - 2026-03-22
 
 - **fix**: Terminal content disappearing after window focus loss — added Tauri `onFocusChanged` handler to complement `visibilitychange` event, and improved WebGL context loss recovery with immediate Canvas fallback re-render
