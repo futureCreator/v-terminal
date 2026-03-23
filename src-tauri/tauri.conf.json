@@ -1,10 +1,10 @@
 {
   "productName": "v-terminal",
-  "version": "0.20.5",
+  "version": "0.20.6",
   "identifier": "com.v-terminal.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://127.0.0.1:5173",
+    "devUrl": "http://127.0.0.1:1420",
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
     "beforeBundleCommand": ""
