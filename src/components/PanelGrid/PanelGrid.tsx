@@ -174,7 +174,7 @@ export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged,
             className="panel-ctx-wrapper"
             onContextMenu={(e) => handleContextMenu(e, panel.id, panel.connection)}
             style={{
-              ...((tab.layout === 3 || tab.layout === 5) && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
+              ...(tab.layout === 5 && index === 0 && !isZoomed ? { gridRow: "1 / 3" } : {}),
               ...(hidden ? { display: "none" } : {}),
             }}
           >

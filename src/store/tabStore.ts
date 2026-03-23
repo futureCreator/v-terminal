@@ -3,25 +3,6 @@ import { v4 as uuidv4 } from "uuid";
 import type { Tab, Panel, Layout, PanelConnection } from "../types/terminal";
 import { panelCount } from "../lib/layoutMath";
 
-const WORKSPACE_KEY = "v-terminal:workspace";
-const WORKSPACE_SAVE_DEBOUNCE_MS = 300;
-
-interface WorkspaceState {
-  version: 1;
-  tabs: Array<{
-    id: string;
-    label: string;
-    cwd: string;
-    layout: Layout;
-    broadcastEnabled: boolean;
-    panels: Array<{
-      id: string;
-      connection?: PanelConnection;
-    }>;
-  }>;
-  activeTabId: string;
-}
-
 // We import uuid lazily since we bundle it
 function genId() {
   return uuidv4();
@@ -65,67 +46,6 @@ function nextTabLabel() {
   return `Terminal ${tabCounter++}`;
 }
 
-let workspaceSaveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function saveWorkspace(tabs: Tab[], activeTabId: string) {
-  if (workspaceSaveTimer) clearTimeout(workspaceSaveTimer);
-  workspaceSaveTimer = setTimeout(() => {
-    try {
-      const state: WorkspaceState = {
-        version: 1,
-        tabs: tabs
-          .filter((t) => !t.pendingSessionPick)
-          .map((t) => ({
-            id: t.id,
-            label: t.label,
-            cwd: t.cwd,
-            layout: t.layout,
-            broadcastEnabled: t.broadcastEnabled,
-            panels: t.panels.map((p) => ({
-              id: p.id,
-              connection: p.connection,
-            })),
-          })),
-        activeTabId,
-      };
-      localStorage.setItem(WORKSPACE_KEY, JSON.stringify(state));
-    } catch {}
-  }, WORKSPACE_SAVE_DEBOUNCE_MS);
-}
-
-function loadWorkspace(): { tabs: Tab[]; activeTabId: string } | null {
-  try {
-    const raw = localStorage.getItem(WORKSPACE_KEY);
-    if (!raw) return null;
-    const state = JSON.parse(raw) as WorkspaceState;
-    if (state.version !== 1 || !Array.isArray(state.tabs) || state.tabs.length === 0) return null;
-
-    const tabs: Tab[] = state.tabs.map((t) => ({
-      id: t.id,
-      label: t.label,
-      cwd: t.cwd,
-      layout: t.layout,
-      broadcastEnabled: t.broadcastEnabled,
-      pendingSessionPick: false,
-      panels: t.panels.map((p) => ({
-        id: p.id,
-        sessionId: null,
-        connection: p.connection,
-      })),
-    }));
-
-    const maxNum = tabs.reduce((max, t) => {
-      const match = t.label.match(/^Terminal (\d+)$/);
-      return match ? Math.max(max, parseInt(match[1], 10)) : max;
-    }, 0);
-    tabCounter = maxNum + 1;
-
-    return { tabs, activeTabId: state.activeTabId };
-  } catch {
-    return null;
-  }
-}
-
 function createDefaultTab(): Tab {
   const layout: Layout = 1;
   return {
@@ -140,17 +60,11 @@ function createDefaultTab(): Tab {
 }
 
 export const useTabStore = create<TabStore>((set, get) => {
-  const restored = loadWorkspace();
-  const initialTabs = restored?.tabs ?? [createDefaultTab()];
-  const initialActiveTabId = restored?.activeTabId ?? initialTabs[0].id;
-
-  const activeTabId = initialTabs.find((t) => t.id === initialActiveTabId)
-    ? initialActiveTabId
-    : initialTabs[0].id;
+  const initialTab = createDefaultTab();
 
   return {
-    tabs: initialTabs,
-    activeTabId,
+    tabs: [initialTab],
+    activeTabId: initialTab.id,
 
     addTab: (cwd, label?) => {
       const id = genId();
@@ -320,11 +234,6 @@ export const useTabStore = create<TabStore>((set, get) => {
     },
 
   };
-});
-
-// Persist workspace state on every change
-useTabStore.subscribe((state) => {
-  saveWorkspace(state.tabs, state.activeTabId);
 });
 
 // Re-export uuid for components that need it

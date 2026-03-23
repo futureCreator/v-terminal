@@ -113,9 +113,9 @@ function LayoutIcon({ layout }: { layout: Layout }) {
     case 3:
       return (
         <svg width="28" height="20" viewBox="0 0 28 20">
-          <rect x="2" y="2" width="11" height="16" rx="1.5" {...s} />
-          <rect x="15" y="2" width="11" height="7" rx="1.2" {...s} />
-          <rect x="15" y="11" width="11" height="7" rx="1.2" {...s} />
+          <rect x="1" y="2" width="7.5" height="16" rx="1" {...s} />
+          <rect x="10.25" y="2" width="7.5" height="16" rx="1" {...s} />
+          <rect x="19.5" y="2" width="7.5" height="16" rx="1" {...s} />
         </svg>
       );
     case 4:
@@ -206,7 +206,7 @@ function PanelConfigGrid({
           <div
             key={i}
             className="sp-panel-cell"
-            style={(layout === 3 || layout === 5) && i === 0 ? { gridRow: "1 / 3" } : undefined}
+            style={layout === 5 && i === 0 ? { gridRow: "1 / 3" } : undefined}
           >
             <span className="sp-panel-cell-label">{t('session.panel', { n: i + 1 })}</span>
             <div className="sp-panel-dropdown">
