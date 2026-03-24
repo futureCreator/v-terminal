@@ -37,7 +37,22 @@ pub async fn session_create(
         }
         "ssh" => {
             let ssh = ssh.ok_or("ssh params required for type 'ssh'")?;
-            state.create_ssh(app, ssh.host, ssh.port, ssh.username, ssh.identity_file, cols, rows).await
+            let mut args = vec![
+                format!("{}@{}", ssh.username, ssh.host),
+                "-p".to_string(),
+                ssh.port.to_string(),
+                "-o".to_string(),
+                "StrictHostKeyChecking=accept-new".to_string(),
+            ];
+            if let Some(identity) = ssh.identity_file {
+                args.push("-i".to_string());
+                args.push(identity);
+            }
+            state.create_local(
+                app, "~".to_string(), cols, rows,
+                Some("ssh".to_string()),
+                Some(args),
+            ).await
         }
         other => Err(format!("unknown session type: {other}")),
     }

@@ -45,6 +45,7 @@ impl SshConnectionPool {
         None
     }
 
+    #[allow(dead_code)]
     pub async fn connect_with_key(
         &mut self,
         host: &str,

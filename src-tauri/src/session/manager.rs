@@ -63,58 +63,6 @@ impl SessionManager {
         })
     }
 
-    pub async fn create_ssh(
-        &self,
-        app: AppHandle,
-        host: String,
-        port: u16,
-        username: String,
-        identity_file: Option<String>,
-        cols: u16,
-        rows: u16,
-    ) -> Result<SessionCreateResult, String> {
-        {
-            let sessions = self.sessions.lock().await;
-            if sessions.len() >= MAX_SESSIONS {
-                return Err(format!("session limit reached ({MAX_SESSIONS})"));
-            }
-        }
-        let resolved_key = identity_file.or_else(find_default_ssh_key)
-            .ok_or_else(|| "{\"code\":\"PASSWORD_REQUIRED\"}".to_string())?;
-        let session_id = Uuid::new_v4().to_string();
-
-        let connection_id = {
-            let mut pool = self.ssh_pool.lock().await;
-            pool.connect_with_key(&host, port, &username, &resolved_key, None).await?
-        };
-
-        // Clone Arc<Handle> and release pool lock BEFORE network I/O in SshSession::create.
-        let handle = {
-            let pool = self.ssh_pool.lock().await;
-            let conn = pool.get(&connection_id).ok_or("connection lost")?;
-            Arc::clone(&conn.handle)
-        };
-
-        let session =
-            SshSession::create(app, session_id.clone(), &*handle, cols, rows)
-                .await?;
-
-        {
-            let mut pool = self.ssh_pool.lock().await;
-            if let Some(conn) = pool.get_mut(&connection_id) {
-                conn.session_ids.push(session_id.clone());
-            }
-        }
-        self.sessions
-            .lock()
-            .await
-            .insert(session_id.clone(), Box::new(session));
-        Ok(SessionCreateResult {
-            session_id,
-            connection_id: Some(connection_id),
-        })
-    }
-
     pub async fn create_ssh_with_password(
         &self,
         app: AppHandle,
@@ -205,37 +153,3 @@ impl SessionManager {
 
 }
 
-/// Scan standard SSH key locations and return the first one that exists.
-/// On Windows: checks %USERPROFILE%\.ssh\ (e.g. C:\Users\user\.ssh\id_ed25519)
-fn find_default_ssh_key() -> Option<String> {
-    let home = dirs::home_dir()?;
-    let ssh_dir = home.join(".ssh");
-
-    const DEFAULT_KEYS: &[&str] = &[
-        "id_ed25519",
-        "id_rsa",
-        "id_ecdsa",
-        "id_dsa",
-    ];
-
-    for name in DEFAULT_KEYS {
-        let path = ssh_dir.join(name);
-        if path.is_file() {
-            return Some(path.to_string_lossy().into_owned());
-        }
-    }
-
-    // Windows: also check ProgramData\ssh\ (system-wide OpenSSH keys)
-    #[cfg(target_os = "windows")]
-    if let Ok(program_data) = std::env::var("ProgramData") {
-        let sys_ssh_dir = std::path::PathBuf::from(program_data).join("ssh");
-        for name in DEFAULT_KEYS {
-            let path = sys_ssh_dir.join(name);
-            if path.is_file() {
-                return Some(path.to_string_lossy().into_owned());
-            }
-        }
-    }
-
-    None
-}

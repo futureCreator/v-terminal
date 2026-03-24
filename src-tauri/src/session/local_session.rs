@@ -44,7 +44,7 @@ impl LocalSession {
         let shell = shell_program.unwrap_or_else(|| {
             #[cfg(target_os = "windows")]
             {
-                std::env::var("COMSPEC").unwrap_or_else(|_| "cmd.exe".to_string())
+                "powershell.exe".to_string()
             }
             #[cfg(not(target_os = "windows"))]
             {
