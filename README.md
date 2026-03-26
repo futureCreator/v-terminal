@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.9 - 2026-03-27
+
+- **chore**: release v0.20.9
+
 ### v0.20.8 - 2026-03-27
 
 - **fix**: Note panel copy/paste not working — added explicit `user-select: text` to CodeMirror container and todo text to override global `user-select: none` on body
