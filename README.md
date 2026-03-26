@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.8 - 2026-03-27
+
+- **fix**: Note panel copy/paste not working — added explicit `user-select: text` to CodeMirror container and todo text to override global `user-select: none` on body
+
 ### v0.20.4 - 2026-03-22
 
 - **fix**: Terminal content overflowing below visible area on restored sessions at app startup — deferred `fitAddon.fit()` to next animation frame so CSS grid/flex layout is fully resolved before calculating terminal dimensions

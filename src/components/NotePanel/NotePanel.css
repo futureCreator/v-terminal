@@ -39,6 +39,7 @@
   background: var(--bg-elevated);
   border: 1px solid var(--bg-panel-border);
   border-radius: var(--radius-sm);
+  user-select: text;
 }
 
 /* ── Todo Section ─────────────────────────────────────────────── */
@@ -123,6 +124,7 @@
   cursor: text;
   padding: 1px 3px;
   border-radius: 3px;
+  user-select: text;
 }
 
 .todo-text:focus {
