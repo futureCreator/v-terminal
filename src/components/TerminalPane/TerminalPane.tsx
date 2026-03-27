@@ -404,9 +404,18 @@ export function TerminalPane({
           resizeTimeout = setTimeout(() => {
             resizeTimeout = null;
             if (disposed || !fitAddonRef.current || !termRef.current) return;
+            // Skip when the container is effectively invisible (e.g. window
+            // minimised gives height 0).  Resizing the PTY to 1 row and back
+            // makes shells clear the viewport and redraw only the prompt.
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (!rect || rect.width < 1 || rect.height < 1) return;
             try {
+              const prevCols = term.cols;
+              const prevRows = term.rows;
               fitAddon.fit();
-              ipc.sessionResize(sessionId!, term.cols, term.rows).catch(() => {});
+              if (term.cols !== prevCols || term.rows !== prevRows) {
+                ipc.sessionResize(sessionId!, term.cols, term.rows).catch(() => {});
+              }
             } catch {}
           }, 50);
         });
@@ -425,33 +434,18 @@ export function TerminalPane({
         } catch {}
       }, 300);
 
-      // Recovery after system sleep/idle: flush buffered data, restore WebGL
-      // renderer, and force re-render when page becomes visible.
+      // Recovery after system sleep/idle: restore WebGL renderer, flush
+      // buffered data, and force re-render when page becomes visible.
       visibilityHandler = () => {
         if (document.visibilityState === "visible" && !disposed) {
           setTimeout(() => {
             if (disposed || !termRef.current) return;
             const t = termRef.current;
 
-            // Flush data buffered while the page was hidden
-            if (hiddenBuffer.length > 0) {
-              const total = Math.min(hiddenBufferSize, MAX_HIDDEN_BUFFER);
-              const merged = new Uint8Array(total);
-              let off = 0;
-              for (const chunk of hiddenBuffer) {
-                if (off + chunk.length > total) break;
-                merged.set(chunk, off);
-                off += chunk.length;
-              }
-              hiddenBuffer = [];
-              hiddenBufferSize = 0;
-              t.write(merged.subarray(0, off));
-            }
-
-            // Force-recreate the WebGL renderer.  On Windows, minimising the
-            // window can invalidate GPU resources without firing onContextLoss,
-            // leaving the renderer in a corrupt state (blank / garbled content).
-            // Disposing and re-creating the addon guarantees a clean GPU context.
+            // 1. Force-recreate the WebGL renderer FIRST so that all
+            //    subsequent writes and renders use a clean GPU context.
+            //    On Windows, minimising can invalidate GPU resources without
+            //    firing onContextLoss, leaving the old renderer corrupt.
             if (webglAddonInstance) {
               try { webglAddonInstance.dispose(); } catch {}
               webglAddonInstance = null;
@@ -466,19 +460,42 @@ export function TerminalPane({
               t.loadAddon(newWebgl);
               webglAddonInstance = newWebgl;
             } catch {
-              // Canvas/DOM fallback already active — ensure it's loaded
+              // Canvas/DOM fallback — ensure it's loaded
               try { t.loadAddon(new CanvasAddon()); } catch {}
             }
 
-            // Re-fit in case the window was resized while the page was hidden
+            // 2. Re-fit in case the window was resized while hidden.
+            //    Only notify the PTY when dimensions actually changed to
+            //    avoid a redundant resize signal that makes shells (PowerShell,
+            //    bash) clear the viewport and redraw only the prompt.
             if (fitAddonRef.current) {
               try {
+                const prevCols = t.cols;
+                const prevRows = t.rows;
                 fitAddonRef.current.fit();
-                const sid = sessionIdRef.current;
-                if (sid) ipc.sessionResize(sid, t.cols, t.rows).catch(() => {});
+                if (t.cols !== prevCols || t.rows !== prevRows) {
+                  const sid = sessionIdRef.current;
+                  if (sid) ipc.sessionResize(sid, t.cols, t.rows).catch(() => {});
+                }
               } catch {}
             }
 
+            // 3. Flush data buffered while the page was hidden.
+            if (hiddenBuffer.length > 0) {
+              const total = Math.min(hiddenBufferSize, MAX_HIDDEN_BUFFER);
+              const merged = new Uint8Array(total);
+              let off = 0;
+              for (const chunk of hiddenBuffer) {
+                if (off + chunk.length > total) break;
+                merged.set(chunk, off);
+                off += chunk.length;
+              }
+              hiddenBuffer = [];
+              hiddenBufferSize = 0;
+              t.write(merged.subarray(0, off));
+            }
+
+            // 4. Full re-render with the fresh renderer.
             t.clearTextureAtlas();
             t.refresh(0, t.rows - 1);
           }, 150);
@@ -496,21 +513,6 @@ export function TerminalPane({
         // Short delay to let the renderer and GPU context stabilize
         setTimeout(() => {
           if (disposed || !termRef.current) return;
-
-          // Flush any data that was buffered while hidden
-          if (hiddenBuffer.length > 0) {
-            const total = Math.min(hiddenBufferSize, MAX_HIDDEN_BUFFER);
-            const merged = new Uint8Array(total);
-            let off = 0;
-            for (const chunk of hiddenBuffer) {
-              if (off + chunk.length > total) break;
-              merged.set(chunk, off);
-              off += chunk.length;
-            }
-            hiddenBuffer = [];
-            hiddenBufferSize = 0;
-            t.write(merged.subarray(0, off));
-          }
 
           // Restore WebGL renderer if it was lost while unfocused
           if (!webglAddonInstance) {
@@ -532,13 +534,33 @@ export function TerminalPane({
             }
           }
 
-          // Re-fit in case the window was resized while unfocused
+          // Re-fit only when dimensions actually changed to avoid
+          // a redundant resize signal that clears shell viewport.
           if (fitAddonRef.current) {
             try {
+              const prevCols = t.cols;
+              const prevRows = t.rows;
               fitAddonRef.current.fit();
-              const sid = sessionIdRef.current;
-              if (sid) ipc.sessionResize(sid, t.cols, t.rows).catch(() => {});
+              if (t.cols !== prevCols || t.rows !== prevRows) {
+                const sid = sessionIdRef.current;
+                if (sid) ipc.sessionResize(sid, t.cols, t.rows).catch(() => {});
+              }
             } catch {}
+          }
+
+          // Flush any data that was buffered while the window was unfocused
+          if (hiddenBuffer.length > 0) {
+            const total = Math.min(hiddenBufferSize, MAX_HIDDEN_BUFFER);
+            const merged = new Uint8Array(total);
+            let off = 0;
+            for (const chunk of hiddenBuffer) {
+              if (off + chunk.length > total) break;
+              merged.set(chunk, off);
+              off += chunk.length;
+            }
+            hiddenBuffer = [];
+            hiddenBufferSize = 0;
+            t.write(merged.subarray(0, off));
           }
 
           // Force full re-render to recover from any rendering artifacts
