@@ -155,11 +155,17 @@ export function TerminalPane({
 
       term.open(containerRef.current);
 
-      // Defer fit() to the next animation frame so the CSS grid/flex layout
-      // is fully resolved. On app startup with restored tabs, the container
-      // dimensions may not be final when this effect runs synchronously,
-      // causing fit() to calculate incorrect rows/cols (content overflow).
-      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      // Wait two animation frames so the CSS grid/flex layout is fully
+      // resolved.  A single rAF is sometimes insufficient on app startup
+      // with restored tabs, causing fit() to calculate incorrect rows/cols.
+      await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+      if (disposed || !containerRef.current) {
+        term.dispose();
+        return;
+      }
+      // Ensure the configured terminal font is loaded before computing
+      // dimensions — fallback-font metrics can produce wrong row counts.
+      await ensureSpecificFontLoaded(fontFamilyRef.current);
       if (disposed || !containerRef.current) {
         term.dispose();
         return;
@@ -408,6 +414,17 @@ export function TerminalPane({
         observerRef.current = observer;
       }
 
+      // Safety re-fit: catch any remaining layout instability that the
+      // double-rAF and ResizeObserver may have missed (e.g. CSS transitions,
+      // late font metrics, DPI settling).
+      setTimeout(() => {
+        if (disposed || !fitAddonRef.current || !termRef.current) return;
+        try {
+          fitAddon.fit();
+          ipc.sessionResize(sessionId!, term.cols, term.rows).catch(() => {});
+        } catch {}
+      }, 300);
+
       // Recovery after system sleep/idle: flush buffered data, restore WebGL
       // renderer, and force re-render when page becomes visible.
       visibilityHandler = () => {
@@ -431,20 +448,35 @@ export function TerminalPane({
               t.write(merged.subarray(0, off));
             }
 
-            // Attempt to restore WebGL renderer if it was lost during idle
-            if (!webglAddonInstance) {
+            // Force-recreate the WebGL renderer.  On Windows, minimising the
+            // window can invalidate GPU resources without firing onContextLoss,
+            // leaving the renderer in a corrupt state (blank / garbled content).
+            // Disposing and re-creating the addon guarantees a clean GPU context.
+            if (webglAddonInstance) {
+              try { webglAddonInstance.dispose(); } catch {}
+              webglAddonInstance = null;
+            }
+            try {
+              const newWebgl = new WebglAddon();
+              newWebgl.onContextLoss(() => {
+                newWebgl.dispose();
+                webglAddonInstance = null;
+                try { t.loadAddon(new CanvasAddon()); } catch {}
+              });
+              t.loadAddon(newWebgl);
+              webglAddonInstance = newWebgl;
+            } catch {
+              // Canvas/DOM fallback already active — ensure it's loaded
+              try { t.loadAddon(new CanvasAddon()); } catch {}
+            }
+
+            // Re-fit in case the window was resized while the page was hidden
+            if (fitAddonRef.current) {
               try {
-                const newWebgl = new WebglAddon();
-                newWebgl.onContextLoss(() => {
-                  newWebgl.dispose();
-                  webglAddonInstance = null;
-                  try { t.loadAddon(new CanvasAddon()); } catch {}
-                });
-                t.loadAddon(newWebgl);
-                webglAddonInstance = newWebgl;
-              } catch {
-                // Canvas/DOM fallback already active
-              }
+                fitAddonRef.current.fit();
+                const sid = sessionIdRef.current;
+                if (sid) ipc.sessionResize(sid, t.cols, t.rows).catch(() => {});
+              } catch {}
             }
 
             t.clearTextureAtlas();
@@ -498,6 +530,15 @@ export function TerminalPane({
             } catch {
               // Canvas/DOM fallback already active
             }
+          }
+
+          // Re-fit in case the window was resized while unfocused
+          if (fitAddonRef.current) {
+            try {
+              fitAddonRef.current.fit();
+              const sid = sessionIdRef.current;
+              if (sid) ipc.sessionResize(sid, t.cols, t.rows).catch(() => {});
+            } catch {}
           }
 
           // Force full re-render to recover from any rendering artifacts
