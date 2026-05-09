@@ -203,11 +203,19 @@ export function TerminalPane({
           }
         }
       } else {
-        try {
-          term.loadAddon(new CanvasAddon());
-        } catch {
-          // DOM renderer remains as final fallback
-        }
+        // CanvasAddon is intentionally disabled. Loading + disposing it across
+        // panel re-mounts (e.g. when switching connection in the right-click
+        // menu) crashes the WebView2 GPU process on Windows
+        // (`Failed to unregister class Chrome_WidgetWin_0. Error = 1412`),
+        // leaving the entire app black and unresponsive. Falling back to the
+        // DOM renderer avoids the crash. WebGL also breaks Korean IME during
+        // streaming output (see ENABLE_WEBGL_RENDERER comment above), so DOM
+        // is currently the only safe choice.
+        // try {
+        //   term.loadAddon(new CanvasAddon());
+        // } catch {
+        //   // DOM renderer remains as final fallback
+        // }
       }
 
       termRef.current = term;
