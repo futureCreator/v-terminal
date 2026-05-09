@@ -20,6 +20,11 @@ export const terminalRegistry = new Map<string, Terminal>();
 // Module-level singleton — avoids allocating a new TextEncoder on every keystroke
 const encoder = new TextEncoder();
 
+// WebGL renderer in @xterm/xterm@6.0.0 cancels Korean IME composition
+// when the terminal is repainted during streaming output. Canvas renderer
+// avoids the issue. Re-evaluate after upgrading @xterm/xterm.
+const ENABLE_WEBGL_RENDERER = false;
+
 interface TerminalPaneProps {
   style?: React.CSSProperties;
   cwd: string;
@@ -173,23 +178,31 @@ export function TerminalPane({
       fitAddon.fit();
 
       // Renderer: WebGL → Canvas → DOM fallback
-      try {
-        const webglAddon = new WebglAddon();
-        webglAddon.onContextLoss(() => {
-          webglAddon.dispose();
-          webglAddonInstance = null;
+      if (ENABLE_WEBGL_RENDERER) {
+        try {
+          const webglAddon = new WebglAddon();
+          webglAddon.onContextLoss(() => {
+            webglAddon.dispose();
+            webglAddonInstance = null;
+            try {
+              term.loadAddon(new CanvasAddon());
+              // Force re-render after fallback to Canvas so content is not lost
+              term.clearTextureAtlas();
+              term.refresh(0, term.rows - 1);
+            } catch {
+              // DOM renderer remains as final fallback
+            }
+          });
+          term.loadAddon(webglAddon);
+          webglAddonInstance = webglAddon;
+        } catch {
           try {
             term.loadAddon(new CanvasAddon());
-            // Force re-render after fallback to Canvas so content is not lost
-            term.clearTextureAtlas();
-            term.refresh(0, term.rows - 1);
           } catch {
             // DOM renderer remains as final fallback
           }
-        });
-        term.loadAddon(webglAddon);
-        webglAddonInstance = webglAddon;
-      } catch {
+        }
+      } else {
         try {
           term.loadAddon(new CanvasAddon());
         } catch {
@@ -446,22 +459,24 @@ export function TerminalPane({
             //    subsequent writes and renders use a clean GPU context.
             //    On Windows, minimising can invalidate GPU resources without
             //    firing onContextLoss, leaving the old renderer corrupt.
-            if (webglAddonInstance) {
-              try { webglAddonInstance.dispose(); } catch {}
-              webglAddonInstance = null;
-            }
-            try {
-              const newWebgl = new WebglAddon();
-              newWebgl.onContextLoss(() => {
-                newWebgl.dispose();
+            if (ENABLE_WEBGL_RENDERER) {
+              if (webglAddonInstance) {
+                try { webglAddonInstance.dispose(); } catch {}
                 webglAddonInstance = null;
+              }
+              try {
+                const newWebgl = new WebglAddon();
+                newWebgl.onContextLoss(() => {
+                  newWebgl.dispose();
+                  webglAddonInstance = null;
+                  try { t.loadAddon(new CanvasAddon()); } catch {}
+                });
+                t.loadAddon(newWebgl);
+                webglAddonInstance = newWebgl;
+              } catch {
+                // Canvas/DOM fallback — ensure it's loaded
                 try { t.loadAddon(new CanvasAddon()); } catch {}
-              });
-              t.loadAddon(newWebgl);
-              webglAddonInstance = newWebgl;
-            } catch {
-              // Canvas/DOM fallback — ensure it's loaded
-              try { t.loadAddon(new CanvasAddon()); } catch {}
+              }
             }
 
             // 2. Re-fit in case the window was resized while hidden.
@@ -515,7 +530,7 @@ export function TerminalPane({
           if (disposed || !termRef.current) return;
 
           // Restore WebGL renderer if it was lost while unfocused
-          if (!webglAddonInstance) {
+          if (ENABLE_WEBGL_RENDERER && !webglAddonInstance) {
             try {
               const newWebgl = new WebglAddon();
               newWebgl.onContextLoss(() => {
