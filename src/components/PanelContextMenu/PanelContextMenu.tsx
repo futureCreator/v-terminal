@@ -16,6 +16,12 @@ interface PanelContextMenuProps {
   onClose: () => void;
 }
 
+const CHECK_ICON = (
+  <svg className="panel-ctx-check" width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 export function PanelContextMenu({
   x,
   y,
@@ -74,11 +80,7 @@ export function PanelContextMenu({
     onClose();
   };
 
-  const checkIcon = (
-    <svg className="panel-ctx-check" width="14" height="14" viewBox="0 0 16 16" fill="none">
-      <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  const checkIcon = CHECK_ICON;
 
   return createPortal(
     <div

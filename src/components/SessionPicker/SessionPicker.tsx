@@ -204,7 +204,7 @@ function PanelConfigGrid({
 
         return (
           <div
-            key={i}
+            key={`panel-${i}`}
             className="sp-panel-cell"
             style={layout === 5 && i === 0 ? { gridRow: "1 / 3" } : undefined}
           >

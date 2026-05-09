@@ -19,7 +19,7 @@ export interface ThemeGroup {
 // Apple
 // ─────────────────────────────────────────────────────────────────
 
-export const dark: ThemeDefinition = {
+const dark: ThemeDefinition = {
   id: "dark", name: "Dark", isDark: true,
   swatch: ["#1c1c1e", "#ff453a", "#30d158", "#0a84ff", "#bf5af2"],
   cssVars: {
@@ -46,7 +46,7 @@ export const dark: ThemeDefinition = {
   },
 };
 
-export const light: ThemeDefinition = {
+const light: ThemeDefinition = {
   id: "light", name: "Light", isDark: false,
   swatch: ["#f2f2f7", "#ff3b30", "#34c759", "#007aff", "#bf5af2"],
   cssVars: {
@@ -77,7 +77,7 @@ export const light: ThemeDefinition = {
 // Popular
 // ─────────────────────────────────────────────────────────────────
 
-export const dracula: ThemeDefinition = {
+const dracula: ThemeDefinition = {
   id: "dracula", name: "Dracula", isDark: true,
   swatch: ["#282a36", "#ff5555", "#50fa7b", "#bd93f9", "#ff79c6"],
   cssVars: {
@@ -104,7 +104,7 @@ export const dracula: ThemeDefinition = {
   },
 };
 
-export const monokai: ThemeDefinition = {
+const monokai: ThemeDefinition = {
   id: "monokai", name: "Monokai", isDark: true,
   swatch: ["#272822", "#f92672", "#a6e22e", "#66d9e8", "#ae81ff"],
   cssVars: {
@@ -131,7 +131,7 @@ export const monokai: ThemeDefinition = {
   },
 };
 
-export const tokyoNight: ThemeDefinition = {
+const tokyoNight: ThemeDefinition = {
   id: "tokyo-night", name: "Tokyo Night", isDark: true,
   swatch: ["#1a1b26", "#f7768e", "#9ece6a", "#7aa2f7", "#bb9af7"],
   cssVars: {
@@ -158,7 +158,7 @@ export const tokyoNight: ThemeDefinition = {
   },
 };
 
-export const oneDark: ThemeDefinition = {
+const oneDark: ThemeDefinition = {
   id: "one-dark", name: "One Dark", isDark: true,
   swatch: ["#282c34", "#e06c75", "#98c379", "#61afef", "#c678dd"],
   cssVars: {
@@ -185,7 +185,7 @@ export const oneDark: ThemeDefinition = {
   },
 };
 
-export const ayu: ThemeDefinition = {
+const ayu: ThemeDefinition = {
   id: "ayu", name: "Ayu", isDark: true,
   swatch: ["#1f2430", "#f28779", "#bae67e", "#5ccfe6", "#d4bfff"],
   cssVars: {
@@ -212,7 +212,7 @@ export const ayu: ThemeDefinition = {
   },
 };
 
-export const nord: ThemeDefinition = {
+const nord: ThemeDefinition = {
   id: "nord", name: "Nord", isDark: true,
   swatch: ["#2e3440", "#bf616a", "#a3be8c", "#88c0d0", "#b48ead"],
   cssVars: {
@@ -243,7 +243,7 @@ export const nord: ThemeDefinition = {
 // Catppuccin
 // ─────────────────────────────────────────────────────────────────
 
-export const catppuccinLatte: ThemeDefinition = {
+const catppuccinLatte: ThemeDefinition = {
   id: "catppuccin-latte", name: "Latte", isDark: false,
   swatch: ["#eff1f5", "#d20f39", "#40a02b", "#1e66f5", "#8839ef"],
   cssVars: {
@@ -270,7 +270,7 @@ export const catppuccinLatte: ThemeDefinition = {
   },
 };
 
-export const catppuccinFrappe: ThemeDefinition = {
+const catppuccinFrappe: ThemeDefinition = {
   id: "catppuccin-frappe", name: "Frappé", isDark: true,
   swatch: ["#303446", "#e78284", "#a6d189", "#8caaee", "#ca9ee6"],
   cssVars: {
@@ -297,7 +297,7 @@ export const catppuccinFrappe: ThemeDefinition = {
   },
 };
 
-export const catppuccinMacchiato: ThemeDefinition = {
+const catppuccinMacchiato: ThemeDefinition = {
   id: "catppuccin-macchiato", name: "Macchiato", isDark: true,
   swatch: ["#24273a", "#ed8796", "#a6da95", "#8aadf4", "#c6a0f6"],
   cssVars: {
@@ -324,7 +324,7 @@ export const catppuccinMacchiato: ThemeDefinition = {
   },
 };
 
-export const catppuccinMocha: ThemeDefinition = {
+const catppuccinMocha: ThemeDefinition = {
   id: "catppuccin-mocha", name: "Mocha", isDark: true,
   swatch: ["#1e1e2e", "#f38ba8", "#a6e3a1", "#89b4fa", "#cba6f7"],
   cssVars: {
@@ -355,7 +355,7 @@ export const catppuccinMocha: ThemeDefinition = {
 // Solarized
 // ─────────────────────────────────────────────────────────────────
 
-export const solarizedLight: ThemeDefinition = {
+const solarizedLight: ThemeDefinition = {
   id: "solarized-light", name: "Light", isDark: false,
   swatch: ["#fdf6e3", "#dc322f", "#859900", "#268bd2", "#d33682"],
   cssVars: {
@@ -382,7 +382,7 @@ export const solarizedLight: ThemeDefinition = {
   },
 };
 
-export const solarizedDark: ThemeDefinition = {
+const solarizedDark: ThemeDefinition = {
   id: "solarized-dark", name: "Dark", isDark: true,
   swatch: ["#002b36", "#dc322f", "#859900", "#268bd2", "#d33682"],
   cssVars: {
@@ -409,7 +409,7 @@ export const solarizedDark: ThemeDefinition = {
   },
 };
 
-export const solarizedOsaka: ThemeDefinition = {
+const solarizedOsaka: ThemeDefinition = {
   id: "solarized-osaka", name: "Osaka", isDark: true,
   swatch: ["#011a25", "#f7768e", "#73daca", "#7aa2f7", "#bb9af7"],
   cssVars: {

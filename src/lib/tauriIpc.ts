@@ -1,9 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
-export interface SessionDataPayload { sessionId: string; data: number[]; }
-export interface SessionExitPayload { sessionId: string; code?: number; }
-export interface SshConnectionStatusPayload { connectionId: string; status: string; error?: string; }
+interface SessionDataPayload { sessionId: string; data: number[]; }
+interface SessionExitPayload { sessionId: string; code?: number; }
+interface SshConnectionStatusPayload { connectionId: string; status: string; error?: string; }
 export interface SessionCreateResult { sessionId: string; connectionId?: string; }
 
 export interface SessionCreateParams {

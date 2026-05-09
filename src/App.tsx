@@ -58,10 +58,16 @@ export function App() {
   const [sshModalOpen, setSshModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // Cached once on first render — both useState initializers below need this value
+  const initialAlarmOpenRef = useRef<boolean | null>(null);
+  if (initialAlarmOpenRef.current === null) {
+    initialAlarmOpenRef.current = localStorage.getItem("v-terminal:alarm-open") === "true";
+  }
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const stored = localStorage.getItem("v-terminal:sidebar-open");
     if (stored !== null) return stored === "true";
-    return localStorage.getItem("v-terminal:note-open") === "true" || localStorage.getItem("v-terminal:alarm-open") === "true";
+    const noteOpen = localStorage.getItem("v-terminal:note-open") === "true";
+    return noteOpen || initialAlarmOpenRef.current!;
   });
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
     const stored = localStorage.getItem("v-terminal:sidebar-tab");
@@ -74,7 +80,7 @@ export function App() {
       localStorage.setItem("v-terminal:sidebar-tab", "timers");
       return "timers";
     }
-    return localStorage.getItem("v-terminal:alarm-open") === "true" ? "timers" : "todos";
+    return initialAlarmOpenRef.current ? "timers" : "todos";
   });
   const [browserPanelOpen, setBrowserPanelOpen] = useState(() => {
     return localStorage.getItem("v-terminal:browser-panel-open") === "true";
@@ -176,9 +182,11 @@ export function App() {
   const handleLayoutChange = useCallback((layout: Layout) => {
     if (!activeTab) return;
     const { removed } = setLayout(activeTab.id, layout);
-    removed
-      .filter((p) => p.sessionId !== null)
-      .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
+    for (const p of removed) {
+      if (p.sessionId !== null) {
+        ipc.sessionKill(p.sessionId).catch(() => {});
+      }
+    }
     cleanupNotePanels(removed);
   }, [activeTab, setLayout]);
 
@@ -197,9 +205,11 @@ export function App() {
       // Close the tab when it's the last panel
       const tab = activeTab;
       cleanupNotePanels(tab.panels);
-      tab.panels
-        .filter((p) => p.sessionId !== null)
-        .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
+      for (const p of tab.panels) {
+        if (p.sessionId !== null) {
+          ipc.sessionKill(p.sessionId).catch(() => {});
+        }
+      }
       removeTab(tab.id);
       return;
     }
@@ -335,9 +345,11 @@ export function App() {
   const handleTabKill = (tabId: string) => {
     const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
-      tab.panels
-        .filter((p) => p.sessionId !== null)
-        .forEach((p) => ipc.sessionKill(p.sessionId!).catch(() => {}));
+      for (const p of tab.panels) {
+        if (p.sessionId !== null) {
+          ipc.sessionKill(p.sessionId).catch(() => {});
+        }
+      }
       cleanupNotePanels(tab.panels);
     }
     removeTab(tabId);

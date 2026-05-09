@@ -213,7 +213,8 @@
     "completedSection": "Completed",
     "clearAll": "Clear",
     "newTodo": "New Todo",
-    "newTaskPlaceholder": "New task..."
+    "newTaskPlaceholder": "New task...",
+    "editTask": "Edit task"
   },
   "note": {
     "placeholder": "Type your markdown note here...",

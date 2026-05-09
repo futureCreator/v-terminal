@@ -83,7 +83,7 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
                 {slide.shortcutKeys.length > 0 && (
                   <div className="welcome-shortcut">
                     {slide.shortcutKeys.map((key, i) => (
-                      <span key={i}>
+                      <span key={`${slide.id}-${key}`}>
                         {i > 0 && <span className="welcome-shortcut-plus">+</span>}
                         <kbd className="welcome-keycap">{key}</kbd>
                       </span>
@@ -106,9 +106,9 @@ export function WelcomePage({ onDone }: WelcomePageProps) {
           </div>
 
           <div className="welcome-dots">
-            {slides.map((_, i) => (
+            {slides.map((slide, i) => (
               <button
-                key={i}
+                key={slide.id}
                 className={`welcome-dot${i === currentSlide ? " welcome-dot--active" : ""}`}
                 onClick={() => setCurrentSlide(i)}
                 aria-label={`Slide ${i + 1} of ${slides.length}`}

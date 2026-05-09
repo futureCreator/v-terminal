@@ -213,7 +213,8 @@
     "completedSection": "완료됨",
     "clearAll": "지우기",
     "newTodo": "새 할 일",
-    "newTaskPlaceholder": "새 할 일..."
+    "newTaskPlaceholder": "새 할 일...",
+    "editTask": "할 일 편집"
   },
   "note": {
     "placeholder": "마크다운 메모를 입력하세요...",

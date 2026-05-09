@@ -5,7 +5,7 @@ import "./CommandPalette.css";
 
 /* ── Types ──────────────────────────────────────────────────────── */
 
-export interface PaletteCommand {
+interface PaletteCommand {
   id: string;
   label: string;
   meta?: string;
@@ -52,7 +52,7 @@ function highlightText(text: string, indices: number[]): React.ReactNode {
   for (const idx of indices) {
     if (idx < 0 || idx >= text.length) continue;
     if (idx > last) parts.push(text.slice(last, idx));
-    parts.push(<mark key={idx} className="cp-match">{text[idx]}</mark>);
+    parts.push(<mark key={`m-${idx}-${text[idx]}`} className="cp-match">{text[idx]}</mark>);
     last = idx + 1;
   }
   if (last < text.length) parts.push(text.slice(last));
@@ -82,7 +82,9 @@ function parsePrefix(raw: string): { mode: PrefixMode; query: string } {
 
 /* ── Component ──────────────────────────────────────────────────── */
 
-export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryChange, initialQuery = "" }: Props) {
+const EMPTY_SECTIONS: PaletteSection[] = [];
+
+export function CommandPalette({ isOpen, onClose, extraSections = EMPTY_SECTIONS, onQueryChange, initialQuery = "" }: Props) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -132,9 +134,11 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
     if (!q) return pool;
 
     // Fuzzy filter + sort by score
-    const scored = pool
-      .map((cmd) => ({ cmd, result: fuzzyMatchFields(q, cmd) }))
-      .filter((x): x is { cmd: Command; result: FuzzyResult } => x.result !== null);
+    const scored: { cmd: Command; result: FuzzyResult }[] = [];
+    for (const cmd of pool) {
+      const result = fuzzyMatchFields(q, cmd);
+      if (result !== null) scored.push({ cmd, result });
+    }
 
     scored.sort((a, b) => b.result.score - a.result.score);
     return scored.map((x) => x.cmd);
@@ -293,6 +297,8 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
         className={`cp-item${isHighlighted ? " cp-item--highlighted" : ""}${cmd.isActive ? " cp-item--active" : ""}`}
         onMouseEnter={() => setActiveIndex(globalIndex)}
         onMouseDown={(e) => { e.preventDefault(); execute(cmd); }}
+        role="option"
+        aria-selected={isHighlighted}
       >
         {cmd.icon}
         <span className="cp-item-label">
@@ -398,6 +404,7 @@ export function CommandPalette({ isOpen, onClose, extraSections = [], onQueryCha
     <div
       className={`cp-backdrop${phase === "out" ? " cp-backdrop--out" : ""}`}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="presentation"
     >
       <div
         className={`cp-panel${phase === "out" ? " cp-panel--out" : ""}`}

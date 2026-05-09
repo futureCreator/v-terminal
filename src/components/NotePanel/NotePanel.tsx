@@ -18,6 +18,7 @@ export function NotePanel({ panelId, isActive, onFocus }: NotePanelProps) {
       className={`note-panel note-panel--embedded${isActive ? " note-panel--active" : ""}${bgClass}`}
       onFocus={onFocus}
       onMouseDown={onFocus}
+      role="presentation"
     >
       <NoteEditor panelId={panelId} />
     </div>

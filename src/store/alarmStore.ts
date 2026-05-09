@@ -22,7 +22,7 @@ export interface PomodoroConfig {
 
 export type PomodoroPhase = "idle" | "focus" | "break" | "longBreak";
 
-export interface PomodoroState {
+interface PomodoroState {
   phase: PomodoroPhase;
   remainingMs: number;
   completedSessions: number;

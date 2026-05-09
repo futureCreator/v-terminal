@@ -124,7 +124,13 @@ export function PanelGrid({ tab, isVisible, overlayActive, onActivePanelChanged,
     : { gridTemplateColumns: gridConfig.gridTemplateColumns, gridTemplateRows: gridConfig.gridTemplateRows };
 
   const siblingSessionIds = useMemo(
-    () => tab.panels.filter((p) => p.sessionId !== null).map((p) => p.sessionId as string),
+    () => {
+      const ids: string[] = [];
+      for (const p of tab.panels) {
+        if (p.sessionId !== null) ids.push(p.sessionId);
+      }
+      return ids;
+    },
     [tab.panels]
   );
 

@@ -12,7 +12,7 @@ import type { Extension } from "@codemirror/state";
 import { Compartment } from "@codemirror/state";
 
 /** CSS-variable-driven highlight style for markdown tokens */
-export const mdHighlight = HighlightStyle.define([
+const mdHighlight = HighlightStyle.define([
   { tag: tags.heading1, fontWeight: "700", fontSize: "1.25em" },
   { tag: tags.heading2, fontWeight: "700", fontSize: "1.12em" },
   { tag: tags.heading3, fontWeight: "600", fontSize: "1.05em" },
@@ -28,7 +28,7 @@ export const mdHighlight = HighlightStyle.define([
 ]);
 
 /** CodeMirror theme that reads from CSS custom properties */
-export const cmTheme = EditorView.theme({
+const cmTheme = EditorView.theme({
   "&": {
     flex: "1",
     overflow: "hidden",

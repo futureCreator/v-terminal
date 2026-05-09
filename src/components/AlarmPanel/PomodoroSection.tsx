@@ -79,7 +79,7 @@ export function PomodoroSection() {
       <div className="pomodoro-session-dots">
         {Array.from({ length: sessionsTotal }, (_, i) => (
           <span
-            key={i}
+            key={`session-${i}`}
             className={`pomodoro-dot${i < sessionsDone ? " pomodoro-dot--done" : ""}`}
             style={i < sessionsDone ? { background: phaseColor } : undefined}
           />

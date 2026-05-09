@@ -13,7 +13,7 @@ function loadThemeId(): ThemeId {
   return "auto";
 }
 
-export function getSystemTheme(): "dark" | "light" {
+function getSystemTheme(): "dark" | "light" {
   return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
 

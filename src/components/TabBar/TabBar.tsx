@@ -118,13 +118,20 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(label);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const startEdit = () => {
     setDraftLabel(label);
     setEditing(true);
-    setTimeout(() => inputRef.current?.select(), 0);
   };
+
+  // Callback ref: focus + select when the input mounts (i.e., entering edit mode).
+  // Stable identity via useCallback so React only calls it on attach/detach.
+  const focusOnMount = useCallback((el: HTMLInputElement | null) => {
+    if (el) {
+      el.focus();
+      el.select();
+    }
+  }, []);
 
   const commitEdit = () => {
     const trimmed = draftLabel.trim();
@@ -186,17 +193,23 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
       onClick={onActivate}
       onDoubleClick={startEdit}
       onContextMenu={(e) => { e.preventDefault(); setCtxMenu({ x: e.clientX, y: e.clientY }); }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onActivate(); }
+        else if (e.key === "F2") { e.preventDefault(); startEdit(); }
+      }}
+      role="tab"
+      aria-selected={isActive}
+      tabIndex={0}
     >
       {editing ? (
         <input
-          ref={inputRef}
+          ref={focusOnMount}
           className="tab-item-input"
           value={draftLabel}
           onChange={(e) => setDraftLabel(e.target.value)}
           onBlur={commitEdit}
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
-          autoFocus
         />
       ) : (
         <span className="tab-item-label">{label}</span>
@@ -222,7 +235,13 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
           className="tab-ctx-menu"
           style={{ top: ctxPos.top, left: ctxPos.left }}
         >
-          <div className="tab-ctx-item tab-ctx-item--destructive" onMouseDown={(e) => { e.stopPropagation(); onKill(); setCtxMenu(null); }}>
+          <div
+            className="tab-ctx-item tab-ctx-item--destructive"
+            onMouseDown={(e) => { e.stopPropagation(); onKill(); setCtxMenu(null); }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onKill(); setCtxMenu(null); } }}
+            role="menuitem"
+            tabIndex={0}
+          >
             <span className="tab-ctx-item-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -231,7 +250,13 @@ function TabItem({ id, label, isActive, onActivate, onClose, onKill, onRename }:
             <span className="tab-ctx-item-label">{t('tab.closeTab')}</span>
           </div>
           <div className="tab-ctx-divider" />
-          <div className="tab-ctx-item" onMouseDown={(e) => { e.stopPropagation(); startEdit(); setCtxMenu(null); }}>
+          <div
+            className="tab-ctx-item"
+            onMouseDown={(e) => { e.stopPropagation(); startEdit(); setCtxMenu(null); }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startEdit(); setCtxMenu(null); } }}
+            role="menuitem"
+            tabIndex={0}
+          >
             <span className="tab-ctx-item-icon">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M2 11h3l6.5-6.5a1.4 1.4 0 0 0-2-2L3 9v3z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />

@@ -51,7 +51,7 @@ export function RecurringSection() {
                 <div className="recurring-weekdays-display">
                   {WEEKDAY_LABELS.map((label, i) => (
                     <span
-                      key={i}
+                      key={`${alarm.id}-${label}`}
                       className={`recurring-weekday-dot${alarm.weekdays[i] ? " recurring-weekday-dot--active" : ""}`}
                     >
                       {label}
@@ -110,7 +110,7 @@ export function RecurringSection() {
           <div className="recurring-weekday-picker">
             {WEEKDAY_LABELS.map((label, i) => (
               <button
-                key={i}
+                key={label}
                 className={`recurring-weekday-btn${newWeekdays[i] ? " recurring-weekday-btn--active" : ""}`}
                 onClick={() => toggleWeekday(i)}
               >

@@ -104,8 +104,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     <div
       className={`settings-overlay${closing ? " settings-overlay--closing" : ""}`}
       onClick={handleOverlayClick}
+      role="presentation"
     >
-      <div className="settings-modal" ref={modalRef}>
+      <div
+        className="settings-modal"
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('settings.title')}
+      >
         {/* Header */}
         <div className="settings-header">
           <div className="settings-title-group">
@@ -294,7 +301,7 @@ function AppearanceTab({
 
         {fontLoaded === false && (
           <div className="settings-font-status settings-font-status--fallback">
-            Font not available — using fallback
+            Font not available, using fallback
           </div>
         )}
 
@@ -405,54 +412,31 @@ function AppearanceTab({
       {/* Notes Section */}
       <div className="settings-section">
         <div className="settings-section-label">{t('settings.notes')}</div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '13px', color: 'var(--label-primary)' }}>
+        <div className="settings-notes-row">
+          <span className="settings-notes-label">
             {t('settings.notesBgStyle')}
           </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div className="settings-notes-bg-grid">
             {([
               { value: "none", label: t('settings.notesBgNone') },
               { value: "ruled", label: t('settings.notesBgRuled') },
               { value: "grid", label: t('settings.notesBgGrid') },
               { value: "dots", label: t('settings.notesBgDots') },
-            ] as { value: NoteBackgroundStyle; label: string }[]).map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => noteConfig.setBackgroundStyle(opt.value)}
-                title={opt.label}
-                style={{
-                  width: '40px',
-                  height: '32px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--bg-elevated)',
-                  border: noteConfig.backgroundStyle === opt.value
-                    ? '2px solid var(--accent)'
-                    : '1px solid var(--bg-panel-border)',
-                  cursor: 'pointer',
-                  padding: 0,
-                  backgroundImage:
-                    opt.value === "ruled"
-                      ? 'repeating-linear-gradient(transparent, transparent 6px, rgba(255,255,255,0.04) 6px, rgba(255,255,255,0.04) 7px)'
-                      : opt.value === "grid"
-                      ? 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)'
-                      : opt.value === "dots"
-                      ? 'radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)'
-                      : 'none',
-                  backgroundSize:
-                    opt.value === "grid" ? '8px 8px'
-                    : opt.value === "dots" ? '6px 6px'
-                    : undefined,
-                }}
-              />
-            ))}
+            ] as { value: NoteBackgroundStyle; label: string }[]).map((opt) => {
+              const isActive = noteConfig.backgroundStyle === opt.value;
+              const swatchClass = `settings-notes-bg-swatch${isActive ? " settings-notes-bg-swatch--active" : ""}${opt.value !== "none" ? ` settings-notes-bg-swatch--${opt.value}` : ""}`;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => noteConfig.setBackgroundStyle(opt.value)}
+                  title={opt.label}
+                  className={swatchClass}
+                />
+              );
+            })}
           </div>
         </div>
-        <div style={{
-          fontSize: '11px',
-          color: 'var(--label-disabled)',
-          textAlign: 'right',
-          marginTop: '4px',
-        }}>
+        <div className="settings-notes-bg-legend">
           {t('settings.notesBgNone')} · {t('settings.notesBgRuled')} · {t('settings.notesBgGrid')} · {t('settings.notesBgDots')}
         </div>
       </div>

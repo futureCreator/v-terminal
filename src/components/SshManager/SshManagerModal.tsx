@@ -128,8 +128,9 @@ export function SshManagerModal({ onClose }: Props) {
     <div
       className="ssh-overlay"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      role="presentation"
     >
-      <div className="ssh-modal">
+      <div className="ssh-modal" role="dialog" aria-modal="true" aria-label={t('ssh.profiles')}>
         {/* Header */}
         <div className="ssh-modal-header">
           <div className="ssh-modal-title-group">
@@ -199,6 +200,14 @@ export function SshManagerModal({ onClose }: Props) {
                       key={p.id}
                       className={`ssh-profile-item ${isActive ? "ssh-profile-item--active" : ""}`}
                       onClick={() => selectProfile(p.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          selectProfile(p.id);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
                       title={`${p.username}@${p.host}:${p.port}`}
                     >
                       <div

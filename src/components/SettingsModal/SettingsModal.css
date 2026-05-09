@@ -570,3 +570,57 @@
 .settings-text-input::placeholder {
   color: var(--text-tertiary, #666);
 }
+
+/* ── Notes Background Picker ───────────────────────────────────── */
+.settings-notes-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-notes-label {
+  font-size: 13px;
+  color: var(--label-primary);
+}
+
+.settings-notes-bg-grid {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-notes-bg-swatch {
+  width: 40px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-panel-border);
+  cursor: pointer;
+  padding: 0;
+}
+
+.settings-notes-bg-swatch--active {
+  border: 2px solid var(--accent);
+}
+
+.settings-notes-bg-swatch--ruled {
+  background-image: repeating-linear-gradient(transparent, transparent 6px, rgba(255, 255, 255, 0.04) 6px, rgba(255, 255, 255, 0.04) 7px);
+}
+
+.settings-notes-bg-swatch--grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+.settings-notes-bg-swatch--dots {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+.settings-notes-bg-legend {
+  font-size: 12px;
+  color: var(--label-disabled);
+  text-align: right;
+  margin-top: 4px;
+}

@@ -22,12 +22,11 @@ interface BrowserUrlPayload {
 export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrowserPanelProps) {
   const { t } = useTranslation();
   const placeholderRef = useRef<HTMLDivElement>(null);
-  const [url, setUrl] = useState(() => localStorage.getItem(URL_STORAGE_KEY) ?? "");
-  const [inputValue, setInputValue] = useState(() => localStorage.getItem(URL_STORAGE_KEY) ?? "");
+  const initialUrl = localStorage.getItem(URL_STORAGE_KEY) ?? "";
+  const urlRef = useRef(initialUrl);
+  const [inputValue, setInputValue] = useState(initialUrl);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
-  const urlRef = useRef(url);
-  urlRef.current = url;
   const createdRef = useRef(false);
   const isVisibleRef = useRef(isVisible);
   isVisibleRef.current = isVisible;
@@ -62,7 +61,7 @@ export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrow
       setCreated(true);
       createdRef.current = true;
       setError(null);
-      setUrl(startUrl);
+      urlRef.current = startUrl;
       setInputValue(startUrl === "about:blank" ? "" : startUrl);
       persistUrl(startUrl);
     }).catch((err) => {
@@ -78,7 +77,7 @@ export function LeftBrowserPanel({ isVisible, overlayActive, onClose }: LeftBrow
       if (event.payload.label !== WEBVIEW_LABEL) return;
       const newUrl = event.payload.url;
       if (newUrl !== urlRef.current) {
-        setUrl(newUrl);
+        urlRef.current = newUrl;
         setInputValue(newUrl === "about:blank" ? "" : newUrl);
         persistUrl(newUrl);
       }

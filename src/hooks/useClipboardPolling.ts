@@ -8,10 +8,11 @@ const POLL_INTERVAL_MS = 1000;
 export function useClipboardPolling() {
   const addEntry = useClipboardStore((s) => s.addEntry);
   const lastTextRef = useRef<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const appWindow = getCurrentWindow();
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let unlistenFn: (() => void) | null = null;
 
     const poll = async () => {
       try {
@@ -26,30 +27,31 @@ export function useClipboardPolling() {
     };
 
     const startPolling = () => {
-      if (intervalRef.current) return;
-      // Poll immediately on focus
+      if (intervalId !== null) return;
       poll();
-      intervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
+      intervalId = setInterval(poll, POLL_INTERVAL_MS);
     };
 
     const stopPolling = () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
       }
     };
 
-    // Start polling if window is already focused
     startPolling();
 
-    const unlisten = appWindow.onFocusChanged(({ payload: focused }) => {
+    appWindow.onFocusChanged(({ payload: focused }) => {
       if (focused) startPolling();
       else stopPolling();
+    }).then((fn) => {
+      unlistenFn = fn;
     });
 
     return () => {
-      stopPolling();
-      unlisten.then((fn) => fn());
+      if (intervalId !== null) clearInterval(intervalId);
+      intervalId = null;
+      if (unlistenFn) unlistenFn();
     };
   }, [addEntry]);
 }

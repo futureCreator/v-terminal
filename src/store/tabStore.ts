@@ -236,5 +236,3 @@ export const useTabStore = create<TabStore>((set, get) => {
   };
 });
 
-// Re-export uuid for components that need it
-export { uuidv4 as genId };

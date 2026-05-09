@@ -99,11 +99,19 @@ export function TerminalPane({
 
   // Password dialog
   const [pwState, pwActions] = usePasswordDialog();
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const handlePasswordCancel = () => {
     pwActions.cancel();
     setExited(true);
   };
+
+  // Focus password input when the dialog opens (replaces autoFocus to satisfy a11y rule)
+  useEffect(() => {
+    if (pwState.visible && !pwState.connecting) {
+      passwordInputRef.current?.focus();
+    }
+  }, [pwState.visible, pwState.connecting]);
 
   // Store broadcast state in refs to avoid stale closures in the onData handler
   const broadcastRef = useRef(broadcastEnabled);
@@ -689,6 +697,7 @@ export function TerminalPane({
       className={`terminal-pane ${isActive ? "terminal-pane--active" : ""}`}
       style={style}
       onClick={() => { onFocus(); termRef.current?.focus(); }}
+      role="presentation"
     >
       {loading && !exited && !pwState.visible && (
         <div className="terminal-loading">
@@ -716,6 +725,7 @@ export function TerminalPane({
             ) : (
               <>
                 <input
+                  ref={passwordInputRef}
                   type="password"
                   className="terminal-password-input"
                   placeholder={t('connection.password')}
@@ -725,7 +735,6 @@ export function TerminalPane({
                     if (e.key === "Enter") pwActions.submit();
                     if (e.key === "Escape") handlePasswordCancel();
                   }}
-                  autoFocus
                 />
                 <div className="terminal-password-actions">
                   <button
@@ -747,7 +756,13 @@ export function TerminalPane({
         </div>
       )}
       {connectionLost && !exited && (
-        <div className="terminal-connection-lost" onClick={handleRestart}>
+        <div
+          className="terminal-connection-lost"
+          onClick={handleRestart}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleRestart(); } }}
+          role="button"
+          tabIndex={0}
+        >
           <span className="terminal-connection-lost-text">{t('connection.connectionLost')}</span>
           <span className="terminal-connection-lost-action">{t('connection.clickToReconnect')}</span>
         </div>
@@ -758,7 +773,13 @@ export function TerminalPane({
         style={{ display: exited || pwState.visible ? "none" : undefined }}
       />
       {exited && (
-        <div className="terminal-exit-panel" onClick={handleRestart}>
+        <div
+          className="terminal-exit-panel"
+          onClick={handleRestart}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleRestart(); } }}
+          role="button"
+          tabIndex={0}
+        >
           <svg className="terminal-exit-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 5.5L7.5 10L3 14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M10 14.5H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>

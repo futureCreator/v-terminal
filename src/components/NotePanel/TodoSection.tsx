@@ -137,6 +137,8 @@ export function TodoSection() {
                 handleBlurEdit(todo.id, e.currentTarget.textContent ?? "")
               }
               onKeyDown={(e) => handleKeyDown(todo.id, e)}
+              role="textbox"
+              aria-label={t("todo.editTask")}
             >
               {todo.text}
             </span>
@@ -160,6 +162,15 @@ export function TodoSection() {
         <div
           className={`todo-item todo-ghost${isAddingNew ? " todo-ghost--active" : ""}`}
           onClick={!isAddingNew ? handleGhostClick : undefined}
+          onKeyDown={(e) => {
+            if (!isAddingNew && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              handleGhostClick();
+            }
+          }}
+          role="button"
+          tabIndex={isAddingNew ? -1 : 0}
+          aria-label={t("todo.addTask")}
         >
           <div className="todo-check todo-check--ghost">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -183,6 +194,8 @@ export function TodoSection() {
               style={{ fontSize: `${fontSize}px` }}
               onBlur={handleInlineInputBlur}
               onKeyDown={handleInlineInputKeyDown}
+              role="textbox"
+              aria-label={t("todo.newTaskPlaceholder")}
             />
           ) : (
             <span
@@ -267,6 +280,8 @@ export function TodoSection() {
                         (e.currentTarget as HTMLElement).blur();
                       }
                     }}
+                    role="textbox"
+                    aria-label={t("todo.editTask")}
                   >
                     {todo.text}
                   </span>
