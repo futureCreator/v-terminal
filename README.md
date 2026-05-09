@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.21.0 - 2026-05-09
+
+- **chore**: release v0.21.0
+
 ### v0.20.13 - 2026-05-09
 
 - **feat**: Sarasa Mono K terminal font added — bundled monospace font with full Hangul (한글) glyph coverage, selectable from Settings → Terminal → Font; Regular and Bold weights provided as woff2
