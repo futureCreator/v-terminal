@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.13 - 2026-05-09
+
+- **feat**: Sarasa Mono K terminal font added — bundled monospace font with full Hangul (한글) glyph coverage, selectable from Settings → Terminal → Font; Regular and Bold weights provided as woff2
+
 ### v0.20.12 - 2026-05-09
 
 - **fix**: Korean IME composition cancellation during streaming output — `@xterm/xterm@6.0.0` WebGL renderer disrupted IME composition when the terminal repainted on every Claude Code output chunk; switched to Canvas renderer behind `ENABLE_WEBGL_RENDERER` flag in `TerminalPane.tsx`

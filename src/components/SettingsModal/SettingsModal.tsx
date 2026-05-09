@@ -25,6 +25,7 @@ const FONT_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "Commit Mono", label: "Commit Mono" },
   { value: "Maple Mono", label: "Maple Mono" },
   { value: "Iosevka", label: "Iosevka" },
+  { value: "Sarasa Mono K", label: "Sarasa Mono K (한글 포함)" },
 ];
 
 const CURSOR_OPTIONS: Array<{ value: CursorStyle; labelKey: string }> = [
