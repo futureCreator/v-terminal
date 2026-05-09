@@ -93,6 +93,11 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.20.12 - 2026-05-09
+
+- **fix**: Korean IME composition cancellation during streaming output — `@xterm/xterm@6.0.0` WebGL renderer disrupted IME composition when the terminal repainted on every Claude Code output chunk; switched to Canvas renderer behind `ENABLE_WEBGL_RENDERER` flag in `TerminalPane.tsx`
+- **chore**: release v0.20.12
+
 ### v0.20.11 - 2026-03-27
 
 - **chore**: release v0.20.11
