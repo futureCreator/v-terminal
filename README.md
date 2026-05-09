@@ -93,6 +93,10 @@ pnpm daemon:stop     # Stop daemon
 
 ## Changelog
 
+### v0.21.1 - 2026-05-09
+
+- **chore**: release v0.21.1
+
 ### v0.21.0 - 2026-05-09
 
 - **chore**: release v0.21.0
